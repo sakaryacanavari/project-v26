@@ -1,0 +1,370 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in w-full" id="marketHomeRoot">
+
+    {# 1. KUTU: ÜST BİLGİ VE ÜLKE SEÇİMİ (v3.0 RTX Ultimate - Aydınlatıldı) #}
+    <div class="relative bg-slate-800/80 backdrop-blur-2xl border border-slate-600/50 border-t-2 border-t-cyan-400 p-5 flex flex-col md:flex-row justify-between items-center gap-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden group">
+        
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-cyan-400/20 blur-[100px] pointer-events-none rounded-full mix-blend-screen group-hover:bg-cyan-300/30 transition-colors duration-1000"></div>
+        <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
+
+        <div class="flex items-center gap-4 relative z-10">
+            <div class="w-13 h-13 p-3 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 border border-cyan-400/50 flex items-center justify-center text-cyan-200 shadow-[0_0_25px_rgba(34,211,238,0.15),inset_0_1px_2px_rgba(255,255,255,0.3)] relative overflow-hidden">
+                <div class="absolute inset-0 bg-cyan-400/20 animate-pulse"></div>
+                <i class="fa-solid fa-store text-2xl drop-shadow-[0_0_12px_rgba(34,211,238,0.9)] relative z-10"></i>
+            </div>
+            <div>
+                <h1 class="text-[16px] font-black text-white uppercase tracking-widest leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">Ürün Pazarı</h1>
+                <div class="text-[10px] text-cyan-200 uppercase tracking-[0.2em] font-bold mt-1 flex items-center gap-2 drop-shadow-sm">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-300 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+                    </span>
+                    Küresel Ticaret Ağı
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto relative z-10">
+            <div class="flex items-center gap-3 bg-slate-900/50 backdrop-blur-md border border-slate-500/60 hover:border-cyan-400/60 rounded-xl pl-4 pr-1 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] focus-within:bg-slate-800/80 focus-within:border-cyan-300 focus-within:shadow-[0_0_20px_rgba(34,211,238,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-300 w-full md:w-56 group/select">
+                <i class="fa-solid fa-globe text-cyan-300/60 group-focus-within/select:text-cyan-300 text-[12px] drop-shadow-sm transition-colors"></i>
+                <div class="w-full">
+                    {% include 'widgets/countrySelector.html.twig' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# 2. KUTU: ÜRÜN İZGARASI (Aydınlatıldı) #}
+    <div class="relative bg-slate-800/70 backdrop-blur-2xl border border-slate-600/50 rounded-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden">
+        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-400/15 blur-[90px] pointer-events-none rounded-full mix-blend-screen"></div>
+
+        <h2 class="text-[11px] font-black text-slate-100 uppercase tracking-[0.2em] mb-5 flex items-center gap-2 border-b border-slate-600/80 pb-3 relative z-10 drop-shadow-md">
+            <i class="fa-solid fa-boxes-stacked text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"></i> Kategori Seçimi
+        </h2>
+        
+        <div class="flex flex-wrap gap-3 relative z-10">
+            {% for product in products %}
+                <button type="button"
+                        data-action="show-product-catalogue"
+                        data-id="{{ product.id }}"
+                        class="product-tile group">
+                    <img src="img/products/{{ product.id }}.png" class="w-9 h-9" alt="{{ product.name }}">
+                    <span class="name">{{ product.name }}</span>
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# 3. KUTU: KALİTE (Q) SEÇİMİ (Aydınlatıldı) #}
+    <div id="product-catalogue" class="hidden animate-fade-in bg-slate-800/70 backdrop-blur-2xl border border-slate-600/50 rounded-xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] relative overflow-hidden">
+        <div class="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(34,211,238,0.05)_50%,transparent_75%,transparent_100%)] bg-[length:200%_200%] animate-shimmer pointer-events-none"></div>
+        <div class="flex flex-col sm:flex-row items-center gap-5 relative z-10">
+            <span class="text-[11px] font-black text-slate-100 uppercase tracking-widest flex items-center gap-2 drop-shadow-md">
+                <i class="fa-solid fa-star text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]"></i> Kalite Seviyesi:
+            </span>
+            <div class="flex flex-wrap gap-2" id="qualityList"></div>
+        </div>
+    </div>
+
+    {# 4. KUTU: BİRLEŞTİRİLMİŞ TEKLİF TABLOSU (Aydınlatıldı) #}
+    <div class="relative bg-slate-800/80 backdrop-blur-2xl border border-slate-600/60 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] p-1">
+        
+        <div class="w-full overflow-x-auto pb-4 px-3 pt-3 relative z-10">
+            <table id="item-results" class="w-full text-left border-collapse" style="border-spacing: 0 8px; border-collapse: separate;">
+                <thead class="text-[10px] font-black text-cyan-50/90 uppercase tracking-widest drop-shadow-sm">
+                    <tr>
+                        <th class="p-3 bg-slate-700/60 rounded-l-lg border-y border-l border-slate-600/50">Ürün Modeli</th>
+                        <th class="p-3 bg-slate-700/60 border-y border-slate-600/50">Tedarikçi (Satıcı)</th>
+                        <th class="p-3 bg-slate-700/60 border-y border-slate-600/50 text-center">Stok</th>
+                        <th class="p-3 bg-slate-700/60 border-y border-slate-600/50 text-center">Birim Fiyatı</th>
+                        <th class="p-3 bg-slate-700/60 rounded-r-lg border-y border-r border-slate-600/50 text-right">Tedarik Emri</th>
+                    </tr>
+                </thead>
+                <tbody id="offers-table-body" class="text-sm text-white">
+                    
+                    {% if offers is defined and offers|length > 0 %}
+                        <tr id="initial-showcase-msg">
+                            <td colspan="5" class="py-3 text-center text-[10px] text-cyan-300 uppercase tracking-[0.4em] font-black border-b border-dashed border-cyan-700/40 bg-cyan-900/20 rounded-lg shadow-inner">
+                                <i class="fa-solid fa-chart-line mr-2"></i> Bölgesel Arz-Talep Dengesi: Aktif Teklifler
+                            </td>
+                        </tr>
+
+                        {% for offer in offers %}
+                            <tr id="offer-{{ offer.id }}" class="bg-slate-700/40 hover:bg-slate-600/60 backdrop-blur-md transition-all duration-300 group relative overflow-hidden">
+                                <td class="p-3 rounded-l-lg flex items-center gap-4 border-y border-l border-slate-600/40 group-hover:border-cyan-400/60 transition-colors relative z-10">
+                                    <div class="w-12 h-12 bg-slate-800/80 rounded-xl flex items-center justify-center border border-slate-500/50 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] group-hover:border-cyan-300/80 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.4),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-all duration-300">
+                                        <img src="img/products/{{ offer.item }}.png" class="w-8 h-8 opacity-90 drop-shadow-md group-hover:opacity-100 group-hover:scale-110 transition-transform duration-300">
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="uppercase tracking-widest text-[11px] text-slate-100 group-hover:text-white transition-colors drop-shadow-sm font-bold">Birim #{{ offer.item }}</span>
+                                        <span class="text-cyan-300/90 text-[8px] font-black mt-0.5 tracking-widest group-hover:text-cyan-200 drop-shadow-[0_0_2px_rgba(34,211,238,0.6)]">Q{{ offer.quality }} - LOJİSTİK ONAYLI</span>
+                                    </div>
+                                </td>
+                                <td class="p-3 border-y border-slate-600/40 group-hover:border-cyan-400/60 transition-colors relative z-10">
+                                    <a href="#" class="flex items-center gap-2 text-slate-200 hover:text-white transition-colors">
+                                        <div class="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_8px_#34d399] animate-pulse"></div>
+                                        <span class="tracking-widest drop-shadow-sm font-black uppercase text-[10px]">{{ offer.seller.nick }}</span>
+                                    </a>
+                                </td>
+                                <td class="p-3 text-center border-y border-slate-600/40 group-hover:border-cyan-400/60 transition-colors relative z-10">
+                                    <div class="flex items-center justify-center gap-2 bg-slate-800/80 py-1.5 px-3 rounded-lg border border-slate-500/50 w-fit mx-auto shadow-inner group-hover:border-slate-400/50 transition-colors">
+                                        <span class="font-mono text-xs font-black text-white">{{ offer.quantity }}</span>
+                                        <span class="text-[8px] text-slate-400 uppercase tracking-widest font-bold">Adet</span>
+                                    </div>
+                                </td>
+                                <td class="p-3 text-center border-y border-slate-600/40 group-hover:border-cyan-400/60 transition-colors relative z-10">
+                                    <div class="flex items-center justify-center gap-1.5 text-yellow-300 bg-yellow-900/30 py-2 px-3 rounded-lg border border-yellow-500/40 w-fit mx-auto shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] group-hover:bg-yellow-800/40 transition-colors">
+                                        <span class="font-mono text-sm font-black drop-shadow-[0_0_8px_rgba(253,224,71,0.8)]">{{ offer.price }}</span>
+                                        <span class="text-[9px] font-black uppercase tracking-widest text-yellow-400/90 ml-1">{% filter upper %}{{ offer.country.currency }}{% endfilter %}</span>
+                                    </div>
+                                </td>
+                                <td class="p-3 text-right rounded-r-lg border-y border-r border-slate-600/40 group-hover:border-cyan-400/60 transition-colors pr-4 relative z-10">
+                                    <div class="flex items-center justify-end gap-3">
+                                        <input name="quantity" type="number" value="1" min="1" max="{{ offer.quantity }}" class="w-16 bg-slate-800/90 border border-slate-500/60 text-slate-50 p-2 rounded-lg text-[11px] font-mono font-black outline-none focus:border-cyan-300 focus:ring-1 focus:ring-cyan-300/60 transition-all shadow-inner text-center">
+                                        <button data-action="buy-item" data-id="{{ offer.id }}" class="relative bg-gradient-to-t from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-200 shadow-[0_5px_15px_rgba(34,211,238,0.5),inset_0_1px_0_rgba(255,255,255,0.5)] active:scale-95 border border-cyan-300/70 flex items-center gap-2 group-hover:shadow-[0_8px_25px_rgba(34,211,238,0.7)] overflow-hidden">
+                                            <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shine"></span>
+                                            <i class="fa-solid fa-cart-arrow-down drop-shadow-md relative z-10"></i> <span class="relative z-10">{% trans %}Buy{% endtrans %}</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="py-24 text-center relative z-10 m-4 rounded-2xl">
+                                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-800/90 text-cyan-300/80 mb-6 border border-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.2),inset_0_2px_10px_rgba(0,0,0,0.3)] relative">
+                                    <div class="absolute inset-0 rounded-full border-2 border-cyan-300/30 animate-ping"></div>
+                                    <i class="fa-solid fa-radar text-3xl drop-shadow-[0_0_15px_rgba(34,211,238,0.6)] animate-[spin_4s_linear_infinite]"></i>
+                                </div>
+                                <div class="text-slate-100 text-[13px] font-black uppercase tracking-[0.4em] mb-2 drop-shadow-lg">
+                                    Pazar Ağı Taranıyor
+                                </div>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+                                    Yukarıdan ürün modeli ve kalite belirleyerek sinyal gönderin
+                                </p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<template id="tpl-item-quality">
+    <a href="javascript:void(0);" data-url-template="{{ path_for('marketplaceOffers', {'item':'__ITEM__', 'quality':'__Q__'}) }}"
+       class="q-btn flex items-center justify-center px-6 py-2.5 bg-gradient-to-b from-slate-700 to-slate-800 border border-slate-500/80 rounded-xl text-[11px] font-black text-slate-300 transition-all duration-300 hover:border-cyan-300 hover:text-cyan-200 hover:shadow-[0_0_15px_rgba(34,211,238,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:-translate-y-0.5">
+        <span class="q-label tracking-widest drop-shadow-sm pointer-events-none"></span>
+    </a>
+</template>
+
+<style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .animate-shimmer { animation: shimmer 8s linear infinite; }
+    
+    @keyframes shine { 100% { transform: translateX(100%); } }
+    .animate-shine { animation: shine 1.5s ease-in-out infinite; }
+
+    /* Ürün Kutuları (Aydınlatıldı) */
+    .product-tile {
+        width: 85px; height: 85px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(51,65,85,0.8), rgba(30,41,59,0.95));
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 6px 12px rgba(0,0,0,0.3);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+        cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative; overflow: hidden;
+    }
+    .product-tile img { opacity: 0.6; filter: grayscale(100%); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .product-tile .name { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; text-shadow: 0 2px 4px rgba(0,0,0,0.6); transition: color 0.3s; }
+
+    .product-tile:hover {
+        background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(30,41,59,0.9));
+        border-color: rgba(34,211,238,0.6);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 12px 24px rgba(0,0,0,0.4), 0 0 20px rgba(34,211,238,0.3);
+        transform: translateY(-5px) scale(1.03);
+    }
+    .product-tile:hover img { opacity: 1; filter: drop-shadow(0 5px 10px rgba(34,211,238,0.7)) grayscale(0%); transform: scale(1.15); }
+    .product-tile:hover .name { color: #ffffff; }
+
+    .product-tile.active-market-btn {
+        background: linear-gradient(135deg, rgba(34,211,238,0.3), rgba(30,41,59,1));
+        border-color: rgba(34,211,238,0.9);
+        box-shadow: inset 0 0 25px rgba(34,211,238,0.3), inset 0 1px 0 rgba(255,255,255,0.4), 0 8px 20px rgba(0,0,0,0.4), 0 0 25px rgba(34,211,238,0.4);
+        transform: translateY(-3px);
+    }
+    .product-tile.active-market-btn img { opacity: 1; filter: drop-shadow(0 0 12px rgba(34,211,238,1)) grayscale(0%); transform: scale(1.2); }
+    .product-tile.active-market-btn .name { color: #67e8f9; text-shadow: 0 0 10px rgba(34,211,238,0.8); }
+
+    /* Dropdown (Aydınlatıldı) */
+    #marketHomeRoot select { background: transparent; color: #ffffff; font-size: 11px; font-weight: 800; outline: none; border: none; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+    #marketHomeRoot select option { background: #1e293b; color: #f8fafc; font-weight: 700; }
+    
+    /* Aktif Q Butonu Neon (Aydınlatıldı) */
+    .q-btn.active-q { 
+        background: linear-gradient(to bottom, rgba(34,211,238,0.2), rgba(30,41,59,0.9));
+        border-color: rgba(34,211,238,1); 
+        color: #67e8f9; 
+        box-shadow: 0 0 25px rgba(34,211,238,0.4), inset 0 1px 0 rgba(255,255,255,0.3); 
+        text-shadow: 0 0 8px rgba(34,211,238,0.8);
+        transform: scale(1.05);
+    }
+</style>
+
+<script>
+$(document).ready(function() {
+    const ROOT_ID = 'marketHomeRoot';
+    const MAX_Q = 5;
+
+    function getSelectedCountry() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const countryId = urlParams.get('country');
+        if (countryId && !isNaN(parseInt(countryId, 10))) {
+            return parseInt(countryId, 10);
+        }
+        return 1;
+    }
+
+    function buildOffersUrl(tpl, itemId, q) {
+        let url = String(tpl || '');
+        url = decodeURIComponent(url); 
+        url = url.replace('__ITEM__', String(itemId)).replace('__Q__', String(q));
+        const c = getSelectedCountry();
+        url += (url.includes('?') ? '&' : '?') + 'country=' + encodeURIComponent(String(c));
+        return url;
+    }
+
+    function fetchMarketData(url, btnElement) {
+        const tbody = document.getElementById('offers-table-body');
+        
+        document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active-q'));
+        if(btnElement) btnElement.classList.add('active-q');
+
+        // Yükleniyor Ekranı
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="py-24 text-center relative z-10 m-4 rounded-2xl">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-800/90 text-cyan-300 mb-6 border border-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.3),inset_0_2px_10px_rgba(0,0,0,0.3)] relative">
+                        <div class="absolute inset-0 rounded-full border-2 border-cyan-300/50 animate-ping"></div>
+                        <i class="fa-solid fa-radar text-3xl animate-[spin_2s_linear_infinite] drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]"></i>
+                    </div>
+                    <div class="text-cyan-200 text-[13px] font-black uppercase tracking-[0.4em] mb-2 animate-pulse drop-shadow-md">Sinyal İşleniyor...</div>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Lütfen bekleyin, veriler yükleniyor.</p>
+                </td>
+            </tr>
+        `;
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                window.history.pushState({path: url}, '', url);
+                let $parsed = $('<div>').html(response);
+                let $newRows = $parsed.find('#item-results tbody').html();
+
+                if ($newRows && $newRows.trim() !== '') {
+                    $newRows = $newRows.replace(/<tr id="initial-showcase-msg">.*?<\/tr>/s, '');
+                    $(tbody).html($newRows);
+                    $(tbody).find('tr').addClass('animate-fade-in');
+                } else {
+                    $(tbody).html(`
+                        <tr>
+                            <td colspan="5" class="py-24 text-center relative z-10 m-4 rounded-2xl">
+                                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-800/90 text-cyan-300/80 mb-6 border border-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.2),inset_0_2px_10px_rgba(0,0,0,0.3)]">
+                                    <i class="fa-solid fa-radar text-3xl drop-shadow-[0_0_15px_rgba(34,211,238,0.6)] animate-[spin_4s_linear_infinite]"></i>
+                                </div>
+                                <div class="text-slate-100 text-[13px] font-black uppercase tracking-[0.4em] mb-2 drop-shadow-lg">Kayıt Bulunamadı</div>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Bu bölgede seçtiğiniz kriterlere uygun teklif yok.</p>
+                            </td>
+                        </tr>
+                    `);
+                }
+
+                if (typeof window.peque !== 'undefined' && window.peque.market && typeof window.peque.market.initResultsList === 'function') {
+                    window.peque.market.initResultsList();
+                }
+            },
+            error: function() {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-24 text-center relative z-10 m-4 rounded-2xl">
+                            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-900/80 text-red-400 mb-6 border border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.4),inset_0_2px_10px_rgba(0,0,0,0.4)] relative">
+                                <div class="absolute inset-0 rounded-full border-2 border-red-400/50 animate-ping"></div>
+                                <i class="fa-solid fa-triangle-exclamation text-3xl drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]"></i>
+                            </div>
+                            <div class="text-red-300 text-[13px] font-black uppercase tracking-[0.4em] mb-2 drop-shadow-lg">Bağlantı Koptu</div>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Ağ sinyali alınamadı, lütfen tekrar deneyin.</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    function renderQualities(itemId) {
+        const catalogue = document.getElementById('product-catalogue');
+        const list = document.getElementById('qualityList');
+        const tpl = document.getElementById('tpl-item-quality');
+        
+        if(!catalogue || !list || !tpl) return;
+        
+        list.innerHTML = '';
+        for(let q = 0; q <= MAX_Q; q++){
+            const node = tpl.content.cloneNode(true);
+            const a = node.querySelector('a');
+            const span = node.querySelector('.q-label');
+            const finalUrl = buildOffersUrl(a.getAttribute('data-url-template'), itemId, q);
+            
+            a.onclick = function(e) { 
+                e.preventDefault(); 
+                fetchMarketData(finalUrl, this); 
+            };
+            
+            span.textContent = 'Q' + q;
+            list.appendChild(node);
+        }
+        catalogue.classList.remove('hidden');
+    }
+
+    function bind() {
+        const root = document.getElementById(ROOT_ID);
+        if(!root) return;
+
+        root.querySelectorAll('[data-action="show-product-catalogue"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                activateBtn(btn);
+                renderQualities(btn.getAttribute('data-id'));
+            });
+        });
+
+        if (typeof window.peque !== 'undefined' && window.peque.market) {
+            let productsData = {{ products|json_encode()|raw }};
+            if(typeof window.peque.market.initHome === 'function') window.peque.market.initHome(productsData);
+            if(typeof window.peque.market.initResultsList === 'function') window.peque.market.initResultsList();
+        }
+    }
+
+    function activateBtn(btn) {
+        document.querySelectorAll('[data-action="show-product-catalogue"]').forEach(b => b.classList.remove('active-market-btn'));
+        btn.classList.add('active-market-btn');
+    }
+
+    bind();
+});
+</script>
+{% endblock %}
+
+{% block bottomJS %}
+    <script>
+        $(function () {
+            if (typeof peque !== 'undefined' && peque.market && typeof peque.market.initResultsList === 'function') {
+                peque.market.initResultsList(); 
+            }
+        });
+    </script>
+{% endblock %}
