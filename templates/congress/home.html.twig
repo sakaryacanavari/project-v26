@@ -1,0 +1,16 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Kongre{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-landmark"></i> Kongre</h1>
+    {% if laws|length == 0 %}
+        <p>Aktif yasa teklifi bulunmuyor.</p>
+    {% else %}
+        {% for law in laws %}
+            <div class="law-card">
+                <a href="{{ path_for('congressLaw', {'id': law.id}) }}">Teklif #{{ law.id }}</a>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

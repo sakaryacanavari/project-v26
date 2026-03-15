@@ -1,0 +1,1797 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+{% set workState = job is defined ? job : null %}
+{% set hasActiveJob = workState and (workState.company or workState.companyName or workState.title) %}
+{% set userSkill = my.economic_skill|default(my.economicSkill|default(my.economySkill|default(1))) %}
+{% set userXp = my.economic_xp|default(my.economicXp|default(0)) %}
+{% set myLocation = my.location.country_id|default(my.location.country.id|default(0)) %}
+{% set currentCountry = selectedCountry|default(myLocation) %}
+{% set lastWorkRaw = workState.last_work|default(null) %}
+{% set workedToday = workState.hasWorkedToday|default(lastWorkRaw ? (lastWorkRaw|date('Y-m-d') == "now"|date('Y-m-d')) : false) %}
+{% set workReady = hasActiveJob and not workedToday %}
+{% set activeSort = selectedSort|default('best') %}
+{% set activeFilter = selectedFilter|default('all') %}
+{% set activeSearch = searchQuery|default('') %}
+{% set pageNum = currentPage|default(1) %}
+{% set pagesTotal = totalPages|default(1) %}
+{% set activeCompanyName = workState.company.name|default(workState.companyName|default(workState.company_title|default(workState.title|default('Aktif Şirket')))) %}
+{% set activeCurrency = workState.currency|default('-') %}
+{% set activeCurrencyCountry = workState.currencyCountryName|default('') %}
+{% set activeRequiredSkill = workState.required_skill|default(0) %}
+{% set salarySortTarget = activeSort == 'salary_desc' ? 'salary_asc' : 'salary_desc' %}
+{% set listQueryBase = {
+    country: selectedCountry|default(null),
+    sort: activeSort,
+    filter: activeFilter,
+    q: activeSearch
+} %}
+
+<style>
+    .work-market-shell { position: relative; overflow: hidden; border-radius: 16px; background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(5, 8, 15, 0.95)); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); }
+    .work-market-hero { position: relative; padding: 40px 24px 60px; background: radial-gradient(circle at top, color-mix(in srgb, var(--brand-primary) 15%, transparent) 0%, rgba(0,0,0,0.5) 100%); border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; overflow: hidden; }
+    .work-market-hero::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; pointer-events: none; z-index: 1; }
+    .work-market-title { position: relative; z-index: 2; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: #fff; text-shadow: 0 0 20px var(--brand-glow); display: flex; align-items: center; justify-content: center; gap: 12px; }
+
+    .filter-console { position: relative; z-index: 10; max-width: 1100px; margin: -35px auto 30px; background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 3px solid var(--brand-primary); border-radius: 12px; padding: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.8), inset 0 2px 15px rgba(255,255,255,0.02); }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: minmax(260px, 1.35fr) minmax(260px, 1.2fr) minmax(150px, 170px) auto;
+        gap: 14px;
+        align-items: center;
+    }
+
+    .filter-region { min-width: 260px; }
+    .filter-sort { min-width: 260px; }
+    .filter-skill { min-width: 150px; }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        background: linear-gradient(180deg, rgba(9, 16, 30, 0.94), rgba(4, 8, 20, 0.98));
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        height: 48px;
+        transition: all 0.3s ease;
+        min-width: 0;
+    }
+
+    .filter-group:focus-within {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 15px color-mix(in srgb, var(--brand-primary) 20%, transparent);
+    }
+
+    .filter-addon {
+        background: rgba(255,255,255,0.03);
+        padding: 0 16px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand-primary);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-right: 1px solid rgba(255,255,255,0.05);
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .filter-select-wrapper {
+        flex: 1;
+        min-width: 0;
+        padding: 0 8px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+
+    .filter-select-wrapper > div,
+    .filter-select-wrapper > input {
+        width: 100%;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #f8fafc !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        outline: none !important;
+        margin: 0 !important;
+    }
+
+    .filter-select-wrapper > select {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #f8fafc !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        outline: none !important;
+        margin: 0 !important;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        border-radius: 0;
+        padding: 0 42px 0 12px;
+        font-size: 13px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    .filter-select-wrapper.has-native-arrow::after {
+        content: '\f107';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #cbd5e1;
+        font-size: 12px;
+        pointer-events: none;
+    }
+
+    .filter-select-wrapper > select option {
+        background: #0b1120 !important;
+        color: #f8fafc !important;
+    }
+
+    .filter-input {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        background: transparent;
+        border: none;
+        color: var(--brand-primary);
+        text-shadow: 0 0 10px var(--brand-glow);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        font-weight: 900;
+        outline: none;
+        padding: 0 16px;
+    }
+
+    .filter-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        min-width: max-content;
+        flex-wrap: nowrap;
+    }
+
+    .filter-btn {
+        height: 44px;
+        min-width: 150px;
+        width: auto;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+        border: 1px solid var(--brand-primary);
+        color: var(--brand-primary);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        box-shadow: 0 0 15px color-mix(in srgb, var(--brand-primary) 30%, transparent);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 18px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .filter-chip-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+
+    .filter-chip {
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        color: #cbd5e1;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all .25s ease;
+    }
+
+    .filter-chip:hover {
+        border-color: var(--brand-primary);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .filter-chip.is-active {
+        border-color: var(--brand-primary);
+        background: color-mix(in srgb, var(--brand-primary) 16%, transparent);
+        color: var(--brand-primary);
+        box-shadow: 0 0 18px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+    }
+
+    .filter-btn:hover {
+        background: var(--brand-primary);
+        color: #000;
+        box-shadow: 0 0 25px var(--brand-glow);
+        transform: translateY(-2px);
+    }
+
+    .filter-ghost-btn {
+        height: 44px;
+        min-width: 128px;
+        width: auto;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #cbd5e1;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        padding: 0 18px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .filter-ghost-btn:hover { border-color: var(--brand-primary); color: #fff; }
+
+    .alarm-btn {
+        height: 44px;
+        width: 44px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.6);
+        border: 1px dashed color-mix(in srgb, var(--brand-primary) 50%, transparent);
+        color: var(--brand-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .alarm-btn:hover {
+        background: color-mix(in srgb, var(--brand-primary) 20%, transparent);
+        border-style: solid;
+        box-shadow: 0 0 15px var(--brand-glow);
+        color: #fff;
+    }
+
+    .active-contract-card {
+        position: relative;
+        margin: 0 24px 24px;
+        padding: 22px 22px 20px;
+        border-radius: 20px;
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 34%, rgba(255,255,255,0.08));
+        background:
+            radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--brand-primary) 10%, transparent) 0%, transparent 28%),
+            linear-gradient(135deg, rgba(6, 13, 27, 0.96), rgba(3, 8, 20, 0.98) 55%, rgba(2, 10, 18, 0.98));
+        box-shadow:
+            0 18px 42px rgba(0,0,0,0.48),
+            inset 0 1px 0 rgba(255,255,255,0.05),
+            inset 0 0 0 1px rgba(255,255,255,0.02),
+            0 0 0 1px rgba(0,0,0,0.25);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    .active-contract-card::before,
+    .active-contract-card::after {
+        content: none;
+    }
+
+    .active-contract-main {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .active-contract-icon {
+        width: 66px;
+        height: 66px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.09);
+        background:
+            radial-gradient(circle at top, color-mix(in srgb, var(--brand-primary) 14%, transparent), transparent 62%),
+            linear-gradient(180deg, rgba(12, 20, 38, 0.96), rgba(4, 9, 21, 1));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 25px;
+        color: #fff;
+        box-shadow:
+            0 14px 28px rgba(0,0,0,0.42),
+            inset 0 1px 0 rgba(255,255,255,0.05);
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .active-contract-icon::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(145deg, rgba(255,255,255,0.05), transparent 48%, transparent);
+        pointer-events: none;
+    }
+
+    .active-contract-icon i { position: relative; z-index: 1; }
+    .active-contract-body { min-width: 0; }
+
+    .active-contract-kicker {
+        font-size: 10px;
+        font-weight: 900;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: .18em;
+        margin-bottom: 8px;
+    }
+
+    .active-contract-name {
+        font-size: 1.18rem;
+        font-weight: 900;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        line-height: 1.18;
+        word-break: break-word;
+        margin-bottom: 12px;
+        text-shadow: 0 0 18px rgba(255,255,255,0.05);
+    }
+
+    .active-contract-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .active-contract-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #e2e8f0;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        line-height: 1;
+        white-space: nowrap;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .active-contract-stat i {
+        color: var(--brand-primary);
+        text-shadow: 0 0 12px var(--brand-glow);
+        flex-shrink: 0;
+    }
+
+    .active-contract-status-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .contract-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .09em;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        color: #cbd5e1;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .contract-status-pill.ok {
+        color: #34d399;
+        border-color: rgba(52, 211, 153, 0.28);
+        background: rgba(52, 211, 153, 0.09);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 0 14px rgba(52,211,153,0.10);
+    }
+
+    .contract-status-pill.wait {
+        color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.25);
+        background: rgba(245, 158, 11, 0.08);
+    }
+
+    .contract-status-pill.info {
+        color: #93c5fd;
+        border-color: rgba(147, 197, 253, 0.20);
+        background: rgba(147, 197, 253, 0.08);
+    }
+
+    .active-contract-actions {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-self: center;
+        padding-left: 12px;
+        margin-left: 2px;
+        border-left: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .contract-action-btn {
+        min-width: 172px;
+        height: 46px;
+        border-radius: 14px;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all .25s ease;
+        border: 1px solid transparent;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .contract-action-btn::before {
+        content: none;
+    }
+
+    .contract-action-btn:hover { transform: translateY(-2px); }
+    .contract-action-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .contract-action-btn.primary {
+        background: linear-gradient(135deg, var(--brand-primary), color-mix(in srgb, var(--brand-primary) 75%, #fff));
+        color: #000;
+        border-color: color-mix(in srgb, var(--brand-primary) 60%, #fff);
+        box-shadow: 0 0 20px color-mix(in srgb, var(--brand-primary) 20%, transparent), 0 10px 24px rgba(0,0,0,0.35);
+    }
+
+    .contract-action-btn.primary:hover {
+        box-shadow: 0 0 24px color-mix(in srgb, var(--brand-primary) 28%, transparent), 0 14px 30px rgba(0,0,0,0.4);
+    }
+
+    .contract-action-btn.danger {
+        background: linear-gradient(135deg, rgba(127, 29, 29, 0.95), rgba(239, 68, 68, 0.16));
+        color: #fecaca;
+        border-color: rgba(239, 68, 68, 0.45);
+    }
+
+    .contract-action-btn.danger:hover {
+        background: linear-gradient(135deg, rgba(153, 27, 27, 1), rgba(239, 68, 68, 0.22));
+        color: #fff;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.18), 0 14px 30px rgba(0,0,0,0.38);
+    }
+
+    .skill-console { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .skill-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); color: #cbd5e1; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    .skill-chip strong { color: var(--brand-primary); text-shadow: 0 0 10px var(--brand-glow); }
+
+    .work-market-table-shell {
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(2, 6, 23, 0.78), rgba(0,0,0,0.34));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .work-market-table { width: 100%; border-collapse: collapse; min-width: 980px; }
+
+    .work-market-table thead th {
+        position: relative;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.96));
+        color: #dbeafe;
+        padding: 18px 14px;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        box-shadow: inset 0 -1px 0 rgba(255,255,255,0.03);
+        white-space: nowrap;
+    }
+
+    .table-head-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .table-head-label i {
+        color: var(--brand-primary);
+        text-shadow: 0 0 12px var(--brand-glow);
+        font-size: 11px;
+    }
+
+    .sort-link {
+        cursor: pointer;
+        transition: .25s ease;
+        position: relative;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .sort-link:hover {
+        background: rgba(255,255,255,0.05) !important;
+        color: #fff !important;
+    }
+
+    .sort-icon { font-size: 8px; margin-left: 5px; opacity: 0.6; }
+    .sort-link.is-active { color: #fff !important; text-shadow: 0 0 10px var(--brand-glow); }
+
+    .work-market-table tbody td {
+        padding: 16px 10px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        vertical-align: middle;
+        color: #e2e8f0;
+        transition: background 0.2s;
+    }
+
+    .work-market-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+    .job-row.job-dim td { opacity: 0.62; }
+    .job-row.job-dim:hover td { opacity: 0.86; }
+
+    .work-market-apply-btn,
+    .work-market-detail-btn {
+        height: 38px;
+        padding: 0 16px;
+        border-radius: 10px;
+        border: 1px solid var(--brand-primary);
+        background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+        color: var(--brand-primary);
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+        letter-spacing: .08em;
+    }
+
+    .work-market-apply-btn:hover,
+    .work-market-detail-btn:hover { background: var(--brand-primary); color: #000; box-shadow: 0 0 15px var(--brand-glow); transform:translateY(-1px); }
+
+    .work-market-apply-btn.loading { opacity: 0.5; pointer-events: none; }
+    .work-market-apply-btn.is-locked { border-color: rgba(245, 158, 11, 0.7); color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+    .work-market-apply-btn.is-disabled { border-color: rgba(239, 68, 68, 0.6); color: #f87171; background: rgba(239, 68, 68, 0.1); cursor: not-allowed; }
+    .work-market-apply-btn.is-disabled:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; box-shadow: none; transform: none; }
+    .work-market-apply-btn.is-passive { border-color: rgba(148, 163, 184, 0.35); color: #94a3b8; background: rgba(148, 163, 184, 0.08); cursor: not-allowed; }
+    .work-market-apply-btn.is-passive:hover { background: rgba(148, 163, 184, 0.08); color: #94a3b8; box-shadow: none; transform: none; }
+    .work-market-detail-btn { border-color: rgba(255,255,255,0.12); color: #cbd5e1; background: rgba(255,255,255,0.04); }
+    .work-market-detail-btn:hover { color: #fff; }
+
+    .work-action-stack { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+    .work-company-cell {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        padding-left: 16px;
+        min-height: 52px;
+        text-align: left;
+    }
+
+    .work-company-meta {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .work-market-logo-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        overflow: hidden;
+        margin: 0;
+        background:#000;
+        flex-shrink: 0;
+    }
+
+    .work-market-logo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    .work-market-product-box {
+        position: relative;
+        width: 50px;
+        height: 60px;
+        background: rgba(0,0,0,0.6);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        border: 1px solid rgba(255,255,255,0.05);
+        margin: 0 auto;
+    }
+
+    .q-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        font-size: 8px;
+        font-weight: 900;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .q-1 { background: #475569; color: #fff; }
+    .q-2 { background: #16a34a; color: #fff; }
+    .q-3 { background: #2563eb; color: #fff; }
+    .q-4 { background: #9333ea; color: #fff; }
+    .q-5 { background: #ca8a04; color: #000; box-shadow: 0 0 10px rgba(202,138,4,0.6); border-color: #facc15; }
+
+    .work-market-salary { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 14px; color: #e2e8f0; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap: wrap; }
+    .work-market-skill { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 900; color: var(--brand-primary); text-shadow: 0 0 10px var(--brand-glow); }
+    .work-market-name-link { display: block; color: #e2e8f0; font-weight: 900; line-height: 1.2; word-break: break-word; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; }
+    .work-market-subtext { margin-top: 6px; color: #64748b; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; text-align: left; }
+    .skill-state-ok { color: #34d399; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; }
+    .skill-state-low { color: #f59e0b; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; }
+    .currency-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.10); background:rgba(255,255,255,0.04); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
+    .currency-dot { width:10px; height:10px; border-radius:999px; display:inline-block; box-shadow:0 0 10px rgba(255,255,255,.18); }
+
+    .pagination-wrap { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 16px; border-top: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; }
+    .pagination-meta { color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .pagination-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .pagination-btn {
+        min-width: 130px;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        color: #e2e8f0;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .pagination-btn:hover { border-color: var(--brand-primary); color: #fff; }
+    .pagination-btn.is-disabled { opacity: .45; pointer-events: none; }
+
+    .pagination-page-chip {
+        min-width: 164px;
+        height: 42px;
+        padding: 0 18px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(9, 16, 30, 0.92), rgba(4, 8, 20, 0.98));
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.08));
+        color: #fff;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.28);
+    }
+
+    .pagination-page-chip strong {
+        color: var(--brand-primary);
+        text-shadow: 0 0 10px var(--brand-glow);
+    }
+
+    .work-mobile-list { display: none; }
+
+    @media (max-width: 1200px) {
+        .filter-grid {
+            grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(130px, 160px) auto;
+        }
+
+        .filter-region,
+        .filter-sort,
+        .filter-skill {
+            min-width: 0;
+        }
+    }
+
+    @media (max-width: 980px) {
+        .filter-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .filter-region,
+        .filter-sort,
+        .filter-skill {
+            min-width: 0;
+        }
+
+        .filter-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .active-contract-card { grid-template-columns: 1fr; }
+        .active-contract-actions { justify-content: stretch; width: 100%; padding-left: 0; margin-left: 0; border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px; }
+        .contract-action-btn { width: 100%; min-width: 0; }
+    }
+
+    @media (max-width: 768px) {
+        .work-market-table { display: none; }
+
+        .work-mobile-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 14px;
+        }
+
+        .work-mobile-card {
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(2, 6, 23, 0.88));
+            padding: 14px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+
+        .work-mobile-card.job-dim { opacity: 0.7; }
+
+        .work-mobile-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .work-mobile-body {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .work-mobile-stat {
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .work-mobile-label {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .work-mobile-value {
+            font-size: 12px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .work-mobile-footer {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .work-mobile-footer .work-market-apply-btn,
+        .work-mobile-footer .work-market-detail-btn {
+            width: 100%;
+        }
+
+        .work-market-shell { border-radius: 14px; }
+        .filter-console { margin-left: 12px; margin-right: 12px; }
+        .filter-grid { grid-template-columns: 1fr; }
+
+        .filter-actions {
+            grid-column: auto;
+            justify-content: stretch;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .filter-btn,
+        .filter-ghost-btn,
+        .alarm-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .alarm-btn {
+            height: 44px;
+        }
+
+        .active-contract-card {
+            padding: 18px 16px 16px;
+            border-radius: 18px;
+        }
+
+        .active-contract-main {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .active-contract-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+        }
+
+        .active-contract-name {
+            font-size: 1.04rem;
+        }
+    }
+</style>
+
+<div class="space-y-6 animate-fade-in w-full">
+    <div class="work-market-shell">
+        <div class="work-market-hero">
+            <div class="work-market-title"><i class="fa-solid fa-briefcase"></i> İş Gücü Komutası</div>
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 relative z-10">Global İstihdam ve Sinyal Takip Radarı</p>
+
+            <div class="skill-console justify-center relative z-10">
+                <div class="skill-chip">
+                    <i class="fa-solid fa-medal"></i>
+                    Ekonomik Yetenek <strong>{{ userSkill }}</strong>
+                </div>
+                <div class="skill-chip">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Ekonomik XP <strong>{{ userXp }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-console mx-4 md:mx-auto">
+            <form method="get" action="{{ base_url() }}/work-offers" class="filter-grid">
+                <input type="hidden" name="filter" value="{{ activeFilter }}">
+                <input type="hidden" name="q" value="{{ activeSearch }}">
+
+                <div class="filter-group filter-region">
+                    <div class="filter-addon"><i class="fa-solid fa-earth-americas mr-2"></i> Bölge</div>
+                    <div class="filter-select-wrapper">{% include 'widgets/countrySelector.html.twig' %}</div>
+                </div>
+
+                <div class="filter-group filter-sort">
+                    <div class="filter-addon"><i class="fa-solid fa-arrow-down-wide-short mr-2"></i> Sıralama</div>
+                    <div class="filter-select-wrapper has-native-arrow">
+                        <select name="sort">
+                            <option value="best" {{ activeSort == 'best' ? 'selected' : '' }}>En Uygun</option>
+                            <option value="salary_desc" {{ activeSort == 'salary_desc' ? 'selected' : '' }}>Maaş Yüksekten</option>
+                            <option value="salary_asc" {{ activeSort == 'salary_asc' ? 'selected' : '' }}>Maaş Düşükten</option>
+                            <option value="skill_asc" {{ activeSort == 'skill_asc' ? 'selected' : '' }}>Yetenek Düşükten</option>
+                            <option value="latest" {{ activeSort == 'latest' ? 'selected' : '' }}>En Yeni</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-group filter-skill">
+                    <div class="filter-addon"><i class="fa-solid fa-medal mr-2"></i> Yetenek</div>
+                    <input type="text" class="filter-input" value="{{ userSkill }}" readonly>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn">
+                        <i class="fa-solid fa-radar fa-spin"></i> Sinyali Ara
+                    </button>
+                    <a href="{{ base_url() }}/work-offers" class="filter-ghost-btn">
+                        <i class="fa-solid fa-rotate-left"></i> Temizle
+                    </a>
+                    <button type="button" class="alarm-btn" onclick="openSignalAlarm()" title="Sinyal Alarmı">
+                        <i class="fa-solid fa-bell"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="filter-chip-bar">
+                <a href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({filter: 'all', page: 1})|url_encode }}" class="filter-chip {{ activeFilter == 'all' ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-globe"></i> Tümü
+                </a>
+                <a href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({filter: 'available', page: 1})|url_encode }}" class="filter-chip {{ activeFilter == 'available' ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-circle-check"></i> Başvurulabilir
+                </a>
+                <a href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({filter: 'matching', page: 1})|url_encode }}" class="filter-chip {{ activeFilter == 'matching' ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-medal"></i> Yetenek Uyumlu
+                </a>
+                <a href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({filter: 'local', page: 1})|url_encode }}" class="filter-chip {{ activeFilter == 'local' ? 'is-active' : '' }}">
+                    <i class="fa-solid fa-location-dot"></i> Yerel
+                </a>
+            </div>
+        </div>
+
+        <div id="activeContractContainer" class="active-contract-card" {% if not hasActiveJob %}style="display:none;"{% endif %}>
+                <div class="active-contract-main">
+                    <div class="active-contract-icon">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+
+                    <div class="active-contract-body">
+                        <div class="active-contract-kicker" id="activeContractKicker">Aktif İş Sözleşmesi • V2.0</div>
+                        <div class="active-contract-name" id="activeContractName">{{ activeCompanyName }}</div>
+
+                        <div class="active-contract-meta">
+                            <div class="active-contract-stat" id="activeContractSalaryStat">
+                                <i class="fa-solid fa-sack-dollar"></i>
+                                Maaş: <span id="activeContractSalary">{{ workState.salary|default(0)|number_format(2) }}</span>
+                            </div>
+
+                            <div class="active-contract-stat" id="activeContractCurrencyStat">
+                                <i class="fa-solid fa-coins"></i>
+                                <span id="activeContractCurrency">{{ activeCurrency }}</span><span id="activeContractCurrencyCountry">{% if activeCurrencyCountry %} / {{ activeCurrencyCountry }}{% endif %}</span>
+                            </div>
+
+                            <div class="active-contract-stat" id="activeContractRequiredSkillStat">
+                                <i class="fa-solid fa-medal"></i>
+                                Gerekli: <span id="activeContractRequiredSkill">{{ activeRequiredSkill }}</span>
+                            </div>
+
+                            <div class="active-contract-stat" id="activeContractUserSkillStat">
+                                <i class="fa-solid fa-medal"></i>
+                                Yetenek: <span id="activeContractUserSkill">{{ userSkill }}</span>
+                            </div>
+
+                            <div class="active-contract-stat" id="activeContractXpStat">
+                                <i class="fa-solid fa-chart-line"></i>
+                                XP: <span id="activeContractXp">{{ userXp }}</span>
+                            </div>
+                        </div>
+
+                        <div class="active-contract-status-row" id="activeContractStatusRow">
+                            {% if workReady %}
+                                <div class="contract-status-pill ok" id="activeContractShiftStatus">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    Vardiya Uygun
+                                </div>
+                            {% else %}
+                                <div class="contract-status-pill wait" id="activeContractShiftStatus">
+                                    <i class="fa-solid fa-clock"></i>
+                                    Bugünkü Vardiya Tamamlandı
+                                </div>
+                            {% endif %}
+
+                            <div class="contract-status-pill info" id="activeContractLastWorkPill" {% if not lastWorkRaw %}style="display:none;"{% endif %}>
+                                    <i class="fa-solid fa-history"></i>
+                                    <span id="activeContractLastWorkLabel">{% if lastWorkRaw %}Son Çalışma: {{ lastWorkRaw|date('d.m.Y H:i') }}{% endif %}</span>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="active-contract-actions">
+                    <button id="btn-work-now" onclick="workNow(this)" class="contract-action-btn primary" {% if not workReady %}disabled{% endif %}>
+                        <i class="fa-solid fa-hammer"></i>
+                        {% if workReady %}Vardiyayı Başlat{% else %}Bugün Tamamlandı{% endif %}
+                    </button>
+
+                    <button id="btn-resign-job" onclick="resignJob(this)" class="contract-action-btn danger">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        Sözleşmeyi Feshet
+                    </button>
+                </div>
+            </div>
+
+        <div class="p-0 sm:px-6 pb-6 overflow-x-auto">
+            <div class="work-market-table-shell rounded-xl border border-white/5">
+                <table class="work-market-table" id="workTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">
+                                <span class="table-head-label">
+                                    <i class="fa-solid fa-building-user"></i>
+                                    Operatör / Şirket
+                                </span>
+                            </th>
+                            <th style="width: 14%;">
+                                <span class="table-head-label">
+                                    <i class="fa-solid fa-industry"></i>
+                                    Sektör / Tesis
+                                </span>
+                            </th>
+                            <th style="width: 12%;">
+                                <a class="table-head-label sort-link {{ activeSort == 'skill_asc' ? 'is-active' : '' }}" href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({sort: 'skill_asc', page: 1})|url_encode }}">
+                                    <i class="fa-solid fa-medal"></i>
+                                    Min. Yetenek
+                                    <i class="fa-solid {{ activeSort == 'skill_asc' ? 'fa-sort-up' : 'fa-sort' }} sort-icon"></i>
+                                </a>
+                            </th>
+                            <th style="width: 20%;">
+                                <a class="table-head-label sort-link {{ activeSort in ['salary_desc', 'salary_asc'] ? 'is-active' : '' }}" href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({sort: salarySortTarget, page: 1})|url_encode }}">
+                                    <i class="fa-solid fa-sack-dollar"></i>
+                                    Günlük Maaş
+                                    <i class="fa-solid {{ activeSort == 'salary_desc' ? 'fa-sort-down' : (activeSort == 'salary_asc' ? 'fa-sort-up' : 'fa-sort') }} sort-icon"></i>
+                                </a>
+                            </th>
+                            <th style="width: 10%;">
+                                <span class="table-head-label">
+                                    <i class="fa-solid fa-shield-check"></i>
+                                    Durum
+                                </span>
+                            </th>
+                            <th style="width: 22%;">
+                                <span class="table-head-label">
+                                    <i class="fa-solid fa-bolt"></i>
+                                    Aksiyon
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in offers %}
+                            {% set requiredSkill = job.required_skill|default(0) %}
+                            {% set salaryValue = job.salary|default(0) %}
+                            {% set salaryCurrency = job.currency|default('-') %}
+                            {% set qLevel = job.quality|default(1) %}
+                            {% set companyName = job.companyName|default('State Company') %}
+                            {% set companyTypeName = job.companyTypeName|default('Genel Tesis') %}
+                            {% set needsTravel = job.needsTravel is defined ? job.needsTravel : (currentCountry != myLocation) %}
+                            {% set skillEnough = job.skillEnough is defined ? job.skillEnough : (userSkill >= requiredSkill) %}
+                            {% set canApply = job.canApply is defined ? job.canApply : ((not hasActiveJob) and (not needsTravel) and skillEnough) %}
+                            {% set rowPriority = job.priority|default(canApply ? 3 : ((not hasActiveJob and not needsTravel) ? 2 : 1)) %}
+
+                            <tr class="job-row {{ hasActiveJob ? 'job-dim' : '' }}" data-priority="{{ rowPriority }}" data-skill="{{ requiredSkill }}" data-salary="{{ salaryValue }}">
+                                <td>
+                                    <div class="work-company-cell">
+                                        <div class="work-market-logo-box">
+                                            <img src="img/default_avatar.jpg" alt="{{ companyName }}">
+                                        </div>
+                                        <div class="work-company-meta">
+                                            <div class="work-market-name-link">{{ companyName }}</div>
+                                            <div class="work-market-subtext">{{ companyTypeName }} / ID: #{{ job.id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="work-market-product-box">
+                                        <span class="q-badge q-{{ qLevel }}">Q{{ qLevel }}</span>
+                                        <i class="fa-solid fa-industry text-lg" style="opacity: 0.8;"></i>
+                                    </div>
+                                </td>
+
+                                <td data-sort="{{ requiredSkill }}">
+                                    <div class="work-market-skill">{{ requiredSkill }}</div>
+                                </td>
+
+                                <td data-sort="{{ salaryValue }}">
+                                    <div class="work-market-salary">
+                                        <span>{{ salaryValue|number_format(2) }}</span>
+                                        <span class="currency-pill">
+                                            <span class="currency-dot" style="background-color: {{ job.currencyColor ?: '#64748b' }}"></span>
+                                            {{ salaryCurrency }}
+                                            {% if job.currencyCountryName %}
+                                                / {{ job.currencyCountryName }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    {% if hasActiveJob %}
+                                        <div class="skill-state-low">
+                                            <i class="fa-solid fa-briefcase"></i> AKTİF İŞİN VAR
+                                        </div>
+                                    {% elseif skillEnough %}
+                                        <div class="skill-state-ok">
+                                            <i class="fa-solid fa-circle-check"></i> UYGUN
+                                        </div>
+                                    {% else %}
+                                        <div class="skill-state-low">
+                                            <i class="fa-solid fa-lock"></i> YETERSİZ
+                                        </div>
+                                        <div class="text-[9px] text-slate-500 font-bold mt-1">
+                                            {{ userSkill }} / {{ requiredSkill }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <div class="work-action-stack">
+                                        <button
+                                            type="button"
+                                            class="work-market-detail-btn"
+                                            onclick="showJobDetails(this)"
+                                            data-title="{{ job.title|default('İş Detayı')|e('html_attr') }}"
+                                            data-description="{{ job.description|default('Bu ilan için ek açıklama bulunmuyor.')|e('html_attr') }}"
+                                            data-company="{{ companyName|e('html_attr') }}"
+                                            data-sector="{{ companyTypeName|e('html_attr') }}"
+                                            data-country="{{ job.countryName|default('-')|e('html_attr') }}"
+                                            data-salary="{{ salaryValue|number_format(2, '.', '') }}"
+                                            data-currency="{{ salaryCurrency|e('html_attr') }}"
+                                            data-required-skill="{{ requiredSkill }}"
+                                            data-quality="{{ qLevel }}"
+                                        >
+                                            <i class="fa-solid fa-circle-info"></i> Detay
+                                        </button>
+
+                                        {% if hasActiveJob %}
+                                            <button type="button" onclick="showActiveJobWarning()" class="work-market-apply-btn is-passive">
+                                                <i class="fa-solid fa-briefcase"></i> Önce Mevcut İşten Ayrıl
+                                            </button>
+                                        {% elseif needsTravel %}
+                                            <button type="button" onclick="showTravelRequired()" class="work-market-apply-btn is-locked">
+                                                <i class="fa-solid fa-plane-departure"></i> Seyahat Gerekir
+                                            </button>
+                                        {% elseif not skillEnough %}
+                                            <button type="button" onclick="showSkillRequired({{ requiredSkill }}, {{ userSkill }})" class="work-market-apply-btn is-disabled">
+                                                <i class="fa-solid fa-lock"></i> Yetenek Yetersiz
+                                            </button>
+                                        {% else %}
+                                            <button
+                                                type="button"
+                                                onclick="applyForJob(this, {{ job.id }})"
+                                                class="work-market-apply-btn"
+                                                data-job-apply-id="{{ job.id }}"
+                                                data-company="{{ companyName|e('html_attr') }}"
+                                                data-salary="{{ salaryValue|number_format(2, '.', '') }}"
+                                                data-currency="{{ salaryCurrency|e('html_attr') }}"
+                                                data-currency-country="{{ job.currencyCountryName|default('')|e('html_attr') }}"
+                                                data-required-skill="{{ requiredSkill }}"
+                                            >
+                                                <i class="fa-solid fa-signature"></i> Sözleşme İmzala
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="work-mobile-list" id="workMobileList">
+                    {% for job in offers %}
+                        {% set requiredSkill = job.required_skill|default(0) %}
+                        {% set salaryValue = job.salary|default(0) %}
+                        {% set salaryCurrency = job.currency|default('-') %}
+                        {% set qLevel = job.quality|default(1) %}
+                        {% set companyName = job.companyName|default('State Company') %}
+                        {% set companyTypeName = job.companyTypeName|default('Genel Tesis') %}
+                        {% set needsTravel = job.needsTravel is defined ? job.needsTravel : (currentCountry != myLocation) %}
+                        {% set skillEnough = job.skillEnough is defined ? job.skillEnough : (userSkill >= requiredSkill) %}
+                        {% set canApply = job.canApply is defined ? job.canApply : ((not hasActiveJob) and (not needsTravel) and skillEnough) %}
+                        {% set rowPriority = job.priority|default(canApply ? 3 : ((not hasActiveJob and not needsTravel) ? 2 : 1)) %}
+
+                        <div class="work-mobile-card {{ hasActiveJob ? 'job-dim' : '' }}" data-priority="{{ rowPriority }}" data-skill="{{ requiredSkill }}" data-salary="{{ salaryValue }}">
+                            <div class="work-mobile-top">
+                                <div class="work-market-logo-box">
+                                    <img src="img/default_avatar.jpg" alt="{{ companyName }}">
+                                </div>
+                                <div class="work-company-meta">
+                                    <div class="work-market-name-link">{{ companyName }}</div>
+                                    <div class="work-market-subtext">{{ companyTypeName }} / ID: #{{ job.id }}</div>
+                                </div>
+                            </div>
+
+                            <div class="work-mobile-body">
+                                <div class="work-mobile-stat">
+                                    <div class="work-mobile-label">Sektör / Tesis</div>
+                                    <div class="work-mobile-value">Q{{ qLevel }} {{ companyTypeName }}</div>
+                                </div>
+
+                                <div class="work-mobile-stat">
+                                    <div class="work-mobile-label">Min. Yetenek</div>
+                                    <div class="work-mobile-value">{{ requiredSkill }}</div>
+                                </div>
+
+                                <div class="work-mobile-stat">
+                                    <div class="work-mobile-label">Günlük Maaş</div>
+                                    <div class="work-mobile-value">{{ salaryValue|number_format(2) }}</div>
+                                </div>
+
+                                <div class="work-mobile-stat">
+                                    <div class="work-mobile-label">Para Birimi</div>
+                                    <div class="work-mobile-value">
+                                        {{ salaryCurrency }}
+                                        {% if job.currencyCountryName %}
+                                            / {{ job.currencyCountryName }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="work-mobile-footer">
+                                <div>
+                                    {% if hasActiveJob %}
+                                        <div class="skill-state-low">
+                                            <i class="fa-solid fa-briefcase"></i> AKTİF İŞİN VAR
+                                        </div>
+                                    {% elseif skillEnough %}
+                                        <div class="skill-state-ok">
+                                            <i class="fa-solid fa-circle-check"></i> UYGUN
+                                        </div>
+                                    {% else %}
+                                        <div class="skill-state-low">
+                                            <i class="fa-solid fa-lock"></i> YETERSİZ
+                                        </div>
+                                        <div class="text-[9px] text-slate-500 font-bold mt-1">
+                                            {{ userSkill }} / {{ requiredSkill }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="work-market-detail-btn"
+                                    onclick="showJobDetails(this)"
+                                    data-title="{{ job.title|default('İş Detayı')|e('html_attr') }}"
+                                    data-description="{{ job.description|default('Bu ilan için ek açıklama bulunmuyor.')|e('html_attr') }}"
+                                    data-company="{{ companyName|e('html_attr') }}"
+                                    data-sector="{{ companyTypeName|e('html_attr') }}"
+                                    data-country="{{ job.countryName|default('-')|e('html_attr') }}"
+                                    data-salary="{{ salaryValue|number_format(2, '.', '') }}"
+                                    data-currency="{{ salaryCurrency|e('html_attr') }}"
+                                    data-required-skill="{{ requiredSkill }}"
+                                    data-quality="{{ qLevel }}"
+                                >
+                                    <i class="fa-solid fa-circle-info"></i> Detay
+                                </button>
+
+                                {% if hasActiveJob %}
+                                    <button type="button" onclick="showActiveJobWarning()" class="work-market-apply-btn is-passive">
+                                        <i class="fa-solid fa-briefcase"></i> Önce Mevcut İşten Ayrıl
+                                    </button>
+                                {% elseif needsTravel %}
+                                    <button type="button" onclick="showTravelRequired()" class="work-market-apply-btn is-locked">
+                                        <i class="fa-solid fa-plane-departure"></i> Seyahat Gerekir
+                                    </button>
+                                {% elseif not skillEnough %}
+                                    <button type="button" onclick="showSkillRequired({{ requiredSkill }}, {{ userSkill }})" class="work-market-apply-btn is-disabled">
+                                        <i class="fa-solid fa-lock"></i> Yetenek Yetersiz
+                                    </button>
+                                {% else %}
+                                    <button
+                                        type="button"
+                                        onclick="applyForJob(this, {{ job.id }})"
+                                        class="work-market-apply-btn"
+                                        data-job-apply-id="{{ job.id }}"
+                                        data-company="{{ companyName|e('html_attr') }}"
+                                        data-salary="{{ salaryValue|number_format(2, '.', '') }}"
+                                        data-currency="{{ salaryCurrency|e('html_attr') }}"
+                                        data-currency-country="{{ job.currencyCountryName|default('')|e('html_attr') }}"
+                                        data-required-skill="{{ requiredSkill }}"
+                                    >
+                                        <i class="fa-solid fa-signature"></i> Sözleşme İmzala
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if offers|length == 0 %}
+                    <div class="text-center p-12 bg-black/30">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-4" style="color:var(--brand-primary);"></i>
+                        <div class="text-sm font-black text-white uppercase tracking-widest mb-2">Sinyal Bulunamadı</div>
+                        <div class="text-xs text-slate-500 uppercase tracking-wider">Filtrelere uygun aktif iş ilanı bulunamadı.</div>
+                    </div>
+                {% endif %}
+
+                {% if offers|length > 0 %}
+                    <div class="pagination-wrap">
+                        <div class="pagination-meta">
+                            Toplam {{ totalOffers|default(offers|length) }} ilan / Sayfa {{ pageNum }} / {{ pagesTotal }}
+                        </div>
+
+                        <div class="pagination-controls">
+                            {% if hasPrevPage|default(false) %}
+                                <a class="pagination-btn" href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({page: pageNum - 1})|url_encode }}">
+                                    <i class="fa-solid fa-arrow-left"></i> Önceki
+                                </a>
+                            {% else %}
+                                <span class="pagination-btn is-disabled"><i class="fa-solid fa-arrow-left"></i> Önceki</span>
+                            {% endif %}
+
+                            <span class="pagination-page-chip">
+                                <i class="fa-solid fa-file-lines"></i>
+                                Sayfa <strong>{{ pageNum }}</strong> / <strong>{{ pagesTotal }}</strong>
+                            </span>
+
+                            {% if hasNextPage|default(false) %}
+                                <a class="pagination-btn" href="{{ base_url() }}/work-offers?{{ listQueryBase|merge({page: pageNum + 1})|url_encode }}">
+                                    Sonraki <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            {% else %}
+                                <span class="pagination-btn is-disabled">Sonraki <i class="fa-solid fa-arrow-right"></i></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function hasSwal() {
+        return typeof window !== 'undefined' && typeof window.Swal !== 'undefined';
+    }
+
+    function showAlert(options) {
+        if (hasSwal()) {
+            return Swal.fire(options);
+        }
+
+        const text = options.text || options.title || 'İşlem bildirimi';
+        alert(text);
+        return Promise.resolve({ isConfirmed: true });
+    }
+
+    function showLoadingAlert(title) {
+        if (hasSwal()) {
+            Swal.fire({
+                title: title || 'Yükleniyor...',
+                background: '#0f172a',
+                color: '#fff',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        }
+    }
+
+    function openSignalAlarm() {
+        showAlert({
+            title: 'İstihbarat Alarmı',
+            text: 'Bu modül henüz aktif değil.',
+            icon: 'info',
+            background: '#0f172a',
+            color: '#fff',
+            confirmButtonColor: 'var(--brand-primary)'
+        });
+    }
+
+    function showTravelRequired() {
+        showAlert({
+            title: 'Seyahat Gerekli',
+            text: 'Bu ülkede çalışabilmek için önce o ülkeye gitmelisiniz.',
+            icon: 'warning',
+            background: '#0f172a',
+            color: '#fff',
+            confirmButtonColor: '#f59e0b'
+        });
+    }
+
+    function showSkillRequired(requiredSkill, currentSkill) {
+        showAlert({
+            title: 'Ekonomik Yetenek Yetersiz',
+            text: 'Bu iş için gereken minimum ekonomik yetenek: ' + requiredSkill + '. Mevcut ekonomik yeteneğiniz: ' + currentSkill,
+            icon: 'warning',
+            background: '#0f172a',
+            color: '#fff',
+            confirmButtonColor: '#f59e0b'
+        });
+    }
+
+    function showActiveJobWarning() {
+        showAlert({
+            title: 'Aktif Sözleşme Var',
+            text: 'Yeni bir işe girmeden önce mevcut iş sözleşmenizi sonlandırmalısınız.',
+            icon: 'info',
+            background: '#0f172a',
+            color: '#fff',
+            confirmButtonColor: 'var(--brand-primary)'
+        });
+    }
+
+    function showJobDetails(btn) {
+        const dataset = btn.dataset;
+        const html = `
+            <div style="text-align:left; display:grid; gap:10px;">
+                <div><strong>Şirket:</strong> ${dataset.company || '-'}</div>
+                <div><strong>Sektör:</strong> ${dataset.sector || '-'}</div>
+                <div><strong>Ülke:</strong> ${dataset.country || '-'}</div>
+                <div><strong>Kalite:</strong> Q${dataset.quality || '1'}</div>
+                <div><strong>Minimum Yetenek:</strong> ${dataset.requiredSkill || '0'}</div>
+                <div><strong>Maaş:</strong> ${dataset.salary || '0.00'} ${dataset.currency || ''}</div>
+                <div><strong>Başlık:</strong> ${dataset.title || '-'}</div>
+                <div><strong>Açıklama:</strong><br>${dataset.description || '-'}</div>
+            </div>
+        `;
+
+        showAlert({
+            title: 'İş Detayı',
+            html: html,
+            background: '#0f172a',
+            color: '#fff',
+            confirmButtonColor: 'var(--brand-primary)'
+        });
+    }
+
+    function updateActiveContractCard(jobData) {
+        const container = document.getElementById('activeContractContainer');
+        if (!container) {
+            return;
+        }
+
+        const salary = Number(jobData.salary || 0).toLocaleString('tr-TR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        const currency = jobData.currency || '-';
+        const currencyCountry = jobData.currencyCountry ? ` / ${jobData.currencyCountry}` : '';
+
+        container.style.display = 'grid';
+
+        const nameNode = document.getElementById('activeContractName');
+        const salaryNode = document.getElementById('activeContractSalary');
+        const currencyNode = document.getElementById('activeContractCurrency');
+        const currencyCountryNode = document.getElementById('activeContractCurrencyCountry');
+        const requiredSkillNode = document.getElementById('activeContractRequiredSkill');
+        const shiftStatusNode = document.getElementById('activeContractShiftStatus');
+        const lastWorkPill = document.getElementById('activeContractLastWorkPill');
+        const lastWorkLabel = document.getElementById('activeContractLastWorkLabel');
+        const workButton = document.getElementById('btn-work-now');
+        const resignButton = document.getElementById('btn-resign-job');
+
+        if (nameNode) {
+            nameNode.textContent = jobData.company || 'Aktif Şirket';
+        }
+
+        if (salaryNode) {
+            salaryNode.textContent = salary;
+        }
+
+        if (currencyNode) {
+            currencyNode.textContent = currency;
+        }
+
+        if (currencyCountryNode) {
+            currencyCountryNode.textContent = currencyCountry;
+        }
+
+        if (requiredSkillNode) {
+            requiredSkillNode.textContent = jobData.requiredSkill || '0';
+        }
+
+        if (shiftStatusNode) {
+            shiftStatusNode.className = 'contract-status-pill ok';
+            shiftStatusNode.innerHTML = '<i class="fa-solid fa-circle-check"></i> Vardiya Uygun';
+        }
+
+        if (lastWorkPill) {
+            lastWorkPill.style.display = 'none';
+        }
+
+        if (lastWorkLabel) {
+            lastWorkLabel.textContent = '';
+        }
+
+        if (workButton) {
+            workButton.disabled = false;
+            workButton.classList.remove('loading');
+            workButton.innerHTML = '<i class="fa-solid fa-hammer"></i> Vardiyayı Başlat';
+        }
+
+        if (resignButton) {
+            resignButton.disabled = false;
+            resignButton.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Sözleşmeyi Feshet';
+        }
+
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function lockMarketToActiveJob(activeJobId) {
+        document.querySelectorAll('.job-row').forEach((row) => {
+            row.classList.add('job-dim');
+        });
+
+        document.querySelectorAll('.work-mobile-card').forEach((card) => {
+            card.classList.add('job-dim');
+        });
+
+        document.querySelectorAll('.job-row .work-market-apply-btn, .work-mobile-card .work-market-apply-btn').forEach((button) => {
+            const buttonJobId = button.getAttribute('data-job-apply-id');
+            const isCurrentJob = String(buttonJobId) === String(activeJobId);
+
+            button.classList.remove('loading', 'is-locked', 'is-disabled');
+            button.classList.add('is-passive');
+            button.disabled = false;
+            button.setAttribute('onclick', 'showActiveJobWarning()');
+            button.innerHTML = isCurrentJob
+                ? '<i class="fa-solid fa-briefcase"></i> Sözleşme Aktif'
+                : '<i class="fa-solid fa-briefcase"></i> Önce Mevcut İşten Ayrıl';
+        });
+    }
+
+    function applyForJob(btn, jobId) {
+        const $btn = $(btn);
+        const originalHtml = $btn.html();
+        const jobData = {
+            jobId: jobId,
+            company: btn.dataset.company || 'Aktif Şirket',
+            salary: btn.dataset.salary || '0.00',
+            currency: btn.dataset.currency || '-',
+            currencyCountry: btn.dataset.currencyCountry || '',
+            requiredSkill: btn.dataset.requiredSkill || '0'
+        };
+
+        $btn.addClass('loading').html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: "{{ base_url() }}/api/jobs/apply",
+            type: "POST",
+            data: { id: jobId },
+            success: function(res) {
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch (e) {}
+                }
+
+                if (res && (res.error === 1 || res.error === true)) {
+                    $btn.removeClass('loading').html(originalHtml);
+
+                    showAlert({
+                        icon: 'error',
+                        title: 'ERİŞİM REDDEDİLDİ',
+                        text: res.message || 'Bu işe şu an başvuramazsınız.',
+                        background: '#0f172a',
+                        color: '#fff',
+                        confirmButtonColor: '#ef4444'
+                    });
+                    return;
+                }
+
+                updateActiveContractCard(jobData);
+                lockMarketToActiveJob(jobId);
+
+                showAlert({
+                    icon: 'success',
+                    title: 'SÖZLEŞME ONAYLANDI',
+                    text: (res && res.message) ? res.message : 'Şirket veri tabanına başarıyla işlendiniz.',
+                    background: '#0f172a',
+                    color: '#fff',
+                    confirmButtonColor: 'var(--brand-primary)'
+                });
+            },
+            error: function(xhr) {
+                $btn.removeClass('loading').html(originalHtml);
+
+                let errorText = 'Bu işe şu an başvuramazsınız.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorText = xhr.responseJSON.message;
+                }
+
+                showAlert({
+                    icon: 'error',
+                    title: 'ERİŞİM REDDEDİLDİ',
+                    text: errorText,
+                    background: '#0f172a',
+                    color: '#fff',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        });
+    }
+
+    function workNow(btn) {
+        if (btn.disabled) {
+            return;
+        }
+
+        const $btn = $(btn);
+        const originalHtml = $btn.html();
+
+        $btn.prop('disabled', true).addClass('loading').html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+        showLoadingAlert('Vardiya Başlatılıyor...');
+
+        $.ajax({
+            url: "{{ base_url() }}/api/job/work",
+            type: "POST",
+            data: {
+                csrf_token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch (e) {}
+                }
+
+                if (hasSwal()) {
+                    Swal.close();
+                }
+
+                if (res && (res.error === 1 || res.error === true)) {
+                    $btn.prop('disabled', false).removeClass('loading').html(originalHtml);
+
+                    showAlert({
+                        icon: 'error',
+                        title: 'Mesai Hatası',
+                        text: res.message || 'Vardiya başlatılamadı.',
+                        background: '#0f172a',
+                        color: '#fff',
+                        confirmButtonColor: '#ef4444'
+                    });
+                    return;
+                }
+
+                showAlert({
+                    icon: 'success',
+                    title: 'Mesai Tamamlandı',
+                    text: (res && res.message) ? res.message : 'Günlük çalışma tamamlandı.',
+                    background: '#0f172a',
+                    color: '#fff',
+                    timer: 1800,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            },
+            error: function(xhr) {
+                if (hasSwal()) {
+                    Swal.close();
+                }
+
+                $btn.prop('disabled', false).removeClass('loading').html(originalHtml);
+
+                let errorText = 'Vardiya başlatılamadı.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorText = xhr.responseJSON.message;
+                }
+
+                showAlert({
+                    icon: 'error',
+                    title: 'Bağlantı Hatası',
+                    text: errorText,
+                    background: '#0f172a',
+                    color: '#fff',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        });
+    }
+
+    function resignJob(btn) {
+        const $btn = $(btn);
+        const originalHtml = $btn.html();
+
+        const proceed = () => {
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: "{{ base_url() }}/api/job/resign",
+                type: "POST",
+                data: {
+                    csrf_token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(res) {
+                    if (typeof res === 'string') {
+                        try { res = JSON.parse(res); } catch (e) {}
+                    }
+
+                    if (res && (res.error === 1 || res.error === true)) {
+                        $btn.prop('disabled', false).html(originalHtml);
+
+                        showAlert({
+                            icon: 'error',
+                            title: 'Fesih Hatası',
+                            text: res.message || 'Sözleşme sonlandırılamadı.',
+                            background: '#0f172a',
+                            color: '#fff',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        return;
+                    }
+
+                    showAlert({
+                        icon: 'success',
+                        title: 'Sözleşme Sonlandırıldı',
+                        text: (res && res.message) ? res.message : 'Mevcut iş sözleşmeniz feshedildi.',
+                        background: '#0f172a',
+                        color: '#fff',
+                        confirmButtonColor: 'var(--brand-primary)'
+                    }).then(() => {
+                        window.location.href = "{{ base_url() }}/work-offers";
+                    });
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html(originalHtml);
+
+                    let errorText = 'Sözleşme sonlandırılamadı.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorText = xhr.responseJSON.message;
+                    }
+
+                    showAlert({
+                        icon: 'error',
+                        title: 'Bağlantı Hatası',
+                        text: errorText,
+                        background: '#0f172a',
+                        color: '#fff',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            });
+        };
+
+        if (!hasSwal()) {
+            const ok = confirm('Mevcut sözleşmeniz feshedilecek. Devam edilsin mi?');
+            if (!ok) {
+                return;
+            }
+            proceed();
+            return;
+        }
+
+        Swal.fire({
+            title: 'EMİN MİSİNİZ?',
+            text: 'Mevcut sözleşmeniz feshedilecek.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'EVET, FESHET',
+            cancelButtonText: 'VAZGEÇ',
+            background: '#0f172a',
+            color: '#fff',
+            confirmButtonColor: '#ef4444'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+            proceed();
+        });
+    }
+</script>
+{% endblock %}

@@ -373,4 +373,115 @@ CREATE TABLE `work_offers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
--- 2016-09-25 15:07:10
+-- =====================================================
+-- S-REPUBLIK / OMNI-COMMAND Şema Güncellemeleri
+-- Aşağıdaki sütunlar mevcut tablolara eklenmiştir.
+-- =====================================================
+
+-- users tablosuna ekonomi ve tema sütunları ekleniyor
+ALTER TABLE `users`
+  ADD COLUMN `economic_skill` int(3) NOT NULL DEFAULT 1 COMMENT 'Kullanıcı ekonomik yetenek seviyesi',
+  ADD COLUMN `economic_xp`    int(11) NOT NULL DEFAULT 0 COMMENT 'Güncel ekonomik XP puanı',
+  ADD COLUMN `theme`          varchar(50) NOT NULL DEFAULT 'dark_cyan' COMMENT 'Aktif tema: mode_color formatında',
+  ADD COLUMN `is_admin`       tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Admin mi?';
+
+-- countries tablosuna minimum ücret ekleniyor
+ALTER TABLE `countries`
+  ADD COLUMN `minimum_wage` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Ülkenin asgari ücreti';
+
+-- work_offers tablosu mevcut yapıya yeni sütunlar ekleniyor
+ALTER TABLE `work_offers`
+  ADD COLUMN `currency`       varchar(20) DEFAULT NULL COMMENT 'Maaş para birimi kodu (örn: esp)',
+  ADD COLUMN `required_skill` int(3) NOT NULL DEFAULT 1 COMMENT 'Gerekli minimum ekonomik yetenek',
+  ADD COLUMN `title`          varchar(200) DEFAULT NULL COMMENT 'İlan başlığı',
+  ADD COLUMN `description`    text DEFAULT NULL COMMENT 'İlan açıklama metni';
+
+-- company_types tablosu (yoksa oluştur)
+CREATE TABLE IF NOT EXISTS `company_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `output_item` int(11) DEFAULT NULL,
+  `output_amount` int(11) NOT NULL DEFAULT 1,
+  `consume_item` int(11) DEFAULT NULL,
+  `consume_amount` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- items tablosu (yoksa oluştur)
+CREATE TABLE IF NOT EXISTS `items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `icon` varchar(100) DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- notifications tablosu (yoksa oluştur)
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `data` text DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `uid` (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- messages tablosu (yoksa oluştur)
+CREATE TABLE IF NOT EXISTS `messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `from` int(11) NOT NULL,
+  `to` int(11) NOT NULL,
+  `text` text NOT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `to` (`to`),
+  KEY `from` (`from`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- parties tablosu (yoksa oluştur)
+CREATE TABLE IF NOT EXISTS `parties` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `uid` int(11) NOT NULL,
+  `country` int(11) NOT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- bug_reports tablosu (yoksa oluştur)
+CREATE TABLE IF NOT EXISTS `bug_reports` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `description` text NOT NULL,
+  `votes` int(11) NOT NULL DEFAULT 0,
+  `status` varchar(20) NOT NULL DEFAULT 'open',
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- user_items tablosu (yoksa oluştur)
+CREATE TABLE IF NOT EXISTS `user_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `item` int(11) NOT NULL,
+  `quality` int(1) NOT NULL DEFAULT 0,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `uid` (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 2016-09-25 15:07:10 (orijinal)

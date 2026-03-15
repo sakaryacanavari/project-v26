@@ -1,0 +1,17 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Ana Sayfa{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title">S-REPUBLIK'e Hoş Geldiniz, {{ my.nick }}!</h1>
+    {% if news|length > 0 %}
+        <div class="news-list">
+            {% for article in news %}
+                <div class="news-item">
+                    <a href="{{ path_for('showArticle', {'id': article.id}) }}">{{ article.title }}</a>
+                    <span class="news-source">{{ article.newspaper_name }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

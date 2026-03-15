@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="{{ my.theme|default('dark_cyan') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>{% block title %}S-REPUBLIK{% endblock %} | OMNI-COMMAND</title>
+
+    {# Tema ve stil dosyaları #}
+    <link rel="stylesheet" href="{{ base_url() }}/css/built.css">
+    {# Font Awesome #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    {% block head %}{% endblock %}
+</head>
+<body class="omni-body">
+
+    {# Tema yükleyici - omni-themes widget #}
+    {% include 'common/omni-themes.html.twig' %}
+
+    {# Navigasyon #}
+    <nav class="omni-nav">
+        <div class="omni-nav-inner">
+            <a href="{{ path_for('home') }}" class="omni-nav-brand">
+                <i class="fa-solid fa-signal"></i> S-REPUBLIK
+            </a>
+
+            <div class="omni-nav-links">
+                <a href="{{ path_for('home') }}"><i class="fa-solid fa-house"></i> Ana Sayfa</a>
+                <a href="{{ path_for('workOffers') }}"><i class="fa-solid fa-briefcase"></i> İş Piyasası</a>
+                <a href="{{ path_for('myCompanies') }}"><i class="fa-solid fa-building"></i> Şirketlerim</a>
+                <a href="{{ path_for('marketplace') }}"><i class="fa-solid fa-store"></i> Pazar</a>
+                <a href="{{ path_for('gyms') }}"><i class="fa-solid fa-dumbbell"></i> Spor Salonu</a>
+                <a href="{{ path_for('wars') }}"><i class="fa-solid fa-sword"></i> Savaşlar</a>
+                <a href="{{ path_for('congressHome') }}"><i class="fa-solid fa-landmark"></i> Kongre</a>
+                <a href="{{ path_for('settings') }}"><i class="fa-solid fa-gear"></i> Ayarlar</a>
+                <a href="{{ path_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Çıkış</a>
+            </div>
+        </div>
+    </nav>
+
+    {# Ana içerik #}
+    <main class="omni-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    {# jQuery #}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

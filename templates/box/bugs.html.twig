@@ -1,0 +1,15 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Hata Bildirimleri{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-bug"></i> Hata Bildirimleri</h1>
+    {% for bug in bugs %}
+        <div class="bug-card">
+            <strong>{{ bug.title }}</strong>
+            <p>{{ bug.description }}</p>
+        </div>
+    {% else %}
+        <p>Hata bildirimi bulunmuyor.</p>
+    {% endfor %}
+</div>
+{% endblock %}

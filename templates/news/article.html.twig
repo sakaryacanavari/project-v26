@@ -1,0 +1,8 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}{{ article.title ?? 'Makale' }}{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1>{{ article.title }}</h1>
+    <p>{{ article.text }}</p>
+</div>
+{% endblock %}

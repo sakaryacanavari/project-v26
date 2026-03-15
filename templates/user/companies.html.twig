@@ -1,0 +1,290 @@
+{% extends 'common/base.html.twig' %}
+
+{% block title %}Şirketlerim{% endblock %}
+
+{% block content %}
+<div class="omni-page">
+    <div class="omni-page-header">
+        <h1 class="omni-page-title">
+            <i class="fa-solid fa-building"></i> Şirketlerim
+        </h1>
+        <a href="{{ path_for('createCompany') }}" class="omni-btn omni-btn-primary">
+            <i class="fa-solid fa-plus"></i> Yeni Şirket Kur
+        </a>
+    </div>
+
+    {% if companies|length == 0 %}
+        <div class="omni-empty-state">
+            <i class="fa-solid fa-building-circle-xmark"></i>
+            <p>Henüz bir şirketiniz bulunmuyor.</p>
+            <a href="{{ path_for('createCompany') }}" class="omni-btn omni-btn-primary">
+                <i class="fa-solid fa-plus"></i> İlk Şirketini Kur
+            </a>
+        </div>
+    {% else %}
+        <div class="companies-table-wrap">
+            <table class="companies-table">
+                <thead>
+                    <tr>
+                        {# YÖNETİCİ sütunu kaldırıldı - toplu üretim kaldırıldı #}
+                        <th>Şirket</th>
+                        <th>Sınıf / Seviye</th>
+                        <th>Lojistik Tüketim</th>
+                        <th>Nihai Çıktı</th>
+                        <th>İş İlanı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                        <tr class="company-row" data-company-id="{{ company.id }}">
+                            {# Şirket bilgisi #}
+                            <td class="company-name-cell">
+                                <div class="company-name">{{ company.type_name }}</div>
+                                <div class="company-id">ID: #{{ company.id }}</div>
+                            </td>
+
+                            {# Şirket sınıfı / seviye #}
+                            <td class="company-class-cell">
+                                <div class="company-quality-badge">Q{{ company.quality }}</div>
+                                <div class="company-type-label">{{ company.type_name }}</div>
+                            </td>
+
+                            {# Lojistik tüketim - hammadde girdisi #}
+                            <td class="company-consume-cell">
+                                {% if company.consume_item and company.consume_amount > 0 %}
+                                    <div class="consume-info">
+                                        <i class="fa-solid fa-cube"></i>
+                                        {{ company.consume_amount }} adet
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+
+                            {# Nihai çıktı ürünü #}
+                            <td class="company-output-cell">
+                                {% if company.output_item %}
+                                    <div class="output-info">
+                                        <i class="fa-solid fa-box-open"></i>
+                                        {{ company.output_amount|default(1) }} adet
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+
+                            {# İş ilanı sütunu #}
+                            <td class="company-offer-cell">
+                                {% if company.openOffer %}
+                                    {# Aktif ilan: sadece DÜZENLE ve KALDIR görünüyor #}
+                                    <div class="offer-active">
+                                        <div class="offer-salary-row">
+                                            <i class="fa-solid fa-sack-dollar"></i>
+                                            {# offer.salary kullan (eski offer.money değil) #}
+                                            <strong>{{ company.openOffer.salary|number_format(2) }}</strong>
+                                            <span class="offer-currency">{{ company.openOffer.currency|upper }}</span>
+                                        </div>
+                                        <div class="offer-skill-row">
+                                            <i class="fa-solid fa-medal"></i>
+                                            {# offer.required_skill kullan (eski offer.skill değil) #}
+                                            Min. Yetenek: {{ company.openOffer.required_skill }}
+                                        </div>
+                                        <div class="offer-actions">
+                                            <button
+                                                type="button"
+                                                class="omni-btn omni-btn-sm omni-btn-warning"
+                                                onclick="editOffer({{ company.openOffer.id }}, {{ company.openOffer.salary }}, '{{ company.openOffer.currency|e('html_attr') }}', {{ company.openOffer.required_skill }}, '{{ (company.openOffer.title ?? '')|e('html_attr') }}')"
+                                            >
+                                                <i class="fa-solid fa-pencil"></i> Düzenle
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="omni-btn omni-btn-sm omni-btn-danger"
+                                                onclick="cancelOffer({{ company.openOffer.id }})"
+                                            >
+                                                <i class="fa-solid fa-trash"></i> Kaldır
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    {# İlan yok: oluştur butonu #}
+                                    <button
+                                        type="button"
+                                        class="omni-btn omni-btn-sm omni-btn-primary"
+                                        onclick="createOffer({{ company.id }})"
+                                    >
+                                        <i class="fa-solid fa-plus"></i> İlan Oluştur
+                                    </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+{# İş ilanı oluşturma/düzenleme modalı #}
+<div id="offerModal" class="omni-modal" style="display:none;">
+    <div class="omni-modal-inner">
+        <div class="omni-modal-header">
+            <h3 id="offerModalTitle">İş İlanı</h3>
+            <button type="button" onclick="closeOfferModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="omni-modal-body">
+            <input type="hidden" id="offerCompanyId" value="">
+            <input type="hidden" id="offerOfferId" value="">
+
+            <div class="omni-form-group">
+                <label>Günlük Maaş</label>
+                <input type="number" id="offerSalary" class="omni-input" step="0.01" min="0.01" placeholder="Maaş miktarı">
+            </div>
+
+            <div class="omni-form-group">
+                <label>Para Birimi</label>
+                <input type="text" id="offerCurrency" class="omni-input" placeholder="esp, gold...">
+            </div>
+
+            <div class="omni-form-group">
+                <label>Minimum Yetenek</label>
+                <input type="number" id="offerSkill" class="omni-input" min="1" value="1" placeholder="Gerekli yetenek seviyesi">
+            </div>
+
+            <div class="omni-form-group">
+                <label>İlan Başlığı <span class="text-muted">(isteğe bağlı)</span></label>
+                <input type="text" id="offerTitle" class="omni-input" placeholder="İlan başlığı">
+            </div>
+        </div>
+        <div class="omni-modal-footer">
+            <button type="button" class="omni-btn omni-btn-secondary" onclick="closeOfferModal()">Vazgeç</button>
+            <button type="button" class="omni-btn omni-btn-primary" id="offerSaveBtn" onclick="saveOffer()">
+                <i class="fa-solid fa-save"></i> Kaydet
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // -------------------------------------------------------
+    // Şirketler sayfası JS
+    // İş ilanı oluşturma, düzenleme ve kaldırma işlemleri
+    // -------------------------------------------------------
+
+    var currentOfferMode = 'create'; // 'create' | 'edit'
+
+    function createOffer(companyId) {
+        currentOfferMode = 'create';
+        document.getElementById('offerModalTitle').textContent = 'Yeni İş İlanı';
+        document.getElementById('offerCompanyId').value = companyId;
+        document.getElementById('offerOfferId').value   = '';
+        document.getElementById('offerSalary').value    = '';
+        document.getElementById('offerCurrency').value  = '';
+        document.getElementById('offerSkill').value     = '1';
+        document.getElementById('offerTitle').value     = '';
+        document.getElementById('offerModal').style.display = 'flex';
+    }
+
+    function editOffer(offerId, salary, currency, skill, title) {
+        currentOfferMode = 'edit';
+        document.getElementById('offerModalTitle').textContent = 'İlanı Düzenle';
+        document.getElementById('offerOfferId').value   = offerId;
+        document.getElementById('offerSalary').value    = salary;
+        document.getElementById('offerCurrency').value  = currency;
+        document.getElementById('offerSkill').value     = skill;
+        document.getElementById('offerTitle').value     = title || '';
+        document.getElementById('offerModal').style.display = 'flex';
+    }
+
+    function closeOfferModal() {
+        document.getElementById('offerModal').style.display = 'none';
+    }
+
+    function saveOffer() {
+        var salary    = parseFloat(document.getElementById('offerSalary').value);
+        var currency  = document.getElementById('offerCurrency').value.trim();
+        var skill     = parseInt(document.getElementById('offerSkill').value);
+        var title     = document.getElementById('offerTitle').value.trim();
+        var saveBtn   = document.getElementById('offerSaveBtn');
+
+        if (!salary || salary <= 0) {
+            alert('Geçerli bir maaş girin.'); return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kaydediliyor...';
+
+        var url, data;
+
+        if (currentOfferMode === 'create') {
+            url  = '{{ base_url() }}/api/company/work-offer/create';
+            data = {
+                company_id:     document.getElementById('offerCompanyId').value,
+                salary:         salary,
+                currency:       currency,
+                required_skill: skill,
+                title:          title
+            };
+        } else {
+            url  = '{{ base_url() }}/api/company/work-offer/update';
+            data = {
+                offer_id:       document.getElementById('offerOfferId').value,
+                salary:         salary,
+                required_skill: skill,
+                title:          title
+            };
+        }
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e){} }
+
+                if (res && (res.error === 1 || res.error === true)) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Kaydet';
+                    alert(res.message || 'İşlem başarısız.');
+                    return;
+                }
+
+                location.reload();
+            },
+            error: function(xhr) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Kaydet';
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Bağlantı hatası.';
+                alert(msg);
+            }
+        });
+    }
+
+    function cancelOffer(offerId) {
+        if (!confirm('Bu iş ilanı kaldırılacak. Onaylıyor musunuz?')) return;
+
+        $.ajax({
+            url: '{{ base_url() }}/api/company/work-offer/cancel',
+            type: 'POST',
+            data: { offer_id: offerId },
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e){} }
+                if (res && (res.error === 1 || res.error === true)) {
+                    alert(res.message || 'İlan kaldırılamadı.');
+                    return;
+                }
+                location.reload();
+            },
+            error: function() { alert('Bağlantı hatası.'); }
+        });
+    }
+
+    // Modal dışına tıklayınca kapat
+    document.getElementById('offerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeOfferModal();
+    });
+</script>
+{% endblock %}

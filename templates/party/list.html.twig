@@ -1,0 +1,16 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Siyasi Partiler{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-users-line"></i> Siyasi Partiler</h1>
+    <div class="party-list">
+        {% for party in parties %}
+            <div class="party-card">
+                <a href="{{ path_for('party', {'id': party.id}) }}">{{ party.name }}</a>
+            </div>
+        {% else %}
+            <p>Henüz parti bulunmuyor.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

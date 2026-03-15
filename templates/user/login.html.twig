@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark_cyan">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş | S-REPUBLIK</title>
+    <link rel="stylesheet" href="/css/built.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="omni-body omni-auth-body">
+<div class="omni-auth-wrap">
+    <div class="omni-auth-card">
+        <div class="omni-auth-logo"><i class="fa-solid fa-signal"></i> S-REPUBLIK</div>
+        <h2>Giriş Yap</h2>
+        <div id="loginMsg" class="omni-alert" style="display:none;"></div>
+        <div class="omni-form-group">
+            <label>E-posta</label>
+            <input type="email" id="email" class="omni-input" placeholder="E-posta adresiniz">
+        </div>
+        <div class="omni-form-group">
+            <label>Şifre</label>
+            <input type="password" id="password" class="omni-input" placeholder="Şifreniz">
+        </div>
+        <button class="omni-btn omni-btn-primary omni-btn-block" onclick="doLogin()">
+            <i class="fa-solid fa-right-to-bracket"></i> Giriş Yap
+        </button>
+        <p class="omni-auth-footer">Hesabın yok mu? <a href="/signup">Kayıt Ol</a></p>
+    </div>
+</div>
+<script>
+function doLogin() {
+    var email = document.getElementById('email').value;
+    var pass  = document.getElementById('password').value;
+    var msg   = document.getElementById('loginMsg');
+    fetch('/login', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'email='+encodeURIComponent(email)+'&password='+encodeURIComponent(pass)})
+        .then(r=>r.json()).then(function(d) {
+            msg.style.display = 'block';
+            if (d.error) { msg.className = 'omni-alert omni-alert-danger'; msg.textContent = d.message; }
+            else { msg.className = 'omni-alert omni-alert-success'; msg.textContent = d.message; setTimeout(function(){window.location='/';},800); }
+        });
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

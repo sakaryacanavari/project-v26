@@ -1,0 +1,19 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Depo{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-warehouse"></i> Depo</h1>
+    {% if items|length == 0 %}
+        <p>Deponuz boş.</p>
+    {% else %}
+        <div class="storage-grid">
+            {% for item in items %}
+                <div class="storage-item">
+                    <div class="item-id">Ürün #{{ item.item }}</div>
+                    <div class="item-qty">{{ item.quantity }} adet</div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

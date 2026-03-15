@@ -1,0 +1,24 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Spor Salonları{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-dumbbell"></i> Spor Salonları</h1>
+    <div class="gym-list">
+        {% for i in 1..4 %}
+            <div class="gym-card">
+                <div class="gym-quality">Q{{ i }} Spor Salonu</div>
+                <div class="gym-gain">+{{ i }} Güç</div>
+                <button class="omni-btn omni-btn-primary" onclick="trainGym({{ i }})">Antrenman Yap</button>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function trainGym(gymId) {
+    fetch('/api/gym/train', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'gym='+gymId})
+        .then(r=>r.json()).then(function(d) { alert(d.message); if (!d.error) location.reload(); });
+}
+</script>
+{% endblock %}

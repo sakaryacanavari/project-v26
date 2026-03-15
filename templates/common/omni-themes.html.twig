@@ -1,0 +1,65 @@
+{#
+  omni-themes.html.twig
+  Tema sistemi - mode_color formatında localStorage ve sunucu taraflı tema yönetimi.
+  localStorage önceliği: storedModeRaw || serverModeRaw
+  Geçerli modlar ve renkler aşağıda tanımlıdır.
+#}
+
+{# Sunucu taraflı tema verileri #}
+{% set serverTheme  = my.theme|default('dark_cyan') %}
+{% set themeParts   = serverTheme|split('_') %}
+{% set serverMode   = themeParts[0]|default('dark') %}
+{% set serverColor  = themeParts[1]|default('cyan') %}
+
+{# Geçerli mod listesi - güncelleme gerektiğinde burası düzenlenir #}
+{% set VALID_MODES  = ['dark', 'oled', 'dim', 'magma', 'aurora'] %}
+
+{# Geçerli renk listesi #}
+{% set VALID_COLORS = ['cyan', 'diamond', 'blue', 'mono', 'red', 'amber', 'purple', 'pink', 'lavender', 'overdrive', 'blood', 'matrix'] %}
+
+<script>
+(function() {
+    // Sunucu taraflı tema değerleri
+    var serverModeRaw  = "{{ serverMode|e('js') }}";
+    var serverColorRaw = "{{ serverColor|e('js') }}";
+
+    // Geçerli değerler
+    var VALID_MODES  = {{ VALID_MODES|json_encode|raw }};
+    var VALID_COLORS = {{ VALID_COLORS|json_encode|raw }};
+
+    // localStorage'dan tema oku (öncelikli)
+    var storedModeRaw  = localStorage.getItem('omni_mode');
+    var storedColorRaw = localStorage.getItem('omni_color');
+
+    // Geçerlilik kontrolleri
+    function isValidMode(v)  { return VALID_MODES.indexOf(v) !== -1; }
+    function isValidColor(v) { return VALID_COLORS.indexOf(v) !== -1; }
+
+    // Önce localStorage, yoksa sunucu değeri kullan
+    var activeMode  = (storedModeRaw  && isValidMode(storedModeRaw))  ? storedModeRaw  : serverModeRaw;
+    var activeColor = (storedColorRaw && isValidColor(storedColorRaw)) ? storedColorRaw : serverColorRaw;
+
+    // Fallback: geçersiz ise varsayılan
+    if (!isValidMode(activeMode))   activeMode  = 'dark';
+    if (!isValidColor(activeColor)) activeColor = 'cyan';
+
+    // data-theme attribute'unu <html>'e uygula
+    var themeValue = activeMode + '_' + activeColor;
+    document.documentElement.setAttribute('data-theme', themeValue);
+
+    // localStorage'ı güncelle (tutarlılık için)
+    localStorage.setItem('omni_mode',  activeMode);
+    localStorage.setItem('omni_color', activeColor);
+
+    // Sunucu ile senkronize et (farklıysa)
+    var serverThemeFull = serverModeRaw + '_' + serverColorRaw;
+    if (themeValue !== serverThemeFull) {
+        // Arkaplanda sunucu temasını güncelle
+        fetch('/api/user/settings/theme', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'theme=' + encodeURIComponent(themeValue)
+        }).catch(function() {});
+    }
+})();
+</script>

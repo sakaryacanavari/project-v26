@@ -1,0 +1,14 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}{{ newspaper.name ?? 'Gazete' }}{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1>{{ newspaper.name }}</h1>
+    {% for article in articles %}
+        <div class="article-card">
+            <a href="{{ path_for('showArticle', {'id': article.id}) }}">{{ article.title }}</a>
+        </div>
+    {% else %}
+        <p>Bu gazetede makale bulunmuyor.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark_cyan">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol | S-REPUBLIK</title>
+    <link rel="stylesheet" href="/css/built.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="omni-body omni-auth-body">
+<div class="omni-auth-wrap">
+    <div class="omni-auth-card">
+        <div class="omni-auth-logo"><i class="fa-solid fa-signal"></i> S-REPUBLIK</div>
+        <h2>Kayıt Ol</h2>
+        <div id="signupMsg" class="omni-alert" style="display:none;"></div>
+        <div class="omni-form-group"><label>Kullanıcı Adı</label><input type="text" id="nick" class="omni-input" placeholder="Kullanıcı adı"></div>
+        <div class="omni-form-group"><label>E-posta</label><input type="email" id="email" class="omni-input" placeholder="E-posta"></div>
+        <div class="omni-form-group"><label>Şifre</label><input type="password" id="password" class="omni-input" placeholder="Şifre"></div>
+        <div class="omni-form-group">
+            <label>Bölge</label>
+            <select id="region" class="omni-input">
+                <option value="">Bölge seçin...</option>
+                {% for country in countries %}
+                    <option value="{{ country.id }}">{{ country.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="omni-btn omni-btn-primary omni-btn-block" onclick="doSignup()">
+            <i class="fa-solid fa-user-plus"></i> Kayıt Ol
+        </button>
+        <p class="omni-auth-footer">Zaten hesabın var mı? <a href="/login">Giriş Yap</a></p>
+    </div>
+</div>
+<script>
+function doSignup() {
+    var msg = document.getElementById('signupMsg');
+    fetch('/signup', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body: 'nick='+encodeURIComponent(document.getElementById('nick').value)
+            + '&email='+encodeURIComponent(document.getElementById('email').value)
+            + '&password='+encodeURIComponent(document.getElementById('password').value)
+            + '&region='+encodeURIComponent(document.getElementById('region').value)
+    }).then(r=>r.json()).then(function(d) {
+        msg.style.display = 'block';
+        if (d.error) { msg.className='omni-alert omni-alert-danger'; msg.textContent=d.message; }
+        else { msg.className='omni-alert omni-alert-success'; msg.textContent=d.message; setTimeout(function(){window.location='/';},800); }
+    });
+}
+</script>
+</body>
+</html>

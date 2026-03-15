@@ -1,0 +1,15 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Haberler{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-newspaper"></i> Haberler</h1>
+    {% for article in articles %}
+        <div class="article-card">
+            <a href="{{ path_for('showArticle', {'id': article.id}) }}">{{ article.title }}</a>
+            <span>{{ article.newspaper_name }}</span>
+        </div>
+    {% else %}
+        <p>Makale bulunmuyor.</p>
+    {% endfor %}
+</div>
+{% endblock %}

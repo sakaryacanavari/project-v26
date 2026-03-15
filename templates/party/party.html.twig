@@ -1,0 +1,7 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}{{ party.name ?? 'Parti' }}{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title">{{ party.name ?? 'Parti' }}</h1>
+</div>
+{% endblock %}

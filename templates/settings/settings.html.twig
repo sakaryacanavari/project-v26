@@ -1,0 +1,39 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Ayarlar{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-gear"></i> Ayarlar</h1>
+
+    <div class="settings-section">
+        <h2>Tema Ayarları</h2>
+        <div class="theme-modes">
+            {% for mode in validModes %}
+                <button class="theme-btn mode-btn {% if themeState.serverModeRaw == mode %}active{% endif %}"
+                    onclick="setTheme('{{ mode }}', null)">{{ mode|capitalize }}</button>
+            {% endfor %}
+        </div>
+        <div class="theme-colors">
+            {% for color in validColors %}
+                <button class="theme-btn color-btn {% if themeState.serverColorRaw == color %}active{% endif %}"
+                    onclick="setTheme(null, '{{ color }}')">{{ color|capitalize }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function setTheme(mode, color) {
+    var currentTheme = document.documentElement.getAttribute('data-theme') || 'dark_cyan';
+    var parts = currentTheme.split('_');
+    var m = mode  || parts[0] || 'dark';
+    var c = color || parts[1] || 'cyan';
+    var theme = m + '_' + c;
+    localStorage.setItem('omni_mode',  m);
+    localStorage.setItem('omni_color', c);
+    document.documentElement.setAttribute('data-theme', theme);
+    fetch('/api/user/settings/theme', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'theme='+theme})
+        .then(r=>r.json()).then(function(d) { if (!d.error) console.log('Tema kaydedildi: '+theme); });
+}
+</script>
+{% endblock %}

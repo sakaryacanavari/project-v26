@@ -74,6 +74,10 @@ $container['db'] = function ($container) {
  */
 $app->add(function ($request, $response, $next) use ($app) {
 
+    // AJAX tespiti: X-Requested-With header ile kontrol
+    $xrw = $request->getHeaderLine('X-Requested-With');
+    $app->isAjax = (strtolower($xrw) === 'xmlhttprequest');
+
     $view = App::container()->get("view");
     $view->getEnvironment()->addGlobal('isAjax', $app->isAjax);
 

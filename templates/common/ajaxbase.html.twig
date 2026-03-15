@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="{{ my.theme|default('dark_cyan') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}API{% endblock %} | S-REPUBLIK</title>
+    <link rel="stylesheet" href="{{ base_url() }}/css/built.css">
+    {% block head %}{% endblock %}
+</head>
+<body class="omni-body">
+    {% block content %}{% endblock %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

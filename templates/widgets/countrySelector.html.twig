@@ -1,0 +1,160 @@
+{#
+  widgets/countrySelector.html.twig
+  Özel custom dropdown ülke seçici widget.
+  URL query param 'country' ile çalışır.
+  Ülke seçildiğinde page=1 ile yönlendirir.
+  Filtre formuyla uyum korunur.
+#}
+
+{# Widget değişkenleri #}
+{% set selectorId = selectorId|default('omni-country-selector') %}
+{% set currentCountry = selectedCountry|default(0) %}
+{% set currentCountryName = 'Tüm Ülkeler' %}
+
+{% for country in countries %}
+    {% if country.id == currentCountry %}
+        {% set currentCountryName = country.name %}
+    {% endif %}
+{% endfor %}
+
+<div class="country-selector-wrap" id="{{ selectorId }}-wrap">
+    {# Tetikleyici buton #}
+    <button
+        type="button"
+        class="country-selector-trigger"
+        id="{{ selectorId }}-trigger"
+        onclick="toggleCountryDropdown('{{ selectorId }}')"
+    >
+        <i class="fa-solid fa-globe"></i>
+        <span id="{{ selectorId }}-label">{{ currentCountryName }}</span>
+        <i class="fa-solid fa-chevron-down country-selector-caret" id="{{ selectorId }}-caret"></i>
+    </button>
+
+    {# Body'ye taşınan fixed dropdown menü #}
+    <div
+        class="country-selector-menu"
+        id="{{ selectorId }}-menu"
+        style="display:none;"
+    >
+        <div class="country-selector-search-wrap">
+            <input
+                type="text"
+                class="country-selector-search"
+                placeholder="Ülke ara..."
+                oninput="filterCountryList('{{ selectorId }}', this.value)"
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="country-selector-list" id="{{ selectorId }}-list">
+            {# "Tüm Ülkeler" seçeneği #}
+            <div
+                class="country-selector-item {% if currentCountry == 0 %}is-selected{% endif %}"
+                onclick="selectCountry('{{ selectorId }}', 0, 'Tüm Ülkeler')"
+            >
+                <i class="fa-solid fa-earth-europe"></i> Tüm Ülkeler
+            </div>
+
+            {% for country in countries %}
+                <div
+                    class="country-selector-item {% if country.id == currentCountry %}is-selected{% endif %}"
+                    data-name="{{ country.name|lower }}"
+                    onclick="selectCountry('{{ selectorId }}', {{ country.id }}, '{{ country.name|e('html_attr') }}')"
+                >
+                    <i class="fa-solid fa-flag"></i> {{ country.name }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Dropdown dışına tıklandığında kapat
+    document.addEventListener('click', function(e) {
+        var wrap = document.getElementById('{{ selectorId }}-wrap');
+        if (wrap && !wrap.contains(e.target)) {
+            closeCountryDropdown('{{ selectorId }}');
+        }
+    });
+})();
+
+function toggleCountryDropdown(id) {
+    var menu   = document.getElementById(id + '-menu');
+    var caret  = document.getElementById(id + '-caret');
+    var isOpen = menu.style.display !== 'none';
+
+    if (isOpen) {
+        closeCountryDropdown(id);
+    } else {
+        openCountryDropdown(id);
+    }
+}
+
+function openCountryDropdown(id) {
+    var trigger = document.getElementById(id + '-trigger');
+    var menu    = document.getElementById(id + '-menu');
+    var caret   = document.getElementById(id + '-caret');
+
+    if (!menu) return;
+
+    // Dropdown pozisyonunu trigger'a göre ayarla
+    var rect = trigger.getBoundingClientRect();
+    menu.style.display    = 'block';
+    menu.style.position   = 'fixed';
+    menu.style.top        = (rect.bottom + 4) + 'px';
+    menu.style.left       = rect.left + 'px';
+    menu.style.minWidth   = Math.max(220, rect.width) + 'px';
+    menu.style.zIndex     = '9999';
+
+    if (caret) caret.classList.add('is-open');
+
+    // Arama kutusunu odakla
+    var search = menu.querySelector('.country-selector-search');
+    if (search) { setTimeout(function() { search.focus(); }, 50); }
+}
+
+function closeCountryDropdown(id) {
+    var menu  = document.getElementById(id + '-menu');
+    var caret = document.getElementById(id + '-caret');
+
+    if (menu) menu.style.display = 'none';
+    if (caret) caret.classList.remove('is-open');
+}
+
+function filterCountryList(id, query) {
+    var list  = document.getElementById(id + '-list');
+    if (!list) return;
+
+    var items = list.querySelectorAll('.country-selector-item[data-name]');
+    var lQuery = query.toLowerCase().trim();
+
+    items.forEach(function(item) {
+        var name = item.getAttribute('data-name') || '';
+        item.style.display = (lQuery === '' || name.indexOf(lQuery) !== -1) ? '' : 'none';
+    });
+}
+
+function selectCountry(id, countryId, countryName) {
+    // Label güncelle
+    var label = document.getElementById(id + '-label');
+    if (label) label.textContent = countryName;
+
+    closeCountryDropdown(id);
+
+    // Mevcut URL'yi parse et ve country/page parametrelerini güncelle
+    var url    = new URL(window.location.href);
+    var params = url.searchParams;
+
+    if (countryId === 0) {
+        params.delete('country');
+    } else {
+        params.set('country', countryId);
+    }
+
+    // Sayfa sıfırla
+    params.set('page', '1');
+
+    window.location.href = url.pathname + '?' + params.toString();
+}
+</script>

@@ -1,0 +1,29 @@
+{% extends 'common/base.html.twig' %}
+{% block title %}Şirket Kur{% endblock %}
+{% block content %}
+<div class="omni-page">
+    <h1 class="omni-page-title"><i class="fa-solid fa-building-circle-arrow-right"></i> Yeni Şirket Kur</h1>
+    <div class="omni-form-group">
+        <label>Şirket Tipi</label>
+        <select id="companyType" class="omni-input">
+            <option value="">Tip seçin...</option>
+            {% for type in companyTypes %}
+                <option value="{{ type.id }}">{{ type.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button class="omni-btn omni-btn-primary" onclick="createCompany()">
+        <i class="fa-solid fa-plus"></i> Kur
+    </button>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function createCompany() {
+    var type = document.getElementById('companyType').value;
+    if (!type) { alert('Lütfen bir şirket tipi seçin.'); return; }
+    fetch('/api/company/create', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'type='+type})
+        .then(r=>r.json()).then(function(d) { alert(d.message); if (!d.error) window.location='/mycompanies'; });
+}
+</script>
+{% endblock %}
