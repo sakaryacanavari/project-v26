@@ -5,7 +5,8 @@
     class="space-y-4 animate-fade-in w-full overflow-hidden gx-density-{{ gameExperienceSettings.ui_density|default('balanced') }} gx-motion-{{ gameExperienceSettings.animation_level|default('balanced') }}"
     id="v2-settings-center"
     data-server-mode="{{ themeState.mode|default('dark') }}"
-    data-server-color="{{ themeState.color|default('cyan') }}"
+    data-server-color="{{ themeState.color|default('purple') }}"
+    data-server-eye-comfort="{{ themeState.eye_comfort_level|default('balanced') }}"
 >
     
     <style>
@@ -45,7 +46,7 @@
         .cyber-btn { position: relative; overflow: hidden; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-size: 10px; cursor: pointer; border: none; min-height: 42px; }
         .cyber-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: all 0.5s; z-index: -1; }
         .cyber-btn:hover::before { left: 100%; }
-        .cyber-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.35); transform: none !important; box-shadow: none !important; }
+        .cyber-btn:disabled { opacity: 0.52; cursor: not-allowed; filter: grayscale(0.25); transform: none !important; box-shadow: none !important; }
         .cyber-btn:disabled::before { display: none; }
         
         .btn-cyan { background: var(--brand-primary); color: #fff; border: 1px solid var(--brand-primary); box-shadow: 0 0 15px var(--brand-glow); }
@@ -84,12 +85,25 @@
         .settings-card-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
         .settings-card-title h2 { display: flex; align-items: center; gap: 9px; font-size: 11px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; color: #e2e8f0; }
         .settings-card-title p { color: #94a3b8; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.45; }
+        .settings-system-layout { align-items: start; }
+        .settings-system-panel { align-self: start; }
+        .settings-system-stack { display: grid; gap: 12px; }
+        .settings-system-control {
+            border: 1px solid color-mix(in srgb, var(--settings-accent) 12%, rgba(255,255,255,0.06));
+            background: color-mix(in srgb, var(--settings-accent) 4%, rgba(0,0,0,0.22));
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .settings-system-control-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .settings-system-control-title { display: flex; align-items: center; gap: 7px; color: #e2e8f0; font-size: 9px; font-weight: 950; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.25; }
+        .settings-system-control .settings-primary-action { width: 100%; min-height: 42px; justify-content: center; }
+        .settings-system-control .settings-action-hint { margin-top: 8px; text-align: center; line-height: 1.35; }
         .settings-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .settings-field { min-width: 0; }
         .settings-field.is-wide { grid-column: 1 / -1; }
         .settings-label { color: #cbd5e1; font-size: 9px; font-weight: 900; letter-spacing: 0.13em; text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 7px; }
         .settings-action-row { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
-        .settings-action-hint { color: #94a3b8; font-size: 8px; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.4; margin-top: 8px; text-align: center; }
+        .settings-action-hint { color: #94a3b8; font-size: 8px; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.4; margin-top: 8px; text-align: center; opacity: 0.88; }
         .settings-action-hint.is-ready { color: var(--settings-accent-text); }
         .settings-primary-action { width: 100%; min-height: 46px; box-shadow: 0 0 20px var(--settings-accent-glow), inset 0 1px 0 rgba(255,255,255,0.18); }
         .settings-password-action { width: 100%; min-height: 46px; }
@@ -168,48 +182,62 @@
         .theme-radio, .mode-radio { display: none; }
 
         .mode-grid,
-        .theme-grid {
-            gap: 10px;
-        }
+        .theme-grid { gap: 10px; }
         .mode-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: flex-start;
-        }
-        .mode-grid > * {
-            flex: 0 0 auto;
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
         }
         .theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
         .mode-card {
-            min-height: 88px; min-width: 128px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-            padding: 14px 16px; border-radius: 14px; background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.08);
-            cursor: pointer; transition: all 0.22s ease; text-align: center;
+            min-height: 62px; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px;
+            padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--settings-accent) 4%, rgba(0,0,0,0.30)); border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer; transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease; text-align: left;
         }
-        .mode-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); }
-        .mode-radio:checked + .mode-card { background: color-mix(in srgb, var(--brand-primary) 12%, rgba(0,0,0,0.72)); border-color: var(--brand-primary); box-shadow: 0 8px 18px -10px var(--brand-glow), inset 0 0 12px color-mix(in srgb, var(--brand-primary) 14%, transparent); transform: translateY(-2px); }
+        .mode-card:hover { border-color: color-mix(in srgb, var(--settings-accent) 26%, rgba(255,255,255,0.14)); background: color-mix(in srgb, var(--settings-accent) 7%, rgba(0,0,0,0.34)); }
+        .mode-radio:checked + .mode-card { background: color-mix(in srgb, var(--brand-primary) 12%, rgba(0,0,0,0.72)); border-color: var(--brand-primary); box-shadow: 0 8px 18px -14px var(--brand-glow), inset 3px 0 0 var(--brand-primary); }
 
-        .mode-card .mode-icon { font-size: 20px; line-height: 1; }
-        .mode-card .mode-name { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; color: #f8fafc; line-height: 1.3; }
+        .mode-card .mode-icon { width: 20px; font-size: 16px; line-height: 1; text-align: center; }
+        .mode-card .mode-name { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; color: #f8fafc; line-height: 1.3; }
+        .mode-card .mode-desc { display: none; }
 
         .theme-card {
-            min-height: 58px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; border-radius: 10px;
-            background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.22s ease;
+            min-height: 46px; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; padding: 7px 9px; border-radius: 10px;
+            background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
             position: relative; overflow: hidden;
         }
-        .theme-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.14); transform: translateY(-2px); }
-        .theme-card .theme-icon { font-size: 16px; transition: all 0.22s ease; }
-        .theme-card .theme-name { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.07em; color: #cbd5e1; text-align: center; line-height: 1.1; }
-        .theme-radio:checked + .theme-card { background: color-mix(in srgb, currentColor 10%, rgba(0,0,0,0.7)); border-color: currentColor; box-shadow: 0 8px 18px -10px currentColor, inset 0 0 12px color-mix(in srgb, currentColor 16%, transparent); transform: translateY(-2px); }
-        .theme-radio:checked + .theme-card .theme-icon { filter: drop-shadow(0 0 8px currentColor); transform: scale(1.1); }
-        .theme-radio:checked + .theme-card .theme-name { color: #fff; text-shadow: 0 0 8px currentColor; }
+        .theme-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.14); }
+        .theme-card .theme-icon { width: 16px; font-size: 14px; text-align: center; transition: all 0.22s ease; }
+        .theme-card .theme-name { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.07em; color: #cbd5e1; text-align: left; line-height: 1.15; }
+        .theme-radio:checked + .theme-card { background: color-mix(in srgb, currentColor 10%, rgba(0,0,0,0.7)); border-color: currentColor; box-shadow: 0 8px 18px -14px currentColor, inset 2px 0 0 currentColor; }
+        .theme-radio:checked + .theme-card .theme-icon { filter: drop-shadow(0 0 7px currentColor); }
+        .theme-radio:checked + .theme-card .theme-name { color: #fff; }
+        .eye-comfort-locked-palette {
+            display: none; align-items: center; gap: 10px; min-height: 56px; padding: 10px 12px; border-radius: 12px;
+            background: color-mix(in srgb, var(--brand-primary) 10%, rgba(0,0,0,0.32)); border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.08));
+            color: color-mix(in srgb, var(--brand-primary) 80%, #f8fafc); box-shadow: inset 3px 0 0 var(--brand-primary);
+        }
+        .eye-comfort-locked-palette.is-visible { display: flex; }
+        .eye-comfort-locked-palette i { width: 18px; text-align: center; }
+        .eye-comfort-locked-palette strong { display: block; color: #f8fafc; font-size: 9px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2; }
+        .eye-comfort-locked-palette span { display: block; margin-top: 3px; color: #94a3b8; font-size: 8px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.35; }
+        .eye-comfort-level-panel { display: none; border: 1px solid color-mix(in srgb, var(--settings-accent) 16%, rgba(255,255,255,0.06)); background: color-mix(in srgb, var(--settings-accent) 5%, rgba(0,0,0,0.20)); border-radius: 12px; padding: 12px; }
+        .eye-comfort-level-panel.is-visible { display: block; }
+        .eye-comfort-level-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 8px; }
+        .eye-comfort-radio { display: none; }
+        .eye-comfort-card { display: flex; flex-direction: column; gap: 5px; min-height: 58px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.18); padding: 10px; cursor: pointer; transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease; }
+        .eye-comfort-card strong { color: #f8fafc; font-size: 9px; font-weight: 950; letter-spacing: 0.1em; text-transform: uppercase; }
+        .eye-comfort-card span { color: #94a3b8; font-size: 8px; font-weight: 800; letter-spacing: 0.075em; text-transform: uppercase; line-height: 1.35; }
+        .eye-comfort-card:hover { border-color: color-mix(in srgb, var(--settings-accent) 24%, transparent); background: color-mix(in srgb, var(--settings-accent) 7%, rgba(0,0,0,0.22)); }
+        .eye-comfort-radio:checked + .eye-comfort-card { border-color: var(--settings-accent); background: color-mix(in srgb, var(--settings-accent) 12%, rgba(0,0,0,0.28)); box-shadow: inset 2px 0 0 var(--settings-accent), 0 8px 18px -14px var(--settings-accent-glow); }
         .settings-toast-popup { margin-top: 64px !important; margin-right: 18px !important; border: 1px solid color-mix(in srgb, var(--settings-accent) 22%, rgba(255,255,255,0.08)) !important; border-radius: 14px !important; padding: 12px 14px !important; box-shadow: 0 18px 42px -24px var(--settings-accent-glow), 0 14px 32px -20px rgba(0,0,0,0.9) !important; }
         .settings-toast-popup .swal2-icon { margin: 0 10px 0 0 !important; width: 34px !important; height: 34px !important; min-width: 34px !important; }
         .settings-toast-popup .swal2-title { padding: 0 !important; margin: 0 !important; color: #e2e8f0 !important; font-size: 13px !important; font-weight: 900 !important; line-height: 1.25 !important; text-align: left !important; }
         .settings-toast-popup .swal2-html-container { margin: 2px 0 0 !important; color: #94a3b8 !important; font-size: 11px !important; font-weight: 800 !important; text-align: left !important; }
 
         @media (min-width: 768px) {
+            .mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .eye-comfort-level-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .theme-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             .settings-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .settings-upcoming-sections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -218,7 +246,8 @@
 
         @media (min-width: 1280px) {
             #tab-profile > .grid { grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr); gap: 18px; align-items: start; }
-            .theme-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+            .mode-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+            .theme-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
         @media (max-width: 767px) {
             .settings-form-grid { grid-template-columns: 1fr; }
@@ -288,7 +317,7 @@
             <div class="settings-summary-icon"><i class="fa-solid fa-palette"></i></div>
             <div>
                 <h3>Gorunum</h3>
-                <p>Aktif tema: {{ themeState.mode|default('dark') }} / {{ themeState.color|default('cyan') }}.</p>
+                <p>Aktif tema: {{ themeState.mode|default('dark') }} / {{ themeState.color|default('purple') }}.</p>
             </div>
         </div>
     </div>
@@ -386,35 +415,40 @@
     </div>
 
     <div id="tab-system" class="tab-content space-y-4">
-        <div class="grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)] gap-4">
-            <div class="holo-panel settings-card relative">
+        <div class="settings-system-layout grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)] gap-4">
+            <div class="holo-panel settings-card settings-system-panel relative">
                 <h2 class="text-[10px] font-black text-slate-300 uppercase tracking-[0.18em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
                     <i class="fa-solid fa-language" style="color: var(--brand-primary);"></i> Gorunum ve Dil
                 </h2>
-                <div class="space-y-3">
-                    <div class="rounded-xl border border-white/5 bg-black/20 p-3 space-y-3">
-                        <div>
+                <div class="settings-system-stack">
+                    <div class="settings-system-control">
+                        <div class="settings-system-control-head">
                             <div>
-                                <label class="settings-label">{{ t('settings.localization.language') }}</label>
-                                <div class="settings-helper mb-2">Dil kaydedilince sayfa yeni secimle yenilenir.</div>
-                                <div class="select-wrapper">
-                                    <select id="input-language" class="cyber-select py-3 px-4">
-                                        <option value="tr" {% if languageState == "tr" %}selected{% endif %}>{{ t('settings.language.tr') }}</option>
-                                        <option value="en" {% if languageState == "en" %}selected{% endif %}>{{ t('settings.language.en') }}</option>
-                                    </select>
-                                </div>
+                                <div class="settings-system-control-title"><i class="fa-solid fa-language text-slate-500"></i> Dil</div>
+                                <div class="settings-helper mt-1">Kaydedilince sayfa yeni secimle yenilenir.</div>
                             </div>
+                        </div>
+                        <div class="select-wrapper">
+                            <select id="input-language" class="cyber-select py-3 px-4">
+                                <option value="tr" {% if languageState == "tr" %}selected{% endif %}>{{ t('settings.language.tr') }}</option>
+                                <option value="en" {% if languageState == "en" %}selected{% endif %}>{{ t('settings.language.en') }}</option>
+                            </select>
                         </div>
                         <button type="button" id="language-save-btn" onclick="window.updateLanguage()" class="cyber-btn btn-cyan settings-primary-action" disabled>
                             <i class="fa-solid fa-language"></i> {{ t('settings.localization.apply_language') }}
                         </button>
-                        <div id="language-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                        <div id="language-save-hint" class="settings-action-hint">Degisiklik yok; dil secimini degistirince aktif olur.</div>
                     </div>
 
-                    <div class="rounded-xl border border-white/5 bg-black/20 p-3">
-                        <div class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500 mb-2">{{ t('settings.system.save_theme') }}</div>
+                    <div class="settings-system-control">
+                        <div class="settings-system-control-head">
+                            <div>
+                                <div class="settings-system-control-title"><i class="fa-solid fa-floppy-disk text-slate-500"></i> Tema</div>
+                                <div class="settings-helper mt-1">Arayuz modu ve renk paleti secimlerini uygular.</div>
+                            </div>
+                        </div>
                         <button type="button" id="theme-save-btn" onclick="window.applyTheme()" class="cyber-btn btn-cyan settings-primary-action" style="background:var(--brand-primary); border-color:var(--brand-primary);" disabled>
-                            <i class="fa-solid fa-floppy-disk"></i> {{ t('settings.system.save_theme') }}
+                            <i class="fa-solid fa-floppy-disk"></i> Tema Kaydet
                         </button>
                         <div id="theme-save-hint" class="settings-action-hint">Degisiklik yok.</div>
                     </div>
@@ -449,6 +483,29 @@
                                 </label>
                             {% endfor %}
                         </div>
+
+                        <div id="eye-comfort-level-panel" class="eye-comfort-level-panel {% if themeState.mode|default('dark') == 'archive' %}is-visible{% endif %}">
+                            <label class="settings-label mb-1">
+                                <i class="fa-solid fa-eye text-slate-500"></i> Göz Konforu Modu Seviyesi
+                            </label>
+                            <div class="settings-helper mb-2">Sadece Göz Konforu Modu seçiliyken uygulanır.</div>
+                            <div class="eye-comfort-level-grid">
+                                {% for levelKey, levelMeta in themeConfig.eyeComfortLevels %}
+                                    <input
+                                        type="radio"
+                                        name="eye_comfort_level"
+                                        id="eye-comfort-{{ levelKey }}"
+                                        class="eye-comfort-radio"
+                                        value="{{ levelKey }}"
+                                        {% if themeState.eye_comfort_level|default('balanced') == levelKey %}checked{% endif %}
+                                    >
+                                    <label for="eye-comfort-{{ levelKey }}" class="eye-comfort-card">
+                                        <strong>{{ levelMeta.name }}</strong>
+                                        <span>{{ levelMeta.description }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
 
                     <div class="rounded-xl border border-white/5 bg-black/20 p-3 space-y-3">
@@ -456,8 +513,9 @@
                             <i class="fa-solid fa-palette text-slate-500"></i> {{ t('settings.system.color_palette') }}
                         </label>
                         <div class="settings-helper">Sistem Renk Paleti vurgu rengi, buton ve aktif durumlari degistirir.</div>
+                        <div id="eye-comfort-palette-note" class="settings-helper {% if themeState.mode|default('dark') != 'archive' %}hidden{% endif %}">Göz Konforu Modu'nda renk paleti otomatik olarak daha sıcak ve düşük parlaklıkta uygulanır.</div>
 
-                        <div class="theme-grid">
+                        <div id="normal-theme-palette" class="theme-grid {% if themeState.mode|default('dark') == 'archive' %}hidden{% endif %}">
                             {% for colorKey, colorMeta in themeConfig.colors %}
                                 <input
                                     type="radio"
@@ -465,13 +523,20 @@
                                     id="theme-{{ colorKey }}"
                                     class="theme-radio"
                                     value="{{ colorKey }}"
-                                    {% if themeState.color|default('cyan') == colorKey %}checked{% endif %}
+                                    {% if themeState.color|default('purple') == colorKey %}checked{% endif %}
                                 >
                                 <label for="theme-{{ colorKey }}" class="theme-card tc-{{ colorKey }}">
                                     <i class="{{ colorMeta.icon }} theme-icon"></i>
                                     <span class="theme-name">{{ colorMeta.name }}</span>
                                 </label>
                             {% endfor %}
+                        </div>
+                        <div id="eye-comfort-locked-palette" class="eye-comfort-locked-palette {% if themeState.mode|default('dark') == 'archive' %}is-visible{% endif %}">
+                            <i class="fa-solid fa-lock"></i>
+                            <div>
+                                <strong>Göz Konforu Modu Paleti</strong>
+                                <span>Sıcak tonlar ve düşük parlaklık için otomatik uygulanır.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -787,7 +852,8 @@
 
         return {
             mode: root && root.dataset ? (root.dataset.serverMode || 'dark') : 'dark',
-            color: root && root.dataset ? (root.dataset.serverColor || 'cyan') : 'cyan'
+            color: root && root.dataset ? (root.dataset.serverColor || 'purple') : 'purple',
+            eyeComfortLevel: root && root.dataset ? (root.dataset.serverEyeComfort || 'balanced') : 'balanced'
         };
     }
 
@@ -796,13 +862,15 @@
 
         return {
             mode: serverState.mode || localStorage.getItem('omni_mode') || 'dark',
-            color: serverState.color || localStorage.getItem('omni_color') || 'cyan'
+            color: serverState.color || localStorage.getItem('omni_color') || 'purple',
+            eyeComfortLevel: serverState.eyeComfortLevel || localStorage.getItem('omni_eye_comfort_level') || 'balanced'
         };
     }
 
-    function syncThemeCache(mode, color) {
+    function syncThemeCache(mode, color, eyeComfortLevel) {
         localStorage.setItem('omni_mode', mode);
         localStorage.setItem('omni_color', color);
+        localStorage.setItem('omni_eye_comfort_level', eyeComfortLevel || 'balanced');
     }
 
     function setupLanguageControls() {
@@ -951,7 +1019,7 @@
             if (interfaceLabel) interfaceLabel.innerHTML = '<i class="fa-solid fa-circle-half-stroke text-slate-500"></i> ' + texts.interfaceMode;
             if (paletteLabel) paletteLabel.innerHTML = '<i class="fa-solid fa-palette text-slate-500"></i> ' + texts.colorPalette;
             const button = systemPanels[0].querySelector('button[onclick="window.applyTheme()"]');
-            if (button) button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> ' + texts.saveTheme;
+            if (button) button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Tema Kaydet';
         }
         const perfPanel = document.querySelector('#tab-performance .holo-panel');
         if (perfPanel) {
@@ -1211,6 +1279,10 @@
         const passwordHint = document.getElementById('password-save-hint');
         const languageHint = document.getElementById('language-save-hint');
         const themeHint = document.getElementById('theme-save-hint');
+        const eyeComfortPanel = document.getElementById('eye-comfort-level-panel');
+        const eyeComfortPaletteNote = document.getElementById('eye-comfort-palette-note');
+        const normalThemePalette = document.getElementById('normal-theme-palette');
+        const eyeComfortLockedPalette = document.getElementById('eye-comfort-locked-palette');
         const initialProfile = profileForm ? $(profileForm).serialize() : '';
         const initialLanguage = languageSelect ? languageSelect.value : '';
         const initialTheme = getServerThemeState();
@@ -1241,24 +1313,36 @@
             if (languageButton && languageSelect) {
                 const isReady = languageSelect.value !== initialLanguage;
                 languageButton.disabled = !isReady;
-                setHint(languageHint, 'Dil kaydedilince sayfa yenilenir.', 'Degisiklik yok.', isReady);
+                setHint(languageHint, 'Dil kaydedilince sayfa yenilenir.', 'Degisiklik yok; dil secimini degistirince aktif olur.', isReady);
             }
         };
 
         const syncTheme = function() {
             const selectedModeEl = document.querySelector('input[name="mode"]:checked');
             const selectedColorEl = document.querySelector('input[name="theme"]:checked');
+            const selectedEyeComfortEl = document.querySelector('input[name="eye_comfort_level"]:checked');
             if (themeButton && selectedModeEl && selectedColorEl) {
-                const isReady = selectedModeEl.value !== initialTheme.mode || selectedColorEl.value !== initialTheme.color;
+                const selectedEyeComfortLevel = selectedEyeComfortEl ? selectedEyeComfortEl.value : 'balanced';
+                const usesEyeComfort = selectedModeEl.value === 'archive';
+                const selectedColor = usesEyeComfort ? 'amber' : selectedColorEl.value;
+                document.documentElement.setAttribute('data-eye-comfort', usesEyeComfort ? selectedEyeComfortLevel : 'balanced');
+                if (eyeComfortPanel) eyeComfortPanel.classList.toggle('is-visible', usesEyeComfort);
+                if (eyeComfortPaletteNote) eyeComfortPaletteNote.classList.toggle('hidden', !usesEyeComfort);
+                if (normalThemePalette) normalThemePalette.classList.toggle('hidden', usesEyeComfort);
+                if (eyeComfortLockedPalette) eyeComfortLockedPalette.classList.toggle('is-visible', usesEyeComfort);
+                document.querySelectorAll('input[name="theme"]').forEach(function(input) {
+                    input.disabled = usesEyeComfort;
+                });
+                const isReady = selectedModeEl.value !== initialTheme.mode || selectedColor !== initialTheme.color || selectedEyeComfortLevel !== initialTheme.eyeComfortLevel;
                 themeButton.disabled = !isReady;
-                setHint(themeHint, 'Tema kaydedilince sayfa yenilenir.', 'Degisiklik yok.', isReady);
+                setHint(themeHint, 'Kaydet ve yenile.', 'Degisiklik yok.', isReady);
             }
         };
 
         if (profileForm) $(profileForm).on('input change', syncProfile);
         if (passwordForm) $(passwordForm).on('input change', syncPassword);
         if (languageSelect) languageSelect.addEventListener('change', syncLanguage);
-        $('input[name="mode"], input[name="theme"]').on('change', syncTheme);
+        $('input[name="mode"], input[name="theme"], input[name="eye_comfort_level"]').on('change', syncTheme);
 
         syncProfile();
         syncPassword();
@@ -1514,6 +1598,7 @@
     window.applyTheme = function() {
         const selectedModeEl = document.querySelector('input[name="mode"]:checked');
         const selectedColorEl = document.querySelector('input[name="theme"]:checked');
+        const selectedEyeComfortEl = document.querySelector('input[name="eye_comfort_level"]:checked');
 
         if (!selectedModeEl || !selectedColorEl) {
             Swal.fire({
@@ -1527,7 +1612,8 @@
         }
 
         const selectedMode = selectedModeEl.value;
-        const selectedColor = selectedColorEl.value;
+        const selectedColor = selectedMode === 'archive' ? 'amber' : selectedColorEl.value;
+        const selectedEyeComfortLevel = selectedEyeComfortEl ? selectedEyeComfortEl.value : 'balanced';
 
         $.ajax({
             url: "{{ base_url() }}/api/user/settings/theme",
@@ -1536,6 +1622,7 @@
             data: {
                 mode: selectedMode,
                 color: selectedColor,
+                eye_comfort_level: selectedEyeComfortLevel,
                 csrf_token: getCsrfToken()
             },
             success: function(res) {
@@ -1552,12 +1639,14 @@
 
                 const mode = (res && res.theme && res.theme.mode) ? res.theme.mode : selectedMode;
                 const color = (res && res.theme && res.theme.color) ? res.theme.color : selectedColor;
+                const eyeComfortLevel = (res && res.theme && res.theme.eye_comfort_level) ? res.theme.eye_comfort_level : selectedEyeComfortLevel;
 
-                syncThemeCache(mode, color);
+                syncThemeCache(mode, color, eyeComfortLevel);
 
-                showSettingsToast('{{ t("settings.js.theme_saved_text") }}', '{{ t("settings.js.theme_saved_title") }}').then(function() {
+                showSettingsToast('{{ t("settings.js.theme_saved_text") }}', '{{ t("settings.js.theme_saved_title") }}');
+                window.setTimeout(function() {
                     location.reload();
-                });
+                }, 900);
             },
             error: function(xhr) {
                 let message = '{{ t("settings.js.theme_error") }}';
