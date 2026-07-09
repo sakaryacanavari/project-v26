@@ -27,6 +27,44 @@ Players grow their profile, interact with other players, follow public news, man
 - Admin/system notice support for important game announcements.
 - Docker-friendly local development setup.
 
+## UI Preview
+
+### Main Navigation
+
+Main navigation and favorite quick-access actions.
+
+![Project V26 Navigation](docs/images/header-navigation.png)
+
+### News and Onboarding
+
+News feed, category filters and new player route.
+
+![Project V26 News](docs/images/home-news.png)
+
+![Project V26 New Player Path](docs/images/new-player-path.png)
+
+### Community
+
+Public shouts feed and notification/DM center.
+
+![Project V26 Shouts Feed](docs/images/shouts-feed.png)
+
+![Project V26 Notifications and DM](docs/images/notifications-dm.png)
+
+### Market and Economy
+
+Product market and economy modules.
+
+![Project V26 Product Market](docs/images/product-market.png)
+
+### Crate and Upgrade Systems
+
+Crate opening and item upgrade interfaces.
+
+![Project V26 Heavy Weapons Crate](docs/images/heavy-weapons-crate.png)
+
+![Project V26 Item Upgrader](docs/images/item-upgrader.png)
+
 ## Tech Stack
 
 - PHP 8.0 runtime image for Docker.
