@@ -1,0 +1,1878 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div
+    class="space-y-4 animate-fade-in w-full overflow-hidden gx-density-{{ gameExperienceSettings.ui_density|default('balanced') }} gx-motion-{{ gameExperienceSettings.animation_level|default('balanced') }}"
+    id="v2-settings-center"
+    data-server-mode="{{ themeState.mode|default('dark') }}"
+    data-server-color="{{ themeState.color|default('cyan') }}"
+>
+    
+    <style>
+        #v2-settings-center {
+            --settings-accent: var(--brand-primary);
+            --settings-accent-text: color-mix(in srgb, var(--brand-primary) 78%, #ffffff);
+            --settings-accent-soft: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+            --settings-accent-border: color-mix(in srgb, var(--brand-primary) 32%, transparent);
+            --settings-accent-glow: var(--brand-glow);
+            max-width: 1320px;
+            margin: 0 auto;
+        }
+
+        #v2-settings-center .holo-panel { background: linear-gradient(145deg, color-mix(in srgb, var(--settings-accent) 8%, rgba(15, 23, 42, 0.82)), rgba(2, 6, 23, 0.94)); backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--settings-accent) 13%, rgba(255,255,255,0.06)); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; position: relative; transition: all 0.25s ease; }
+        #v2-settings-center .holo-panel::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: repeating-linear-gradient(transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); opacity: 0.5; }
+        #v2-settings-center .settings-compact-panel { padding: 16px; }
+        #v2-settings-center .settings-tight-stack { gap: 14px; }
+
+        .tech-border-top-emerald { border-top: 2px solid var(--settings-accent); box-shadow: inset 0 15px 15px -15px var(--settings-accent-glow); }
+        .tech-border-top-cyan { border-top: 2px solid var(--settings-accent); box-shadow: inset 0 15px 15px -15px var(--settings-accent-glow); }
+        .tech-border-top-red { border-top: 2px solid #ef4444; box-shadow: inset 0 15px 15px -15px rgba(239, 68, 68, 0.3); }
+        .tech-border-top-indigo { border-top: 2px solid var(--settings-accent); box-shadow: inset 0 15px 15px -15px var(--settings-accent-glow); }
+        .tech-border-top-amber { border-top: 2px solid #f59e0b; box-shadow: inset 0 15px 15px -15px rgba(245, 158, 11, 0.3); }
+        .tech-border-top-crimson { border-top: 2px solid #991b1b; box-shadow: inset 0 15px 15px -15px rgba(153, 27, 27, 0.5); }
+        .tech-border-top-purple { border-top: 2px solid var(--settings-accent); box-shadow: inset 0 15px 15px -15px var(--settings-accent-glow); }
+
+        .cyber-input, .cyber-select { background: color-mix(in srgb, var(--settings-accent) 5%, rgba(0, 0, 0, 0.48)); border: 1px solid color-mix(in srgb, var(--settings-accent) 16%, rgba(255,255,255,0.08)); color: #e2e8f0; font-family: 'Courier New', monospace; font-weight: bold; transition: all 0.22s ease; width: 100%; border-radius: 10px; outline: none; appearance: none; }
+        .cyber-input:disabled { background-color: rgba(15, 23, 42, 0.4) !important; color: #94a3b8 !important; }
+        .cyber-input:hover, .cyber-select:hover { border-color: color-mix(in srgb, var(--settings-accent) 34%, rgba(255,255,255,0.12)); background: color-mix(in srgb, var(--settings-accent) 8%, rgba(0, 0, 0, 0.55)); }
+        .cyber-input:focus, .cyber-select:focus { border-color: var(--brand-primary); background: color-mix(in srgb, var(--settings-accent) 9%, rgba(0, 0, 0, 0.72)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--settings-accent) 35%, transparent), 0 0 18px var(--brand-glow), inset 0 0 10px var(--settings-accent-soft); }
+        .cyber-input.input-red:focus { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), inset 0 0 10px rgba(239, 68, 68, 0.1); }
+
+        .select-wrapper { position: relative; }
+        .select-wrapper::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; font-size: 12px; }
+        .cyber-select option { background: #0f172a; color: #fff; }
+
+        .cyber-btn { position: relative; overflow: hidden; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-size: 10px; cursor: pointer; border: none; min-height: 42px; }
+        .cyber-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: all 0.5s; z-index: -1; }
+        .cyber-btn:hover::before { left: 100%; }
+        .cyber-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.35); transform: none !important; box-shadow: none !important; }
+        .cyber-btn:disabled::before { display: none; }
+        
+        .btn-cyan { background: var(--brand-primary); color: #fff; border: 1px solid var(--brand-primary); box-shadow: 0 0 15px var(--brand-glow); }
+        .btn-cyan:hover { filter: brightness(1.2); box-shadow: 0 0 25px var(--brand-glow); transform: translateY(-2px); }
+        
+        .btn-red { background: #dc2626; color: #fff; border: 1px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .btn-red:hover { background: #b91c1c; box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); transform: translateY(-2px); }
+        
+        .btn-amber { background: #d97706; color: #fff; border: 1px solid #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .btn-amber:hover { background: #b45309; box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); transform: translateY(-2px); }
+        
+        .btn-crimson { background: #7f1d1d; color: #fff; border: 1px solid #991b1b; box-shadow: 0 0 15px rgba(153, 27, 27, 0.4); }
+        .btn-crimson:hover { background: #450a0a; box-shadow: 0 0 25px rgba(153, 27, 27, 0.8); transform: translateY(-2px); }
+
+        .toggle-checkbox:checked { right: 0; border-color: var(--settings-accent); }
+        .toggle-checkbox:checked + .toggle-label { background-color: var(--settings-accent); }
+        .toggle-checkbox:disabled { opacity: 0.55; cursor: not-allowed; }
+        .toggle-checkbox:disabled + .toggle-label { opacity: 0.5; cursor: not-allowed; }
+        .settings-status-note { color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+        .settings-soon { border: 1px solid color-mix(in srgb, var(--settings-accent) 22%, transparent); background: color-mix(in srgb, var(--settings-accent) 8%, transparent); color: var(--settings-accent-text); border-radius: 999px; padding: 3px 7px; font-size: 7px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+        .settings-secret-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .settings-action-btn { border: 1px solid color-mix(in srgb, var(--settings-accent) 24%, transparent); background: color-mix(in srgb, var(--settings-accent) 10%, transparent); color: var(--settings-accent-text); border-radius: 8px; padding: 8px 10px; font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+        .settings-upcoming-sections { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 14px; }
+        .settings-upcoming-section { border: 1px solid color-mix(in srgb, var(--settings-accent) 14%, rgba(255,255,255,0.06)); background: color-mix(in srgb, var(--settings-accent) 5%, rgba(0,0,0,0.18)); border-radius: 12px; padding: 12px; }
+        .settings-upcoming-section-title { display: flex; align-items: center; gap: 8px; color: #fff; font-size: 10px; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 9px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .settings-upcoming-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 10px; }
+        .settings-upcoming-card { border: 1px solid color-mix(in srgb, var(--settings-accent) 16%, transparent); background: color-mix(in srgb, var(--settings-accent) 6%, rgba(0,0,0,0.22)); border-radius: 10px; padding: 12px; min-height: 0; }
+        .settings-upcoming-card h3 { color: var(--settings-accent-text); font-size: 9px; font-weight: 900; letter-spacing: 0.13em; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .settings-upcoming-card h3 span:first-child { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+        .settings-upcoming-card p { color: #94a3b8; font-size: 8px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.5; }
+        .settings-upcoming-badge { border: 1px solid color-mix(in srgb, var(--settings-accent) 24%, transparent); background: color-mix(in srgb, var(--settings-accent) 9%, transparent); color: var(--settings-accent-text); border-radius: 999px; padding: 3px 7px; font-size: 7px; font-weight: 900; letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap; flex: 0 0 auto; }
+        .settings-hero { border-left: 4px solid var(--settings-accent); padding: 14px 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--settings-accent) 16%, transparent), rgba(0,0,0,0.12)); }
+        .settings-hero-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; background-color: color-mix(in srgb, var(--settings-accent) 18%, transparent); color: var(--settings-accent); border: 1px solid var(--settings-accent); box-shadow: 0 0 14px var(--settings-accent-glow); }
+        .settings-tabs { padding: 6px; gap: 6px; border: 1px solid color-mix(in srgb, var(--settings-accent) 12%, rgba(255,255,255,0.06)); }
+        .settings-card { padding: 18px; border-top: 2px solid var(--settings-accent); }
+        .settings-card-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .settings-card-title h2 { display: flex; align-items: center; gap: 9px; font-size: 11px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; color: #e2e8f0; }
+        .settings-card-title p { color: #94a3b8; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.45; }
+        .settings-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .settings-field { min-width: 0; }
+        .settings-field.is-wide { grid-column: 1 / -1; }
+        .settings-label { color: #cbd5e1; font-size: 9px; font-weight: 900; letter-spacing: 0.13em; text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 7px; }
+        .settings-action-row { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .settings-action-hint { color: #94a3b8; font-size: 8px; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.4; margin-top: 8px; text-align: center; }
+        .settings-action-hint.is-ready { color: var(--settings-accent-text); }
+        .settings-primary-action { width: 100%; min-height: 46px; box-shadow: 0 0 20px var(--settings-accent-glow), inset 0 1px 0 rgba(255,255,255,0.18); }
+        .settings-password-action { width: 100%; min-height: 46px; }
+        .settings-secret-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; border-radius: 8px; transition: all 0.2s ease; }
+        .settings-secret-toggle:hover { color: #fff; background: color-mix(in srgb, var(--settings-accent) 12%, transparent); }
+        .settings-helper { color: #94a3b8; font-size: 8px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.45; margin-top: 7px; }
+        .settings-helper.is-warn { color: var(--settings-accent-text); }
+        .settings-avatar-preview { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid color-mix(in srgb, var(--settings-accent) 18%, rgba(255,255,255,0.06)); border-radius: 12px; background: color-mix(in srgb, var(--settings-accent) 7%, rgba(0,0,0,0.24)); }
+        .settings-avatar-preview img, .settings-avatar-fallback { width: 46px; height: 46px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--settings-accent) 30%, transparent); object-fit: cover; flex: 0 0 auto; }
+        .settings-avatar-fallback { display: none; align-items: center; justify-content: center; color: var(--settings-accent-text); background: color-mix(in srgb, var(--settings-accent) 14%, transparent); font-size: 18px; }
+        .settings-strength { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.08); margin-top: 9px; }
+        .settings-strength-bar { height: 100%; width: 0; background: var(--settings-accent); box-shadow: 0 0 12px var(--settings-accent-glow); transition: width 0.2s ease; }
+        .settings-strength-text { margin-top: 7px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+        .settings-inline-alert { display: none; color: var(--settings-accent-text); font-size: 8px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 7px; }
+        .settings-inline-alert.is-visible { display: block; }
+        .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--settings-accent) 14%, rgba(255,255,255,0.06)); background: color-mix(in srgb, var(--settings-accent) 5%, rgba(0,0,0,0.22)); }
+        .settings-toggle-title { color: #e2e8f0; font-size: 9px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+        .settings-toggle-desc { color: #94a3b8; font-size: 8px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.45; margin-top: 3px; }
+        .settings-switch { position: relative; display: inline-flex; width: 44px; height: 24px; flex: 0 0 auto; }
+        .settings-switch input { position: absolute; opacity: 0; pointer-events: none; }
+        .settings-switch span { width: 100%; height: 100%; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid color-mix(in srgb, var(--settings-accent) 15%, rgba(255,255,255,0.08)); transition: all 0.2s ease; cursor: pointer; }
+        .settings-switch span::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; border-radius: 999px; background: #fff; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .settings-switch input:checked + span { background: var(--settings-accent); box-shadow: 0 0 14px var(--settings-accent-glow); }
+        .settings-switch input:checked + span::after { transform: translateX(20px); }
+        .settings-switch input:disabled + span { opacity: 0.55; cursor: not-allowed; }
+        .settings-time-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .settings-passive-note { border: 1px solid color-mix(in srgb, var(--settings-accent) 14%, rgba(255,255,255,0.06)); background: color-mix(in srgb, var(--settings-accent) 5%, rgba(0,0,0,0.2)); border-radius: 10px; padding: 10px; color: #94a3b8; font-size: 8px; font-weight: 850; letter-spacing: 0.09em; text-transform: uppercase; line-height: 1.45; }
+        .settings-simple-row { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .settings-simple-row:last-of-type { border-bottom: none; }
+        .settings-info-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid color-mix(in srgb, var(--settings-accent) 18%, transparent); background: color-mix(in srgb, var(--settings-accent) 7%, transparent); color: var(--settings-accent-text); border-radius: 999px; padding: 6px 9px; font-size: 8px; font-weight: 900; letter-spacing: 0.09em; text-transform: uppercase; white-space: nowrap; }
+        .settings-choice-desc { margin-top: 9px; color: var(--settings-accent-text); font-size: 8px; font-weight: 900; letter-spacing: 0.09em; text-transform: uppercase; line-height: 1.45; }
+        .settings-option-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .settings-option-grid.is-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .settings-choice-radio { display: none; }
+        .settings-choice-card { display: flex; align-items: center; justify-content: center; min-height: 46px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--settings-accent) 14%, rgba(255,255,255,0.06)); background: color-mix(in srgb, var(--settings-accent) 5%, rgba(0,0,0,0.22)); color: #94a3b8; padding: 8px; text-align: center; font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.18s ease; }
+        .settings-choice-card:hover { color: #fff; border-color: color-mix(in srgb, var(--settings-accent) 28%, transparent); }
+        .settings-choice-radio:checked + .settings-choice-card { color: #fff; border-color: var(--settings-accent); background: color-mix(in srgb, var(--settings-accent) 13%, rgba(0,0,0,0.28)); box-shadow: inset 0 0 14px color-mix(in srgb, var(--settings-accent) 10%, transparent); }
+        .game-settings-layout { align-items: start; }
+        .game-settings-panel { border-radius: 14px; background: rgba(0,0,0,0.16); padding: 4px 0; }
+        .game-settings-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .game-settings-head h2 { color: #f8fafc; font-size: 11px; font-weight: 950; letter-spacing: 0.16em; text-transform: uppercase; }
+        .game-settings-head p { margin-top: 4px; color: #94a3b8; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.45; }
+        .game-settings-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--settings-accent) 25%, transparent); background: color-mix(in srgb, var(--settings-accent) 8%, transparent); color: var(--settings-accent-text); padding: 6px 9px; font-size: 8px; font-weight: 950; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+        .game-setting-group { padding: 14px 10px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .game-setting-group:last-child { border-bottom: 0; }
+        .game-setting-group + .game-setting-group { margin-top: 0; }
+        .game-setting-group .settings-label { margin-bottom: 0; color: #e2e8f0; }
+        .game-setting-group .settings-helper { margin-top: 5px; margin-bottom: 10px; letter-spacing: 0.075em; }
+        .game-setting-group .settings-choice-card { min-height: 44px; border-radius: 11px; background: rgba(0,0,0,0.18); }
+        .game-setting-group .settings-choice-radio:checked + .settings-choice-card { box-shadow: inset 0 0 12px color-mix(in srgb, var(--settings-accent) 12%, transparent); }
+        .game-card-action { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .game-card-action .settings-action-hint { margin: 0; text-align: right; }
+        .game-card-action .settings-primary-action { width: auto; min-width: 0; min-height: 36px; padding: 9px 14px; border-radius: 10px; font-size: 9px; box-shadow: 0 0 12px var(--settings-accent-glow), inset 0 1px 0 rgba(255,255,255,0.14); }
+        .settings-favorite-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .settings-favorite-check { display: none; }
+        .settings-favorite-chip { display: flex; align-items: center; gap: 8px; min-height: 38px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.16); color: #94a3b8; padding: 8px 10px; font-size: 9px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: color .18s ease, border-color .18s ease, background .18s ease; }
+        .settings-favorite-chip:hover { color: #fff; border-color: color-mix(in srgb, var(--settings-accent) 24%, transparent); }
+        .settings-favorite-check:checked + .settings-favorite-chip { color: #fff; border-color: var(--settings-accent); background: color-mix(in srgb, var(--settings-accent) 10%, rgba(0,0,0,0.18)); }
+        #v2-settings-center.gx-density-compact .settings-card { padding: 14px; }
+        #v2-settings-center.gx-density-comfortable .settings-card { padding: 22px; }
+        #v2-settings-center.gx-motion-off *, #v2-settings-center.gx-motion-off *::before, #v2-settings-center.gx-motion-off *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+        #v2-settings-center.gx-motion-off .cyber-btn, #v2-settings-center.gx-motion-off .settings-primary-action { box-shadow: none !important; }
+        .settings-summary-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 10px; }
+        .settings-summary-card { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--settings-accent) 16%, rgba(255,255,255,0.06)); background: color-mix(in srgb, var(--settings-accent) 7%, rgba(0,0,0,0.2)); }
+        .settings-summary-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--settings-accent-text); background: color-mix(in srgb, var(--settings-accent) 13%, transparent); border: 1px solid color-mix(in srgb, var(--settings-accent) 22%, transparent); flex: 0 0 auto; }
+        .settings-summary-card h3 { color: #fff; font-size: 10px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
+        .settings-summary-card p { color: #94a3b8; font-size: 8px; font-weight: 850; letter-spacing: 0.09em; text-transform: uppercase; line-height: 1.45; }
+
+        .tab-btn { padding: 10px 14px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; border: 1px solid transparent; border-radius: 10px; transition: all 0.25s; cursor: pointer; display: flex; align-items: center; gap: 8px; flex: 1 1 150px; justify-content: center; }
+        .tab-btn:hover { color: #fff; background: color-mix(in srgb, var(--settings-accent) 7%, transparent); border-color: color-mix(in srgb, var(--settings-accent) 15%, transparent); }
+        .tab-btn.active { color: var(--brand-primary); border-color: color-mix(in srgb, var(--brand-primary) 34%, transparent); background: color-mix(in srgb, var(--brand-primary) 13%, transparent); text-shadow: 0 0 10px var(--brand-glow); box-shadow: inset 0 0 14px color-mix(in srgb, var(--brand-primary) 10%, transparent); }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .theme-radio, .mode-radio { display: none; }
+
+        .mode-grid,
+        .theme-grid {
+            gap: 10px;
+        }
+        .mode-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .mode-grid > * {
+            flex: 0 0 auto;
+        }
+        .theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+        .mode-card {
+            min-height: 88px; min-width: 128px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+            padding: 14px 16px; border-radius: 14px; background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer; transition: all 0.22s ease; text-align: center;
+        }
+        .mode-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); }
+        .mode-radio:checked + .mode-card { background: color-mix(in srgb, var(--brand-primary) 12%, rgba(0,0,0,0.72)); border-color: var(--brand-primary); box-shadow: 0 8px 18px -10px var(--brand-glow), inset 0 0 12px color-mix(in srgb, var(--brand-primary) 14%, transparent); transform: translateY(-2px); }
+
+        .mode-card .mode-icon { font-size: 20px; line-height: 1; }
+        .mode-card .mode-name { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; color: #f8fafc; line-height: 1.3; }
+
+        .theme-card {
+            min-height: 58px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; border-radius: 10px;
+            background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.22s ease;
+            position: relative; overflow: hidden;
+        }
+        .theme-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.14); transform: translateY(-2px); }
+        .theme-card .theme-icon { font-size: 16px; transition: all 0.22s ease; }
+        .theme-card .theme-name { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.07em; color: #cbd5e1; text-align: center; line-height: 1.1; }
+        .theme-radio:checked + .theme-card { background: color-mix(in srgb, currentColor 10%, rgba(0,0,0,0.7)); border-color: currentColor; box-shadow: 0 8px 18px -10px currentColor, inset 0 0 12px color-mix(in srgb, currentColor 16%, transparent); transform: translateY(-2px); }
+        .theme-radio:checked + .theme-card .theme-icon { filter: drop-shadow(0 0 8px currentColor); transform: scale(1.1); }
+        .theme-radio:checked + .theme-card .theme-name { color: #fff; text-shadow: 0 0 8px currentColor; }
+        .settings-toast-popup { margin-top: 64px !important; margin-right: 18px !important; border: 1px solid color-mix(in srgb, var(--settings-accent) 22%, rgba(255,255,255,0.08)) !important; border-radius: 14px !important; padding: 12px 14px !important; box-shadow: 0 18px 42px -24px var(--settings-accent-glow), 0 14px 32px -20px rgba(0,0,0,0.9) !important; }
+        .settings-toast-popup .swal2-icon { margin: 0 10px 0 0 !important; width: 34px !important; height: 34px !important; min-width: 34px !important; }
+        .settings-toast-popup .swal2-title { padding: 0 !important; margin: 0 !important; color: #e2e8f0 !important; font-size: 13px !important; font-weight: 900 !important; line-height: 1.25 !important; text-align: left !important; }
+        .settings-toast-popup .swal2-html-container { margin: 2px 0 0 !important; color: #94a3b8 !important; font-size: 11px !important; font-weight: 800 !important; text-align: left !important; }
+
+        @media (min-width: 768px) {
+            .theme-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .settings-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .settings-upcoming-sections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .tab-btn { flex: 0 1 auto; }
+        }
+
+        @media (min-width: 1280px) {
+            #tab-profile > .grid { grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr); gap: 18px; align-items: start; }
+            .theme-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+        }
+        @media (max-width: 767px) {
+            .settings-form-grid { grid-template-columns: 1fr; }
+            .settings-time-grid { grid-template-columns: 1fr; }
+            .settings-option-grid, .settings-option-grid.is-two, .settings-favorite-grid { grid-template-columns: 1fr; }
+            .game-settings-head { flex-direction: column; }
+            .settings-card { padding: 16px; }
+            .settings-hero { padding: 12px; }
+            .settings-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+            .settings-tabs::-webkit-scrollbar { display: none; }
+            .settings-tabs .tab-btn { flex: 0 0 auto; min-width: 148px; min-height: 44px; white-space: nowrap; }
+        }
+
+        .perf-mode-radio:checked + .perf-mode-card {
+            border-color: var(--settings-accent);
+            background: color-mix(in srgb, var(--settings-accent) 10%, transparent);
+            box-shadow: 0 0 15px var(--settings-accent-glow);
+        }
+
+        .settings-theme-text { color: var(--settings-accent-text); }
+        .settings-theme-panel { background-color: color-mix(in srgb, var(--settings-accent) 10%, transparent); border-color: color-mix(in srgb, var(--settings-accent) 20%, transparent); }
+        .settings-theme-chip { color: var(--settings-accent); }
+        .settings-theme-button { background: var(--settings-accent); border-color: var(--settings-accent); box-shadow: 0 0 15px var(--settings-accent-glow); }
+        .settings-theme-button:hover { filter: brightness(1.2); box-shadow: 0 0 25px var(--settings-accent-glow); }
+    </style>
+
+    <div class="holo-panel settings-hero">
+        <div class="flex items-center gap-3 relative z-10">
+            <div class="settings-hero-icon">
+                <i class="fa-solid fa-server"></i>
+            </div>
+            <div>
+                <h1 class="text-[13px] md:text-[15px] font-black text-white uppercase tracking-[0.18em] leading-tight text-shadow-sm">{{ t('settings.page.hero_title') }}</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.14em] mt-1 flex items-center gap-2" style="color: var(--brand-primary);">
+                    <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background-color: var(--brand-primary); box-shadow: 0 0 8px var(--brand-glow);"></span> {{ t('settings.page.hero_subtitle') }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% set hasEmail = my.email is defined and my.email %}
+    {% set hasAvatar = my.avatar is defined and my.avatar %}
+    {% set missingProfileItems = [] %}
+    {% if not hasEmail %}
+        {% set missingProfileItems = missingProfileItems|merge(['e-posta']) %}
+    {% endif %}
+    {% if not hasAvatar %}
+        {% set missingProfileItems = missingProfileItems|merge(['avatar']) %}
+    {% endif %}
+
+    <div class="settings-summary-grid">
+        <div class="settings-summary-card">
+            <div class="settings-summary-icon"><i class="fa-solid fa-user-check"></i></div>
+            <div>
+                <h3>Hesap Durumu</h3>
+                <p>{% if missingProfileItems|length %}Eksik bilgi: {{ missingProfileItems|join(', ') }}.{% else %}Temel hesap bilgileri tamam gorunuyor.{% endif %}</p>
+            </div>
+        </div>
+        <div class="settings-summary-card">
+            <div class="settings-summary-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <h3>Guvenlik Ozeti</h3>
+                <p>Sifre degistirme ayari aktif. 2FA hesaba aktif ozellik olarak sayilmiyor.</p>
+            </div>
+        </div>
+        <div class="settings-summary-card">
+            <div class="settings-summary-icon"><i class="fa-solid fa-palette"></i></div>
+            <div>
+                <h3>Gorunum</h3>
+                <p>Aktif tema: {{ themeState.mode|default('dark') }} / {{ themeState.color|default('cyan') }}.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="holo-panel settings-tabs flex flex-wrap">
+        <div class="tab-btn active" data-target="tab-profile"><i class="fa-solid fa-id-card"></i> {{ t('settings.tabs.profile') }}</div>
+        <div class="tab-btn" data-target="tab-system"><i class="fa-solid fa-desktop"></i> {{ t('settings.tabs.system') }}</div>
+        <div class="tab-btn" data-target="tab-communication"><i class="fa-solid fa-comments"></i> Iletisim & Gizlilik</div>
+        <div class="tab-btn" data-target="tab-game-experience"><i class="fa-solid fa-gamepad"></i> Oyun Deneyimi</div>
+        <div class="tab-btn" data-target="tab-upcoming"><i class="fa-solid fa-flask"></i> Gelistirme Asamasinda</div>
+    </div>
+
+    <div id="tab-profile" class="tab-content active space-y-6">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="holo-panel settings-card relative">
+                <div class="settings-card-title">
+                    <div>
+                        <h2><i class="fa-solid fa-id-card" style="color: var(--brand-primary);"></i> Hesap Bilgileri</h2>
+                        <p>E-posta ve avatar bilgilerini yonet.</p>
+                    </div>
+                </div>
+                <form id="profile-settings-form" onsubmit="window.updateProfile(event)">
+                    <div class="settings-form-grid">
+                        <div class="settings-field">
+                            <label class="settings-label" style="color: var(--brand-primary);"><i class="fa-solid fa-user"></i> {{ t('settings.profile.username') }}</label>
+                            <input type="text" value="{{ my.username }}" disabled class="cyber-input py-3 px-4 border-dashed">
+                            <div class="settings-helper">Kullanici adi su an degistirilemiyor.</div>
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-label"><i class="fa-solid fa-envelope text-slate-500"></i> {{ t('settings.profile.email') }}</label>
+                            <div class="relative"><i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="email" id="input-email" value="{{ my.email }}" required class="cyber-input py-3 pr-4 pl-11"></div>
+                            <div id="email-change-note" class="settings-helper is-warn hidden">E-posta degisikligi kayit sonrasi gecerli olur.</div>
+                        </div>
+                        <div class="settings-field is-wide">
+                            <label class="settings-label"><i class="fa-solid fa-image text-slate-500"></i> {{ t('settings.profile.avatar') }}</label>
+                            <div class="settings-avatar-preview mb-3">
+                                <img id="settings-avatar-preview-img" src="{{ my.avatar|default('') }}" alt="Avatar onizleme">
+                                <div id="settings-avatar-fallback" class="settings-avatar-fallback"><i class="fa-solid fa-user"></i></div>
+                                <div>
+                                    <div class="text-[9px] font-black uppercase tracking-[0.12em] text-white">Avatar Onizleme</div>
+                                    <div class="settings-helper !mt-1">URL bos veya yuklenemezse varsayilan avatar gosterilir.</div>
+                                </div>
+                            </div>
+                            <div class="relative"><i class="fa-solid fa-image absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="url" id="input-avatar" value="{{ my.avatar }}" class="cyber-input py-3 pr-4 pl-11"></div>
+                        </div>
+                    </div>
+                    <div class="settings-action-row">
+                        <button type="submit" id="profile-save-btn" class="cyber-btn btn-cyan settings-primary-action" style="background:var(--brand-primary); border-color:var(--brand-primary);" disabled><i class="fa-solid fa-fingerprint"></i> {{ t('settings.profile.update') }}</button>
+                        <div id="profile-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="holo-panel settings-card tech-border-top-red relative">
+                <div class="settings-card-title">
+                    <div>
+                        <h2><i class="fa-solid fa-shield-halved text-red-500"></i> Guvenlik</h2>
+                        <p>Sifre degisikligi icin mevcut sifre gerekir.</p>
+                    </div>
+                </div>
+                <form id="security-settings-form" onsubmit="window.updatePassword(event)">
+                    <div class="settings-form-grid">
+                        <div class="settings-field is-wide">
+                            <label class="settings-label"><i class="fa-solid fa-lock text-slate-500"></i> {{ t('settings.security.current_password') }}</label>
+                            <div class="relative"><i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="password" id="input-old-password" required class="cyber-input input-red py-3 pr-12 pl-11"><button type="button" class="settings-secret-toggle" data-toggle-secret="input-old-password" aria-label="{{ t('settings.common.show_hide') }}"><i class="fa-solid fa-eye"></i></button></div>
+                            <div class="settings-inline-alert" data-caps-warning>Caps Lock acik gorunuyor.</div>
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-label"><i class="fa-solid fa-key text-slate-500"></i> {{ t('settings.security.new_password') }}</label>
+                            <div class="relative"><input type="password" id="input-new-password" required minlength="6" class="cyber-input input-red py-3 pr-12 pl-4"><button type="button" class="settings-secret-toggle" data-toggle-secret="input-new-password" aria-label="{{ t('settings.common.show_hide') }}"><i class="fa-solid fa-eye"></i></button></div>
+                            <div class="settings-strength"><div id="password-strength-bar" class="settings-strength-bar"></div></div>
+                            <div id="password-strength-text" class="settings-strength-text">Sifre gucu: bekleniyor</div>
+                            <div class="settings-inline-alert" data-caps-warning>Caps Lock acik gorunuyor.</div>
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-label"><i class="fa-solid fa-check-double text-slate-500"></i> {{ t('settings.security.confirm_password') }}</label>
+                            <div class="relative"><input type="password" id="input-new-password-confirm" required minlength="6" class="cyber-input input-red py-3 pr-12 pl-4"><button type="button" class="settings-secret-toggle" data-toggle-secret="input-new-password-confirm" aria-label="{{ t('settings.common.show_hide') }}"><i class="fa-solid fa-eye"></i></button></div>
+                            <div id="password-match-note" class="settings-inline-alert">Yeni sifre ve tekrar alani eslesmiyor.</div>
+                            <div class="settings-inline-alert" data-caps-warning>Caps Lock acik gorunuyor.</div>
+                        </div>
+                    </div>
+                    <div class="settings-action-row">
+                        <button type="submit" id="password-save-btn" class="cyber-btn btn-red settings-password-action" disabled><i class="fa-solid fa-key"></i> {{ t('settings.security.change_password') }}</button>
+                        <div id="password-save-hint" class="settings-action-hint">Sifre alanlari tamamlaninca aktif olur.</div>
+                    </div>
+                </form>
+                <div class="game-card-action">
+                    <div id="game-experience-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                    <button form="game-experience-form" type="submit" class="cyber-btn btn-cyan settings-primary-action game-experience-save-btn" disabled>
+                        <i class="fa-solid fa-gamepad"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-system" class="tab-content space-y-4">
+        <div class="grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)] gap-4">
+            <div class="holo-panel settings-card relative">
+                <h2 class="text-[10px] font-black text-slate-300 uppercase tracking-[0.18em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
+                    <i class="fa-solid fa-language" style="color: var(--brand-primary);"></i> Gorunum ve Dil
+                </h2>
+                <div class="space-y-3">
+                    <div class="rounded-xl border border-white/5 bg-black/20 p-3 space-y-3">
+                        <div>
+                            <div>
+                                <label class="settings-label">{{ t('settings.localization.language') }}</label>
+                                <div class="settings-helper mb-2">Dil kaydedilince sayfa yeni secimle yenilenir.</div>
+                                <div class="select-wrapper">
+                                    <select id="input-language" class="cyber-select py-3 px-4">
+                                        <option value="tr" {% if languageState == "tr" %}selected{% endif %}>{{ t('settings.language.tr') }}</option>
+                                        <option value="en" {% if languageState == "en" %}selected{% endif %}>{{ t('settings.language.en') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="language-save-btn" onclick="window.updateLanguage()" class="cyber-btn btn-cyan settings-primary-action" disabled>
+                            <i class="fa-solid fa-language"></i> {{ t('settings.localization.apply_language') }}
+                        </button>
+                        <div id="language-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                    </div>
+
+                    <div class="rounded-xl border border-white/5 bg-black/20 p-3">
+                        <div class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500 mb-2">{{ t('settings.system.save_theme') }}</div>
+                        <button type="button" id="theme-save-btn" onclick="window.applyTheme()" class="cyber-btn btn-cyan settings-primary-action" style="background:var(--brand-primary); border-color:var(--brand-primary);" disabled>
+                            <i class="fa-solid fa-floppy-disk"></i> {{ t('settings.system.save_theme') }}
+                        </button>
+                        <div id="theme-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="holo-panel settings-card relative">
+                <h2 class="text-[10px] font-black text-slate-300 uppercase tracking-[0.18em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
+                    <i class="fa-solid fa-desktop" style="color: var(--brand-primary);"></i> {{ t('settings.system.interface_mode') }}
+                </h2>
+                <div class="space-y-3">
+                    <div class="rounded-xl border border-white/5 bg-black/20 p-3 space-y-3">
+                        <label id="settings-interface-mode-label" class="settings-label mb-0">
+                            <i class="fa-solid fa-circle-half-stroke text-slate-500"></i> {{ t('settings.system.interface_mode') }}
+                        </label>
+                        <div class="settings-helper">Arayuz Modu arka plan ve panel tonunu degistirir.</div>
+
+                        <div class="mode-grid">
+                            {% for modeKey, modeMeta in themeConfig.modes %}
+                                <input
+                                    type="radio"
+                                    name="mode"
+                                    id="mode-{{ modeKey }}"
+                                    class="mode-radio"
+                                    value="{{ modeKey }}"
+                                    {% if themeState.mode|default('dark') == modeKey %}checked{% endif %}
+                                >
+                                <label for="mode-{{ modeKey }}" class="mode-card">
+                                    <i class="{{ modeMeta.icon }} mode-icon"></i>
+                                    <span class="mode-name">{{ modeMeta.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-white/5 bg-black/20 p-3 space-y-3">
+                        <label id="settings-color-palette-label" class="settings-label mb-0">
+                            <i class="fa-solid fa-palette text-slate-500"></i> {{ t('settings.system.color_palette') }}
+                        </label>
+                        <div class="settings-helper">Sistem Renk Paleti vurgu rengi, buton ve aktif durumlari degistirir.</div>
+
+                        <div class="theme-grid">
+                            {% for colorKey, colorMeta in themeConfig.colors %}
+                                <input
+                                    type="radio"
+                                    name="theme"
+                                    id="theme-{{ colorKey }}"
+                                    class="theme-radio"
+                                    value="{{ colorKey }}"
+                                    {% if themeState.color|default('cyan') == colorKey %}checked{% endif %}
+                                >
+                                <label for="theme-{{ colorKey }}" class="theme-card tc-{{ colorKey }}">
+                                    <i class="{{ colorMeta.icon }} theme-icon"></i>
+                                    <span class="theme-name">{{ colorMeta.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-communication" class="tab-content space-y-4">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+            <div class="holo-panel settings-card relative self-start">
+                <h2 class="text-[10px] font-black text-slate-300 uppercase tracking-[0.18em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
+                    <i class="fa-solid fa-bell" style="color: var(--brand-primary);"></i> Bildirim Tercihleri
+                </h2>
+                <form id="notification-settings-form" class="rounded-xl border border-white/5 bg-black/20 p-3 space-y-3" onsubmit="window.updateNotificationSettings(event)">
+                    <div>
+                        <div class="text-[9px] font-black uppercase tracking-[0.14em] text-white flex items-center gap-2"><i class="fa-solid fa-bell" style="color: var(--brand-primary);"></i> Bildirim Tercihleri</div>
+                        <div class="settings-helper">Kritik sistem duyurulari tamamen kapatilamaz.</div>
+                    </div>
+
+                    <label class="settings-toggle-row">
+                        <span>
+                            <span class="settings-toggle-title">DM bildirimleri</span>
+                            <span class="settings-toggle-desc">Yeni direkt mesaj bildirimleri.</span>
+                        </span>
+                        <span class="settings-switch"><input type="checkbox" id="notif-dm" name="dm_enabled" {% if notificationSettings.dm_enabled|default(1) %}checked{% endif %}><span></span></span>
+                    </label>
+
+                    <label class="settings-toggle-row">
+                        <span>
+                            <span class="settings-toggle-title">Haber bildirimleri</span>
+                            <span class="settings-toggle-desc">Takip edilen gazete haberleri.</span>
+                        </span>
+                        <span class="settings-switch"><input type="checkbox" id="notif-news" name="news_enabled" {% if notificationSettings.news_enabled|default(1) %}checked{% endif %}><span></span></span>
+                    </label>
+
+                    <label class="settings-toggle-row">
+                        <span>
+                            <span class="settings-toggle-title">Sistem duyurulari</span>
+                            <span class="settings-toggle-desc">Kritik duyurular her zaman kayda alinir.</span>
+                        </span>
+                        <span class="settings-switch"><input type="checkbox" id="notif-system" name="system_enabled" {% if notificationSettings.system_enabled|default(1) %}checked{% endif %}><span></span></span>
+                    </label>
+
+                    <label class="settings-toggle-row">
+                        <span>
+                            <span class="settings-toggle-title">Sessiz saatler</span>
+                            <span class="settings-toggle-desc">Bu aralikta bildirimler okunmus kaydedilir.</span>
+                        </span>
+                        <span class="settings-switch"><input type="checkbox" id="notif-quiet" name="quiet_hours_enabled" {% if notificationSettings.quiet_hours_enabled|default(0) %}checked{% endif %}><span></span></span>
+                    </label>
+
+                    <div class="settings-time-grid">
+                        <div>
+                            <label class="settings-label">Baslangic</label>
+                            <input type="time" id="notif-quiet-start" class="cyber-input py-3 px-4" value="{{ notificationSettings.quiet_start|default('22:00') }}">
+                        </div>
+                        <div>
+                            <label class="settings-label">Bitis</label>
+                            <input type="time" id="notif-quiet-end" class="cyber-input py-3 px-4" value="{{ notificationSettings.quiet_end|default('08:00') }}">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="notification-save-btn" class="cyber-btn btn-cyan settings-primary-action" disabled>
+                        <i class="fa-solid fa-bell"></i> Bildirimleri Kaydet
+                    </button>
+                    <div id="notification-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                </form>
+            </div>
+
+            <div class="holo-panel settings-card relative">
+                <h2 class="text-[10px] font-black text-slate-300 uppercase tracking-[0.18em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
+                    <i class="fa-solid fa-user-shield" style="color: var(--brand-primary);"></i> DM Gizlilik Ayarlari
+                </h2>
+                <form id="dm-privacy-form" class="rounded-xl border border-white/5 bg-black/20 px-3 pt-3 pb-2 space-y-1" onsubmit="window.updateDmPrivacySettings(event)">
+                    <div>
+                        <div class="text-[9px] font-black uppercase tracking-[0.14em] text-white flex items-center gap-2"><i class="fa-solid fa-user-shield" style="color: var(--brand-primary);"></i> DM Gizlilik Ayarlari</div>
+                        <div class="settings-helper">Yeni DM baslatma izinlerini kontrol eder; mevcut sohbet gecmisini silmez.</div>
+                    </div>
+
+                    <div class="settings-simple-row">
+                        <label class="settings-label">Kimler mesaj gonderebilir?</label>
+                        <div class="select-wrapper">
+                            <select id="dm-allow-from" class="cyber-select py-3 px-4">
+                                <option value="everyone" {% if dmPrivacySettings.allow_from|default('everyone') == 'everyone' %}selected{% endif %}>Herkes</option>
+                                <option value="friends" disabled>Sadece arkadaslar - altyapi yok</option>
+                                <option value="party" {% if dmPrivacySupport.party and dmPrivacySettings.allow_from|default('everyone') == 'party' %}selected{% endif %} {% if not dmPrivacySupport.party %}disabled{% endif %}>Parti / ittifak uyeleri{% if not dmPrivacySupport.party %} - altyapi yok{% endif %}</option>
+                                <option value="nobody" {% if dmPrivacySettings.allow_from|default('everyone') == 'nobody' %}selected{% endif %}>Kimse</option>
+                            </select>
+                        </div>
+                        <div id="dm-allow-desc" class="settings-choice-desc">Tum oyuncular sana yeni mesaj gonderebilir.</div>
+                        <div class="settings-helper">Arkadas secenegi, gercek arkadas sistemi olmadigi icin pasif.</div>
+                    </div>
+
+                    <div class="settings-simple-row flex items-center justify-between gap-3">
+                        <div>
+                            <div class="settings-toggle-title">Mesaj istekleri</div>
+                            <div class="settings-toggle-desc">Ayri istek kutusu henuz aktif degil.</div>
+                        </div>
+                        <input type="hidden" id="dm-message-requests" name="message_requests_enabled" value="{% if dmPrivacySettings.message_requests_enabled|default(0) %}1{% else %}0{% endif %}">
+                        <span class="settings-info-badge"><i class="fa-solid fa-clock"></i> Istek kutusu henuz aktif degil</span>
+                    </div>
+
+                    <div class="settings-simple-row">
+                        <div class="settings-toggle-title">Engellenen kullanicilar</div>
+                        <div class="settings-toggle-desc">Engel altyapisi aktif degil.</div>
+                    </div>
+
+                    <button type="submit" id="dm-privacy-save-btn" class="cyber-btn btn-cyan settings-primary-action" disabled>
+                        <i class="fa-solid fa-user-shield"></i> DM Gizliligini Kaydet
+                    </button>
+                    <div id="dm-privacy-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-game-experience" class="tab-content space-y-4">
+        <div class="game-settings-layout grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="holo-panel settings-card relative">
+                <div class="game-settings-head">
+                    <div>
+                        <h2 class="flex items-center gap-2"><i class="fa-solid fa-gamepad" style="color: var(--brand-primary);"></i> Oyun Deneyimi</h2>
+                        <p>Arayuz hissi, animasyon ve panel yogunlugunu ayarla.</p>
+                    </div>
+                    <span class="game-settings-badge"><i class="fa-solid fa-check"></i> Aktif</span>
+                </div>
+                <form id="game-experience-form" class="game-settings-panel" onsubmit="window.updateGameExperienceSettings(event)">
+                    <div class="game-setting-group">
+                        <label class="settings-label">Arayuz yogunlugu</label>
+                        <div class="settings-helper mb-2">Ayarlar ve ana sayfada kart bosluklarini kucuk olcekte etkiler.</div>
+                        <div class="settings-option-grid">
+                            <input class="settings-choice-radio" type="radio" name="ui_density" id="gx-density-compact" value="compact" {% if gameExperienceSettings.ui_density|default('balanced') == 'compact' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-density-compact">Kompakt</label>
+                            <input class="settings-choice-radio" type="radio" name="ui_density" id="gx-density-balanced" value="balanced" {% if gameExperienceSettings.ui_density|default('balanced') == 'balanced' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-density-balanced">Dengeli</label>
+                            <input class="settings-choice-radio" type="radio" name="ui_density" id="gx-density-comfortable" value="comfortable" {% if gameExperienceSettings.ui_density|default('balanced') == 'comfortable' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-density-comfortable">Ferah</label>
+                        </div>
+                    </div>
+
+                    <div class="game-setting-group">
+                        <label class="settings-label">Animasyon yogunlugu</label>
+                        <div class="settings-helper mb-2">Kapali secimi gereksiz hover, glow ve gecisleri azaltir.</div>
+                        <div class="settings-option-grid">
+                            <input class="settings-choice-radio" type="radio" name="animation_level" id="gx-motion-off" value="off" {% if gameExperienceSettings.animation_level|default('balanced') == 'off' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-motion-off">Kapali</label>
+                            <input class="settings-choice-radio" type="radio" name="animation_level" id="gx-motion-balanced" value="balanced" {% if gameExperienceSettings.animation_level|default('balanced') == 'balanced' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-motion-balanced">Dengeli</label>
+                            <input class="settings-choice-radio" type="radio" name="animation_level" id="gx-motion-full" value="full" {% if gameExperienceSettings.animation_level|default('balanced') == 'full' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-motion-full">Tam</label>
+                        </div>
+                    </div>
+
+                    <div class="game-setting-group">
+                        <label class="settings-label">Sol HUD gorunumu</label>
+                        <div class="settings-helper mb-2">Kompakt mod ana sayfa yan panel kart bosluklarini azaltir.</div>
+                        <div class="settings-option-grid is-two">
+                            <input class="settings-choice-radio" type="radio" name="left_hud" id="gx-hud-detailed" value="detailed" {% if gameExperienceSettings.left_hud|default('detailed') == 'detailed' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-hud-detailed">Detayli</label>
+                            <input class="settings-choice-radio" type="radio" name="left_hud" id="gx-hud-compact" value="compact" {% if gameExperienceSettings.left_hud|default('detailed') == 'compact' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-hud-compact">Kompakt</label>
+                        </div>
+                    </div>
+
+                    <div class="game-setting-group">
+                        <label class="settings-label">Shouts genisligi</label>
+                        <div class="settings-helper mb-2">Ana sayfadaki Shouts kartinin yatay kapladigi alani ayarlar.</div>
+                        <div class="settings-option-grid">
+                            <input class="settings-choice-radio" type="radio" name="shout_width" id="gx-shout-width-compact" value="compact" {% if gameExperienceSettings.shout_width|default('balanced') == 'compact' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-shout-width-compact">Kompakt</label>
+                            <input class="settings-choice-radio" type="radio" name="shout_width" id="gx-shout-width-balanced" value="balanced" {% if gameExperienceSettings.shout_width|default('balanced') == 'balanced' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-shout-width-balanced">Dengeli</label>
+                            <input class="settings-choice-radio" type="radio" name="shout_width" id="gx-shout-width-wide" value="wide" {% if gameExperienceSettings.shout_width|default('balanced') == 'wide' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-shout-width-wide">Genis</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="holo-panel settings-card relative">
+                <div class="game-settings-head">
+                    <div>
+                        <h2 class="flex items-center gap-2"><i class="fa-solid fa-bolt" style="color: var(--brand-primary);"></i> Ana Sayfa Tercihleri</h2>
+                        <p>Ilk gorunen bolumleri ve hizli menuyu duzenle.</p>
+                    </div>
+                    <span class="game-settings-badge"><i class="fa-solid fa-home"></i> Ana sayfa</span>
+                </div>
+                <div class="game-settings-panel">
+                    <div class="game-setting-group">
+                        <label class="settings-label">Ana sayfa duzeni</label>
+                        <div class="settings-helper mb-2">Kompakt kolon modunda Haberler solda kuculur, Shouts orta alana iner, Gorevler sag kolona adapte olur.</div>
+                        <div class="settings-option-grid is-two">
+                            <input form="game-experience-form" class="settings-choice-radio" type="radio" name="home_layout" id="gx-home-layout-wide" value="wide" {% if gameExperienceSettings.home_layout|default('wide') == 'wide' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-home-layout-wide">Genis akis</label>
+                            <input form="game-experience-form" class="settings-choice-radio" type="radio" name="home_layout" id="gx-home-layout-compact-columns" value="compact_columns" {% if gameExperienceSettings.home_layout|default('wide') == 'compact_columns' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-home-layout-compact-columns">Kompakt kolon</label>
+                        </div>
+                    </div>
+
+                    <div class="game-setting-group">
+                        <label class="settings-label">Ana sayfa oncelikli alan</label>
+                        <div class="settings-helper mb-2">Ana sayfada ilgili bolum yukariya alinir ve kucuk vurgu uygulanir.</div>
+                        <div class="settings-option-grid">
+                            <input form="game-experience-form" class="settings-choice-radio" type="radio" name="home_priority" id="gx-priority-news" value="news" {% if gameExperienceSettings.home_priority|default('news') == 'news' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-priority-news">Haberler</label>
+                            <input form="game-experience-form" class="settings-choice-radio" type="radio" name="home_priority" id="gx-priority-shouts" value="shouts" {% if gameExperienceSettings.home_priority|default('news') == 'shouts' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-priority-shouts">Shouts</label>
+                            <input form="game-experience-form" class="settings-choice-radio" type="radio" name="home_priority" id="gx-priority-tasks" value="tasks" {% if gameExperienceSettings.home_priority|default('news') == 'tasks' %}checked{% endif %}>
+                            <label class="settings-choice-card" for="gx-priority-tasks">Gorevler</label>
+                        </div>
+                    </div>
+
+                    <div class="game-setting-group">
+                        <label class="settings-label">Hizli aksiyon favorileri</label>
+                        <div class="settings-helper mb-2">En fazla 4 secim. Ana sayfa ust hizli menusu favorileri once gosterir.</div>
+                        <div class="settings-favorite-grid" id="game-favorites-grid">
+                            {% for actionKey, actionMeta in gameExperienceQuickActions %}
+                                <input form="game-experience-form" class="settings-favorite-check" type="checkbox" name="quick_favorites[]" id="gx-fav-{{ actionKey }}" value="{{ actionKey }}" {% if actionKey in gameExperienceSettings.quick_favorites|default([]) %}checked{% endif %}>
+                                <label class="settings-favorite-chip" for="gx-fav-{{ actionKey }}"><i class="fa-solid {{ actionMeta.icon }}"></i> {{ t(actionMeta.label_key) }}</label>
+                            {% endfor %}
+                        </div>
+                        <div id="game-favorites-hint" class="settings-helper">En fazla 4 favori secilebilir.</div>
+                    </div>
+                </div>
+                <div class="game-card-action">
+                    <div class="settings-action-hint game-experience-save-hint-copy">Degisiklik yok.</div>
+                    <button form="game-experience-form" type="submit" class="cyber-btn btn-cyan settings-primary-action game-experience-save-btn" disabled>
+                        <i class="fa-solid fa-bolt"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-upcoming" class="tab-content space-y-4">
+        <div class="holo-panel settings-compact-panel relative border-t-2" style="border-top-color: var(--brand-primary);">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4 border-b border-white/5 pb-4">
+                <h2 class="text-[11px] font-black settings-theme-text uppercase tracking-[0.2em] flex items-center gap-2">
+                    <i class="fa-solid fa-flask"></i> Gelistirme Asamasinda
+                </h2>
+                <span class="settings-status-note">Bu ozellikler henuz hesabiniza acik degil.</span>
+            </div>
+            <div class="settings-upcoming-sections">
+                <section class="settings-upcoming-section">
+                    <h3 class="settings-upcoming-section-title"><i class="fa-solid fa-shield-halved"></i> Guvenlik</h3>
+                    <div class="settings-upcoming-grid">
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-mobile-screen-button"></i> {{ t('settings.security.twofa_title') }}</span><span class="settings-upcoming-badge">Planlandi</span></h3>
+                            <p>Bu ozellik henuz hesabiniz icin aktif degil.</p>
+                        </div>
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-network-wired"></i> {{ t('settings.danger.audit_title') }}</span><span class="settings-upcoming-badge">Backend gerekli</span></h3>
+                            <p>Backend destegi tamamlandiginda kullanilabilir olacak.</p>
+                        </div>
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-radiation"></i> {{ t('settings.tabs.danger') }}</span><span class="settings-upcoming-badge">Backend gerekli</span></h3>
+                            <p>Backend destegi tamamlandiginda kullanilabilir olacak.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-upcoming-section">
+                    <h3 class="settings-upcoming-section-title"><i class="fa-solid fa-plug"></i> Entegrasyon</h3>
+                    <div class="settings-upcoming-grid">
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-brands fa-discord"></i> {{ t('settings.network.discord_title') }}</span><span class="settings-upcoming-badge">Yakinda</span></h3>
+                            <p>Bu ozellik henuz hesabiniz icin aktif degil.</p>
+                        </div>
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-code"></i> {{ t('settings.network.api_key') }}</span><span class="settings-upcoming-badge">Backend gerekli</span></h3>
+                            <p>Backend destegi tamamlandiginda kullanilabilir olacak.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-upcoming-section">
+                    <h3 class="settings-upcoming-section-title"><i class="fa-solid fa-robot"></i> Otomasyon</h3>
+                    <div class="settings-upcoming-grid">
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-robot"></i> {{ t('settings.automation.title') }}</span><span class="settings-upcoming-badge">Planlandi</span></h3>
+                            <p>Bu ozellik henuz hesabiniz icin aktif degil.</p>
+                        </div>
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-microchip"></i> {{ t('settings.performance.title') }}</span><span class="settings-upcoming-badge">Yakinda</span></h3>
+                            <p>Bu ozellik henuz hesabiniz icin aktif degil.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-upcoming-section">
+                    <h3 class="settings-upcoming-section-title"><i class="fa-solid fa-user-shield"></i> Gizlilik</h3>
+                    <div class="settings-upcoming-grid">
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-user-ninja"></i> {{ t('settings.network.privacy_title') }}</span><span class="settings-upcoming-badge">Planlandi</span></h3>
+                            <p>Bu ozellik henuz hesabiniz icin aktif degil.</p>
+                        </div>
+                        <div class="settings-upcoming-card">
+                            <h3><span><i class="fa-solid fa-coins"></i> {{ t('settings.finance.title') }}</span><span class="settings-upcoming-badge">Backend gerekli</span></h3>
+                            <p>Backend destegi tamamlandiginda kullanilabilir olacak.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function getServerThemeState() {
+        const root = document.getElementById('v2-settings-center');
+
+        return {
+            mode: root && root.dataset ? (root.dataset.serverMode || 'dark') : 'dark',
+            color: root && root.dataset ? (root.dataset.serverColor || 'cyan') : 'cyan'
+        };
+    }
+
+    function getResolvedThemeState() {
+        const serverState = getServerThemeState();
+
+        return {
+            mode: serverState.mode || localStorage.getItem('omni_mode') || 'dark',
+            color: serverState.color || localStorage.getItem('omni_color') || 'cyan'
+        };
+    }
+
+    function syncThemeCache(mode, color) {
+        localStorage.setItem('omni_mode', mode);
+        localStorage.setItem('omni_color', color);
+    }
+
+    function setupLanguageControls() {
+        const languageLabel = document.querySelector('#tab-system label[for="input-language"], #tab-system label');
+        const languageSelect = document.getElementById('input-language');
+
+        if (languageLabel) {
+            languageLabel.textContent = "{{ t('settings.localization.language') }}";
+        }
+
+        if (languageSelect) {
+            languageSelect.id = 'input-language';
+            languageSelect.innerHTML = '' +
+                '<option value="tr" {% if languageState == "tr" %}selected{% endif %}>{{ t("settings.language.tr") }}</option>' +
+                '<option value="en" {% if languageState == "en" %}selected{% endif %}>{{ t("settings.language.en") }}</option>';
+        }
+    }
+
+    function setupSettingsLocalization() {
+        const texts = {
+            heroTitle: '{{ t("settings.page.hero_title") }}',
+            heroSubtitle: '{{ t("settings.page.hero_subtitle") }}',
+            tabProfile: '{{ t("settings.tabs.profile") }}',
+            tabSystem: '{{ t("settings.tabs.system") }}',
+            tabPerformance: '{{ t("settings.tabs.performance") }}',
+            tabAutomation: '{{ t("settings.tabs.automation") }}',
+            tabNetwork: '{{ t("settings.tabs.network") }}',
+            tabDanger: '{{ t("settings.tabs.danger") }}',
+            profileIdentity: '{{ t("settings.profile.identity") }}',
+            profileUsername: '{{ t("settings.profile.username") }}',
+            profileEmail: '{{ t("settings.profile.email") }}',
+            profileAvatar: '{{ t("settings.profile.avatar") }}',
+            profileUpdate: '{{ t("settings.profile.update") }}',
+            securityTitle: '{{ t("settings.security.title") }}',
+            securityCurrent: '{{ t("settings.security.current_password") }}',
+            securityNew: '{{ t("settings.security.new_password") }}',
+            securityConfirm: '{{ t("settings.security.confirm_password") }}',
+            securityButton: '{{ t("settings.security.change_password") }}',
+            twofaTitle: '{{ t("settings.security.twofa_title") }}',
+            twofaDesc: '{{ t("settings.security.twofa_desc") }}',
+            twofaButton: '{{ t("settings.security.twofa_button") }}',
+            interfaceMode: '{{ t("settings.system.interface_mode") }}',
+            colorPalette: '{{ t("settings.system.color_palette") }}',
+            saveTheme: '{{ t("settings.system.save_theme") }}',
+            perfTitle: '{{ t("settings.performance.title") }}',
+            perfSubtitle: '{{ t("settings.performance.subtitle") }}',
+            perfLowTitle: '{{ t("settings.performance.low_title") }}',
+            perfLowDesc: '{{ t("settings.performance.low_desc") }}',
+            perfBalancedTitle: '{{ t("settings.performance.balanced_title") }}',
+            perfBalancedDesc: '{{ t("settings.performance.balanced_desc") }}',
+            perfUltraTitle: '{{ t("settings.performance.ultra_title") }}',
+            perfUltraDesc: '{{ t("settings.performance.ultra_desc") }}',
+            perfApply: '{{ t("settings.performance.apply") }}',
+            automationTitle: '{{ t("settings.automation.title") }}',
+            autohealTitle: '{{ t("settings.automation.autoheal_title") }}',
+            autohealDesc: '{{ t("settings.automation.autoheal_desc") }}',
+            shiftTitle: '{{ t("settings.automation.shift_title") }}',
+            shiftDesc: '{{ t("settings.automation.shift_desc") }}',
+            automationUpdate: '{{ t("settings.automation.update") }}',
+            financeTitle: '{{ t("settings.finance.title") }}',
+            financeCurrencyTitle: '{{ t("settings.finance.currency_title") }}',
+            financeCurrencyDesc: '{{ t("settings.finance.currency_desc") }}',
+            financeCurrencyGold: '{{ t("settings.finance.currency_gold") }}',
+            financeCurrencyTry: '{{ t("settings.finance.currency_try") }}',
+            financeApply: '{{ t("settings.finance.apply") }}',
+            networkTitle: '{{ t("settings.network.title") }}',
+            discordTitle: '{{ t("settings.network.discord_title") }}',
+            discordDesc: '{{ t("settings.network.discord_desc") }}',
+            connect: '{{ t("settings.network.connect") }}',
+            apiKey: '{{ t("settings.network.api_key") }}',
+            refresh: '{{ t("settings.network.refresh") }}',
+            opsTitle: '{{ t("settings.network.ops_title") }}',
+            opsDesc: '{{ t("settings.network.ops_desc") }}',
+            privacyTitle: '{{ t("settings.network.privacy_title") }}',
+            ghostMode: '{{ t("settings.network.ghost_mode") }}',
+            hideInventory: '{{ t("settings.network.hide_inventory") }}',
+            auditTitle: '{{ t("settings.danger.audit_title") }}',
+            auditDate: '{{ t("settings.danger.table.date") }}',
+            auditIp: '{{ t("settings.danger.table.ip") }}',
+            auditDevice: '{{ t("settings.danger.table.device") }}',
+            auditStatus: '{{ t("settings.danger.table.status") }}',
+            auditNow: '{{ t("settings.danger.now") }}',
+            auditDaysAgo: '{{ t("settings.danger.days_ago") }}',
+            auditActive: '{{ t("settings.danger.active") }}',
+            auditBlocked: '{{ t("settings.danger.blocked") }}',
+            sleepTitle: '{{ t("settings.danger.sleep_title") }}',
+            sleepDesc: '{{ t("settings.danger.sleep_desc") }}',
+            sleepButton: '{{ t("settings.danger.sleep_button") }}',
+            destroyTitle: '{{ t("settings.danger.destroy_title") }}',
+            destroyDesc: '{{ t("settings.danger.destroy_desc") }}',
+            destroyButton: '{{ t("settings.danger.destroy_button") }}'
+        };
+
+        const setText = (selector, text, root = document) => {
+            const el = root.querySelector(selector);
+            if (el) {
+                el.textContent = text;
+            }
+        };
+
+        const setHtml = (selector, html, root = document) => {
+            const el = root.querySelector(selector);
+            if (el) {
+                el.innerHTML = html;
+            }
+        };
+
+        setText('#v2-settings-center > .holo-panel.border-l-4 h1', texts.heroTitle);
+        setHtml('#v2-settings-center > .holo-panel.border-l-4 p', '<span class="w-2 h-2 rounded-full animate-pulse" style="background-color: var(--brand-primary); box-shadow: 0 0 8px var(--brand-glow);"></span> ' + texts.heroSubtitle);
+
+        setHtml('[data-target="tab-profile"]', '<i class="fa-solid fa-id-card"></i> ' + texts.tabProfile);
+        setHtml('[data-target="tab-system"]', '<i class="fa-solid fa-desktop"></i> ' + texts.tabSystem);
+        const profilePanels = document.querySelectorAll('#tab-profile .holo-panel');
+        if (profilePanels[0]) {
+            setHtml('h2', '<i class="fa-solid fa-id-card text-lg" style="color: var(--brand-primary);"></i> ' + texts.profileIdentity, profilePanels[0]);
+            const labels = profilePanels[0].querySelectorAll('label');
+            if (labels[0]) labels[0].textContent = texts.profileUsername;
+            if (labels[1]) labels[1].textContent = texts.profileEmail;
+            if (labels[2]) labels[2].textContent = texts.profileAvatar;
+            const button = profilePanels[0].querySelector('button[type="submit"]');
+            if (button) button.innerHTML = '<i class="fa-solid fa-fingerprint"></i> ' + texts.profileUpdate;
+        }
+
+        if (profilePanels[1]) {
+            setHtml('h2', '<i class="fa-solid fa-shield-halved text-red-500 text-lg"></i> ' + texts.securityTitle, profilePanels[1]);
+            const labels = profilePanels[1].querySelectorAll('label');
+            if (labels[0]) labels[0].textContent = texts.securityCurrent;
+            if (labels[1]) labels[1].textContent = texts.securityNew;
+            if (labels[2]) labels[2].textContent = texts.securityConfirm;
+            const button = profilePanels[1].querySelector('#security-settings-form button[type="submit"]');
+            if (button) button.innerHTML = '<i class="fa-solid fa-key"></i> ' + texts.securityButton;
+            const twofaWrap = profilePanels[1].querySelector('.flex.items-center.justify-between.bg-black\\/40');
+            if (twofaWrap) {
+                const spans = twofaWrap.querySelectorAll('span');
+                if (spans[0]) spans[0].innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> ' + texts.twofaTitle;
+                if (spans[1]) spans[1].textContent = texts.twofaDesc;
+                const button2 = twofaWrap.querySelector('button');
+                if (button2) button2.innerHTML = '<i class="fa-solid fa-qrcode"></i> ' + texts.twofaButton;
+            }
+        }
+
+        const systemPanels = document.querySelectorAll('#tab-system .holo-panel');
+        if (systemPanels[0]) {
+            const interfaceLabel = document.getElementById('settings-interface-mode-label');
+            const paletteLabel = document.getElementById('settings-color-palette-label');
+            if (interfaceLabel) interfaceLabel.innerHTML = '<i class="fa-solid fa-circle-half-stroke text-slate-500"></i> ' + texts.interfaceMode;
+            if (paletteLabel) paletteLabel.innerHTML = '<i class="fa-solid fa-palette text-slate-500"></i> ' + texts.colorPalette;
+            const button = systemPanels[0].querySelector('button[onclick="window.applyTheme()"]');
+            if (button) button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> ' + texts.saveTheme;
+        }
+        const perfPanel = document.querySelector('#tab-performance .holo-panel');
+        if (perfPanel) {
+            setHtml('h2', '<i class="fa-solid fa-microchip"></i> ' + texts.perfTitle, perfPanel);
+            const desc = perfPanel.querySelector('p');
+            if (desc) desc.textContent = texts.perfSubtitle;
+            const cards = perfPanel.querySelectorAll('.perf-mode-card');
+            if (cards[0]) {
+                const parts = cards[0].querySelectorAll('div > div');
+                if (parts[0]) parts[0].textContent = texts.perfLowTitle;
+                if (parts[1]) parts[1].textContent = texts.perfLowDesc;
+            }
+            if (cards[1]) {
+                const parts = cards[1].querySelectorAll('div > div');
+                if (parts[0]) parts[0].textContent = texts.perfBalancedTitle;
+                if (parts[1]) parts[1].textContent = texts.perfBalancedDesc;
+            }
+            if (cards[2]) {
+                const parts = cards[2].querySelectorAll('div > div');
+                if (parts[0]) parts[0].textContent = texts.perfUltraTitle;
+                if (parts[1]) parts[1].textContent = texts.perfUltraDesc;
+            }
+            const button = perfPanel.querySelector('button');
+            if (button) button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> ' + texts.perfApply;
+        }
+
+        const automationPanels = document.querySelectorAll('#tab-automation .holo-panel');
+        if (automationPanels[0]) {
+            setHtml('h2', '<i class="fa-solid fa-robot text-lg"></i> ' + texts.automationTitle, automationPanels[0]);
+            const cards = automationPanels[0].querySelectorAll('.settings-theme-panel');
+            if (cards[0]) {
+                const spans = cards[0].querySelectorAll('span');
+                if (spans[0]) spans[0].innerHTML = '<i class="fa-solid fa-heart-pulse w-4"></i> ' + texts.autohealTitle + ' <span class="text-white px-1 rounded text-[7px] ml-1" style="background: var(--brand-primary);">VIP</span>';
+                if (spans[1]) spans[1].textContent = texts.autohealDesc;
+            }
+            if (cards[1]) {
+                const spans = cards[1].querySelectorAll('span');
+                if (spans[0]) spans[0].innerHTML = '<i class="fa-solid fa-briefcase w-4"></i> ' + texts.shiftTitle + ' <span class="bg-amber-500 text-black px-1 rounded text-[7px] ml-1">VIP+</span>';
+                if (spans[1]) spans[1].textContent = texts.shiftDesc;
+            }
+            const button = automationPanels[0].querySelector('button');
+            if (button) button.innerHTML = '<i class="fa-solid fa-microchip"></i> ' + texts.automationUpdate;
+        }
+        if (automationPanels[1]) {
+            setHtml('h2', '<i class="fa-solid fa-coins text-lg"></i> ' + texts.financeTitle, automationPanels[1]);
+            const label = automationPanels[1].querySelector('label');
+            if (label) label.textContent = texts.financeCurrencyTitle;
+            const desc = automationPanels[1].querySelector('p');
+            if (desc) desc.textContent = texts.financeCurrencyDesc;
+            const select = automationPanels[1].querySelector('select');
+            if (select) {
+                select.innerHTML = '<option value="GOLD">' + texts.financeCurrencyGold + '</option><option value="TRY">' + texts.financeCurrencyTry + '</option>';
+            }
+            const button = automationPanels[1].querySelector('button');
+            if (button) button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> ' + texts.financeApply;
+        }
+
+        const networkPanels = document.querySelectorAll('#tab-network .holo-panel');
+        if (networkPanels[0]) {
+            setHtml('h2', '<i class="fa-solid fa-network-wired settings-theme-text text-lg"></i> ' + texts.networkTitle, networkPanels[0]);
+            const card = networkPanels[0].querySelector('.settings-theme-panel');
+            if (card) {
+                const spans = card.querySelectorAll('span');
+                if (spans[0]) spans[0].innerHTML = '<i class="fa-brands fa-discord"></i> ' + texts.discordTitle;
+                if (spans[1]) spans[1].textContent = texts.discordDesc;
+                const button = card.querySelector('button');
+                if (button) button.innerHTML = '<i class="fa-solid fa-link"></i> ' + texts.connect;
+            }
+            const label = networkPanels[0].querySelector('label');
+            if (label) {
+                label.innerHTML = '<span><i class="fa-solid fa-code"></i> ' + texts.apiKey + '</span>';
+            }
+        }
+        if (networkPanels[1]) {
+            const cards = networkPanels[1].querySelectorAll('.holo-panel');
+            if (cards[0]) {
+                setHtml('h2', '<i class="fa-solid fa-users-rays"></i> ' + texts.opsTitle, cards[0]);
+                const desc = cards[0].querySelector('p');
+                if (desc) desc.innerHTML = texts.opsDesc.replace('5 GOLD', '<span class="text-yellow-500 font-bold">5 GOLD</span>');
+            }
+            if (cards[1]) {
+                setHtml('h2', '<i class="fa-solid fa-user-ninja"></i> ' + texts.privacyTitle, cards[1]);
+                const spans = cards[1].querySelectorAll('span.text-\\[9px\\]');
+                if (spans[0]) spans[0].innerHTML = '<i class="fa-solid fa-ghost w-4"></i> ' + texts.ghostMode;
+                if (spans[1]) spans[1].innerHTML = '<i class="fa-solid fa-box-open w-4"></i> ' + texts.hideInventory;
+            }
+        }
+
+        const dangerPanels = document.querySelectorAll('#tab-danger .holo-panel');
+        if (dangerPanels[0]) {
+            setHtml('h2', '<i class="fa-solid fa-network-wired"></i> ' + texts.auditTitle, dangerPanels[0]);
+            const th = dangerPanels[0].querySelectorAll('th');
+            if (th[0]) th[0].textContent = texts.auditDate;
+            if (th[1]) th[1].textContent = texts.auditIp;
+            if (th[2]) th[2].textContent = texts.auditDevice;
+            if (th[3]) th[3].textContent = texts.auditStatus;
+            const td = dangerPanels[0].querySelectorAll('tbody td');
+            if (td[0]) td[0].textContent = texts.auditNow;
+            if (td[3]) td[3].textContent = texts.auditActive;
+            if (td[4]) td[4].textContent = texts.auditDaysAgo;
+            if (td[7]) td[7].textContent = texts.auditBlocked;
+        }
+        if (dangerPanels[1]) {
+            setHtml('h2', '<i class="fa-solid fa-snowflake"></i> ' + texts.sleepTitle, dangerPanels[1]);
+            const desc = dangerPanels[1].querySelector('p');
+            if (desc) desc.innerHTML = texts.sleepDesc.replace('7 gun', '<span class="text-white font-bold">7 gun</span>');
+            const button = dangerPanels[1].querySelector('button');
+            if (button) button.innerHTML = '<i class="fa-solid fa-power-off"></i> ' + texts.sleepButton;
+        }
+        if (dangerPanels[2]) {
+            setHtml('h2', '<i class="fa-solid fa-skull"></i> ' + texts.destroyTitle, dangerPanels[2]);
+            const desc = dangerPanels[2].querySelector('p');
+            if (desc) desc.innerHTML = texts.destroyDesc.replace('Kalici Olarak', '<span class="text-red-400 font-bold">Kalici Olarak</span>');
+            const button = dangerPanels[2].querySelector('button');
+            if (button) button.innerHTML = '<i class="fa-solid fa-radiation"></i> ' + texts.destroyButton;
+        }
+    }
+
+    $(document).ready(function() {
+        $('.tab-btn').on('click', function() {
+            $('.tab-btn').removeClass('active');
+            $(this).addClass('active');
+            $('.tab-content').removeClass('active');
+            $('#' + $(this).data('target')).addClass('active');
+        });
+
+        const resolvedTheme = getResolvedThemeState();
+
+        syncThemeCache(resolvedTheme.mode, resolvedTheme.color);
+
+        $('#mode-' + resolvedTheme.mode).prop('checked', true);
+        $('#theme-' + resolvedTheme.color).prop('checked', true);
+        setupLanguageControls();
+        setupSettingsDirtyState();
+        setupSecretActions();
+        setupProfileUx();
+        setupPasswordUx();
+        setupNotificationSettings();
+        setupDmPrivacySettings();
+        setupGameExperienceSettings();
+    });
+
+    function setupProfileUx() {
+        const avatarInput = document.getElementById('input-avatar');
+        const avatarImg = document.getElementById('settings-avatar-preview-img');
+        const avatarFallback = document.getElementById('settings-avatar-fallback');
+        const emailInput = document.getElementById('input-email');
+        const emailNote = document.getElementById('email-change-note');
+        const initialEmail = emailInput ? emailInput.value : '';
+
+        const showAvatarFallback = function() {
+            if (avatarImg) avatarImg.style.display = 'none';
+            if (avatarFallback) avatarFallback.style.display = 'flex';
+        };
+
+        const updateAvatarPreview = function() {
+            const value = avatarInput ? avatarInput.value.trim() : '';
+            if (!value || !avatarImg) {
+                showAvatarFallback();
+                return;
+            }
+
+            if (avatarFallback) avatarFallback.style.display = 'none';
+            avatarImg.style.display = 'block';
+            avatarImg.src = value;
+        };
+
+        if (avatarImg) avatarImg.addEventListener('error', showAvatarFallback);
+        if (avatarInput) avatarInput.addEventListener('input', updateAvatarPreview);
+        if (emailInput && emailNote) {
+            emailInput.addEventListener('input', function() {
+                emailNote.classList.toggle('hidden', emailInput.value === initialEmail);
+            });
+        }
+
+        updateAvatarPreview();
+    }
+
+    function setupPasswordUx() {
+        const oldInput = document.getElementById('input-old-password');
+        const newInput = document.getElementById('input-new-password');
+        const confirmInput = document.getElementById('input-new-password-confirm');
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+        const matchNote = document.getElementById('password-match-note');
+
+        const getStrength = function(value) {
+            let score = 0;
+            if (value.length >= 6) score++;
+            if (value.length >= 10) score++;
+            if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+            if (/\d/.test(value)) score++;
+            if (/[^A-Za-z0-9]/.test(value)) score++;
+            return Math.min(score, 5);
+        };
+
+        const updateStrength = function() {
+            if (!newInput || !strengthBar || !strengthText) return;
+            const score = getStrength(newInput.value);
+            const labels = ['bekleniyor', 'zayif', 'orta', 'iyi', 'guclu', 'cok guclu'];
+            strengthBar.style.width = (score * 20) + '%';
+            strengthText.textContent = 'Sifre gucu: ' + labels[score];
+        };
+
+        const updateMatch = function() {
+            if (!newInput || !confirmInput || !matchNote) return;
+            const mismatch = confirmInput.value.length > 0 && newInput.value !== confirmInput.value;
+            matchNote.classList.toggle('is-visible', mismatch);
+        };
+
+        const updateCaps = function(event) {
+            const wrapper = event.target.closest('.settings-field');
+            const warning = wrapper ? wrapper.querySelector('[data-caps-warning]') : null;
+            if (!warning || !event.getModifierState) return;
+            warning.classList.toggle('is-visible', event.getModifierState('CapsLock'));
+        };
+
+        [oldInput, newInput, confirmInput].forEach(function(input) {
+            if (!input) return;
+            input.addEventListener('keyup', updateCaps);
+            input.addEventListener('keydown', updateCaps);
+            input.addEventListener('blur', function() {
+                const wrapper = input.closest('.settings-field');
+                const warning = wrapper ? wrapper.querySelector('[data-caps-warning]') : null;
+                if (warning) warning.classList.remove('is-visible');
+            });
+        });
+
+        if (newInput) newInput.addEventListener('input', function() { updateStrength(); updateMatch(); });
+        if (confirmInput) confirmInput.addEventListener('input', updateMatch);
+        updateStrength();
+        updateMatch();
+    }
+
+    function resetPasswordUx() {
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+        const matchNote = document.getElementById('password-match-note');
+
+        if (strengthBar) strengthBar.style.width = '0%';
+        if (strengthText) strengthText.textContent = 'Sifre gucu: bekleniyor';
+        if (matchNote) matchNote.classList.remove('is-visible');
+        document.querySelectorAll('[data-caps-warning]').forEach(function(warning) {
+            warning.classList.remove('is-visible');
+        });
+    }
+
+    function setupSettingsDirtyState() {
+        const profileForm = document.getElementById('profile-settings-form');
+        const profileButton = document.getElementById('profile-save-btn');
+        const passwordForm = document.getElementById('security-settings-form');
+        const passwordButton = document.getElementById('password-save-btn');
+        const languageSelect = document.getElementById('input-language');
+        const languageButton = document.getElementById('language-save-btn');
+        const themeButton = document.getElementById('theme-save-btn');
+        const profileHint = document.getElementById('profile-save-hint');
+        const passwordHint = document.getElementById('password-save-hint');
+        const languageHint = document.getElementById('language-save-hint');
+        const themeHint = document.getElementById('theme-save-hint');
+        const initialProfile = profileForm ? $(profileForm).serialize() : '';
+        const initialLanguage = languageSelect ? languageSelect.value : '';
+        const initialTheme = getServerThemeState();
+
+        const setHint = function(el, readyText, idleText, isReady) {
+            if (!el) return;
+            el.textContent = isReady ? readyText : idleText;
+            el.classList.toggle('is-ready', isReady);
+        };
+
+        const syncProfile = function() {
+            if (profileButton && profileForm) {
+                const isReady = $(profileForm).serialize() !== initialProfile;
+                profileButton.disabled = !isReady;
+                setHint(profileHint, 'Kaydetmeye hazir.', 'Degisiklik yok.', isReady);
+            }
+        };
+
+        const syncPassword = function() {
+            if (passwordButton) {
+                const isReady = !!($('#input-old-password').val() && $('#input-new-password').val() && $('#input-new-password-confirm').val());
+                passwordButton.disabled = !isReady;
+                setHint(passwordHint, 'Sifre degisikligi onaya hazir.', 'Sifre alanlari tamamlaninca aktif olur.', isReady);
+            }
+        };
+
+        const syncLanguage = function() {
+            if (languageButton && languageSelect) {
+                const isReady = languageSelect.value !== initialLanguage;
+                languageButton.disabled = !isReady;
+                setHint(languageHint, 'Dil kaydedilince sayfa yenilenir.', 'Degisiklik yok.', isReady);
+            }
+        };
+
+        const syncTheme = function() {
+            const selectedModeEl = document.querySelector('input[name="mode"]:checked');
+            const selectedColorEl = document.querySelector('input[name="theme"]:checked');
+            if (themeButton && selectedModeEl && selectedColorEl) {
+                const isReady = selectedModeEl.value !== initialTheme.mode || selectedColorEl.value !== initialTheme.color;
+                themeButton.disabled = !isReady;
+                setHint(themeHint, 'Tema kaydedilince sayfa yenilenir.', 'Degisiklik yok.', isReady);
+            }
+        };
+
+        if (profileForm) $(profileForm).on('input change', syncProfile);
+        if (passwordForm) $(passwordForm).on('input change', syncPassword);
+        if (languageSelect) languageSelect.addEventListener('change', syncLanguage);
+        $('input[name="mode"], input[name="theme"]').on('change', syncTheme);
+
+        syncProfile();
+        syncPassword();
+        syncLanguage();
+        syncTheme();
+    }
+
+    function setupNotificationSettings() {
+        const form = document.getElementById('notification-settings-form');
+        const button = document.getElementById('notification-save-btn');
+        const hint = document.getElementById('notification-save-hint');
+        const quietToggle = document.getElementById('notif-quiet');
+        const quietStart = document.getElementById('notif-quiet-start');
+        const quietEnd = document.getElementById('notif-quiet-end');
+
+        if (!form || !button) return;
+
+        const getPayload = function() {
+            return {
+                dm_enabled: document.getElementById('notif-dm').checked ? '1' : '0',
+                news_enabled: document.getElementById('notif-news').checked ? '1' : '0',
+                system_enabled: document.getElementById('notif-system').checked ? '1' : '0',
+                quiet_hours_enabled: quietToggle.checked ? '1' : '0',
+                quiet_start: quietStart.value || '22:00',
+                quiet_end: quietEnd.value || '08:00'
+            };
+        };
+
+        const serializePayload = function(payload) {
+            return [
+                payload.dm_enabled,
+                payload.news_enabled,
+                payload.system_enabled,
+                payload.quiet_hours_enabled,
+                payload.quiet_start,
+                payload.quiet_end
+            ].join('|');
+        };
+
+        let initial = serializePayload(getPayload());
+
+        const sync = function() {
+            const quietEnabled = quietToggle.checked;
+            quietStart.disabled = !quietEnabled;
+            quietEnd.disabled = !quietEnabled;
+
+            const changed = serializePayload(getPayload()) !== initial;
+            button.disabled = !changed;
+            if (hint) {
+                hint.textContent = changed ? 'Kaydetmeye hazir.' : 'Degisiklik yok.';
+                hint.classList.toggle('is-ready', changed);
+            }
+        };
+
+        $(form).on('change input', sync);
+        form._resetNotificationInitial = function() {
+            initial = serializePayload(getPayload());
+            sync();
+        };
+
+        sync();
+    }
+
+    function setupDmPrivacySettings() {
+        const form = document.getElementById('dm-privacy-form');
+        const button = document.getElementById('dm-privacy-save-btn');
+        const hint = document.getElementById('dm-privacy-save-hint');
+        const allowFrom = document.getElementById('dm-allow-from');
+        const messageRequests = document.getElementById('dm-message-requests');
+        const allowDesc = document.getElementById('dm-allow-desc');
+
+        if (!form || !button || !allowFrom || !messageRequests) return;
+
+        const descriptions = {
+            everyone: 'Tum oyuncular sana yeni mesaj gonderebilir.',
+            party: 'Sadece ayni parti veya ittifak uyeleri sana yeni mesaj gonderebilir.',
+            nobody: 'Yeni DM istekleri engellenir.',
+            friends: 'Arkadas altyapisi henuz aktif degil.'
+        };
+
+        const getPayload = function() {
+            return {
+                allow_from: allowFrom.value || 'everyone',
+                message_requests_enabled: messageRequests.type === 'checkbox'
+                    ? (messageRequests.checked ? '1' : '0')
+                    : (messageRequests.value || '0')
+            };
+        };
+
+        const serializePayload = function(payload) {
+            return [payload.allow_from, payload.message_requests_enabled].join('|');
+        };
+
+        let initial = serializePayload(getPayload());
+
+        const sync = function() {
+            const changed = serializePayload(getPayload()) !== initial;
+            button.disabled = !changed;
+            if (allowDesc) {
+                allowDesc.textContent = descriptions[allowFrom.value] || descriptions.everyone;
+            }
+            if (hint) {
+                hint.textContent = changed ? 'Kaydetmeye hazir.' : 'Degisiklik yok.';
+                hint.classList.toggle('is-ready', changed);
+            }
+        };
+
+        $(form).on('change input', sync);
+        form._resetDmPrivacyInitial = function() {
+            initial = serializePayload(getPayload());
+            sync();
+        };
+
+        sync();
+    }
+
+    function setupGameExperienceSettings() {
+        const form = document.getElementById('game-experience-form');
+        const buttons = document.querySelectorAll('.game-experience-save-btn');
+        const hint = document.getElementById('game-experience-save-hint');
+        const hintCopies = document.querySelectorAll('.game-experience-save-hint-copy');
+        const favoritesHint = document.getElementById('game-favorites-hint');
+
+        if (!form || !buttons.length) return;
+
+        const getCheckedValue = function(name, fallback) {
+            const checked = document.querySelector('input[name="' + name + '"]:checked');
+            return checked ? checked.value : fallback;
+        };
+
+        const getFavorites = function() {
+            return Array.prototype.slice.call(document.querySelectorAll('input[name="quick_favorites[]"]:checked')).map(function(input) {
+                return input.value;
+            });
+        };
+
+        const serializeState = function() {
+            return [
+                getCheckedValue('ui_density', 'balanced'),
+                getCheckedValue('animation_level', 'balanced'),
+                getCheckedValue('left_hud', 'detailed'),
+                getCheckedValue('shout_width', 'balanced'),
+                getCheckedValue('home_layout', 'wide'),
+                getCheckedValue('home_priority', 'news'),
+                getFavorites().join(',')
+            ].join('|');
+        };
+
+        let initial = serializeState();
+
+        const sync = function() {
+            const favorites = getFavorites();
+            const favoriteChecks = document.querySelectorAll('input[name="quick_favorites[]"]');
+            favoriteChecks.forEach(function(input) {
+                input.disabled = favorites.length >= 4 && !input.checked;
+            });
+
+            const changed = serializeState() !== initial;
+            buttons.forEach(function(button) {
+                button.disabled = !changed;
+            });
+            if (hint) {
+                hint.textContent = changed ? 'Kaydetmeye hazir.' : 'Degisiklik yok.';
+                hint.classList.toggle('is-ready', changed);
+            }
+            hintCopies.forEach(function(copy) {
+                copy.textContent = changed ? 'Kaydetmeye hazir.' : 'Degisiklik yok.';
+                copy.classList.toggle('is-ready', changed);
+            });
+            if (favoritesHint) {
+                favoritesHint.textContent = favorites.length >= 4 ? 'Favori limiti dolu.' : 'En fazla 4 favori secilebilir.';
+                favoritesHint.classList.toggle('is-ready', favorites.length >= 4);
+            }
+        };
+
+        $(document).on('change', '#game-experience-form input, input[form="game-experience-form"]', sync);
+        form._resetGameExperienceInitial = function() {
+            initial = serializeState();
+            sync();
+        };
+
+        sync();
+    }
+
+    function applyGameExperienceState(preferences) {
+        if (!preferences) return;
+
+        const checkRadio = function(name, value) {
+            const input = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+            if (input) input.checked = true;
+        };
+
+        checkRadio('ui_density', preferences.ui_density || 'balanced');
+        checkRadio('animation_level', preferences.animation_level || 'balanced');
+        checkRadio('left_hud', preferences.left_hud || 'detailed');
+        checkRadio('shout_width', preferences.shout_width || 'balanced');
+        checkRadio('home_layout', preferences.home_layout || 'wide');
+        checkRadio('home_priority', preferences.home_priority || 'news');
+
+        const favorites = Array.isArray(preferences.quick_favorites) ? preferences.quick_favorites : [];
+        document.querySelectorAll('input[name="quick_favorites[]"]').forEach(function(input) {
+            input.checked = favorites.indexOf(input.value) !== -1;
+        });
+
+        const root = document.getElementById('v2-settings-center');
+        if (root) {
+            root.classList.remove('gx-density-compact', 'gx-density-balanced', 'gx-density-comfortable', 'gx-motion-off', 'gx-motion-balanced', 'gx-motion-full');
+            root.classList.add('gx-density-' + (preferences.ui_density || 'balanced'));
+            root.classList.add('gx-motion-' + (preferences.animation_level || 'balanced'));
+        }
+    }
+
+    function setupSecretActions() {
+        document.querySelectorAll('[data-toggle-secret]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const input = document.getElementById(button.getAttribute('data-toggle-secret'));
+                if (!input || input.disabled) return;
+                input.type = input.type === 'password' ? 'text' : 'password';
+                const icon = button.querySelector('i');
+                if (icon) {
+                    icon.className = input.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+                }
+            });
+        });
+    }
+
+    function showSettingsToast(message, title) {
+        if (Swal.isVisible() && Swal.getPopup() && Swal.getPopup().classList.contains('swal2-toast')) {
+            Swal.close();
+        }
+
+        const rootStyle = getComputedStyle(document.getElementById('v2-settings-center'));
+        const toastButton = rootStyle.getPropertyValue('--settings-accent').trim() || '#0f172a';
+
+        return Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: title || '{{ t("settings.js.confirmed") }}',
+            text: message,
+            background: '#0f172a',
+            color: '#fff',
+            iconColor: toastButton,
+            timer: 1300,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            customClass: {
+                popup: 'settings-toast-popup'
+            }
+        });
+    }
+
+    window.applyTheme = function() {
+        const selectedModeEl = document.querySelector('input[name="mode"]:checked');
+        const selectedColorEl = document.querySelector('input[name="theme"]:checked');
+
+        if (!selectedModeEl || !selectedColorEl) {
+            Swal.fire({
+                icon: 'warning',
+                title: '{{ t("settings.js.missing_selection_title") }}',
+                text: '{{ t("settings.js.missing_selection_text") }}',
+                background: '#0f172a',
+                color: '#fff'
+            });
+            return;
+        }
+
+        const selectedMode = selectedModeEl.value;
+        const selectedColor = selectedColorEl.value;
+
+        $.ajax({
+            url: "{{ base_url() }}/api/user/settings/theme",
+            type: "POST",
+            dataType: "json",
+            data: {
+                mode: selectedMode,
+                color: selectedColor,
+                csrf_token: getCsrfToken()
+            },
+            success: function(res) {
+                if (res && res.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '{{ t("home.shouts.generic_error") }}',
+                        text: res.message || '{{ t("settings.js.theme_error") }}',
+                        background: '#0f172a',
+                        color: '#fff'
+                    });
+                    return;
+                }
+
+                const mode = (res && res.theme && res.theme.mode) ? res.theme.mode : selectedMode;
+                const color = (res && res.theme && res.theme.color) ? res.theme.color : selectedColor;
+
+                syncThemeCache(mode, color);
+
+                showSettingsToast('{{ t("settings.js.theme_saved_text") }}', '{{ t("settings.js.theme_saved_title") }}').then(function() {
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                let message = '{{ t("settings.js.theme_error") }}';
+
+                if (xhr && xhr.responseText) {
+                    try {
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) {
+                            message = parsed.message;
+                        }
+                    } catch (e) {}
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ t("settings.js.connection_error") }}',
+                    text: message,
+                    background: '#0f172a',
+                    color: '#fff'
+                });
+            }
+        });
+    };
+
+    function getCsrfToken() { return "{{ csrf_token|e('js') }}"; }
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-Token': getCsrfToken()
+        }
+    });
+    
+    window.updateLanguage = function() {
+        const languageSelect = document.getElementById('input-language');
+
+        if (!languageSelect) {
+            Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: '{{ t("settings.localization.language_error") }}', background: '#0f172a', color: '#fff' });
+            return;
+        }
+
+        $.ajax({
+            url: "{{ base_url() }}/api/user/settings/language",
+            type: "POST",
+            dataType: "json",
+            data: {
+                locale: languageSelect.value,
+                csrf_token: getCsrfToken()
+            },
+            success: function(res) {
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: res.message || '{{ t("settings.localization.language_error") }}', background: '#0f172a', color: '#fff' });
+                    return;
+                }
+
+                showSettingsToast('{{ t("settings.localization.language_saved") }}').then(function() {
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                let message = '{{ t("settings.localization.language_error") }}';
+
+                if (xhr && xhr.responseText) {
+                    try {
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) {
+                            message = parsed.message;
+                        }
+                    } catch (e) {}
+                }
+
+                Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: message, background: '#0f172a', color: '#fff' });
+            }
+        });
+    };
+
+    window.updateNotificationSettings = function(e) {
+        e.preventDefault();
+
+        const form = document.getElementById('notification-settings-form');
+        const payload = {
+            dm_enabled: document.getElementById('notif-dm').checked ? '1' : '0',
+            news_enabled: document.getElementById('notif-news').checked ? '1' : '0',
+            system_enabled: document.getElementById('notif-system').checked ? '1' : '0',
+            quiet_hours_enabled: document.getElementById('notif-quiet').checked ? '1' : '0',
+            quiet_start: document.getElementById('notif-quiet-start').value || '22:00',
+            quiet_end: document.getElementById('notif-quiet-end').value || '08:00',
+            csrf_token: getCsrfToken()
+        };
+
+        $.ajax({
+            url: "{{ base_url() }}/api/user/settings/notifications",
+            type: "POST",
+            dataType: "json",
+            data: payload,
+            success: function(res) {
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: res.message || 'Bildirim tercihleri kaydedilemedi.', background: '#0f172a', color: '#fff' });
+                    return;
+                }
+
+                showSettingsToast('Bildirim tercihleri kaydedildi.').then(function() {
+                    if (form && typeof form._resetNotificationInitial === 'function') {
+                        form._resetNotificationInitial();
+                    }
+                });
+            },
+            error: function(xhr) {
+                let message = 'Bildirim tercihleri kaydedilemedi.';
+                if (xhr && xhr.responseText) {
+                    try {
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) {
+                            message = parsed.message;
+                        }
+                    } catch (err) {}
+                }
+                Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: message, background: '#0f172a', color: '#fff' });
+            }
+        });
+    };
+
+    window.updateDmPrivacySettings = function(e) {
+        e.preventDefault();
+
+        const form = document.getElementById('dm-privacy-form');
+        const payload = {
+            allow_from: document.getElementById('dm-allow-from').value || 'everyone',
+            message_requests_enabled: document.getElementById('dm-message-requests').type === 'checkbox'
+                ? (document.getElementById('dm-message-requests').checked ? '1' : '0')
+                : (document.getElementById('dm-message-requests').value || '0'),
+            csrf_token: getCsrfToken()
+        };
+
+        $.ajax({
+            url: "{{ base_url() }}/api/user/settings/dm-privacy",
+            type: "POST",
+            dataType: "json",
+            data: payload,
+            success: function(res) {
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: res.message || 'DM gizlilik ayarlari kaydedilemedi.', background: '#0f172a', color: '#fff' });
+                    return;
+                }
+
+                showSettingsToast('DM gizlilik ayarlari kaydedildi.').then(function() {
+                    if (form && typeof form._resetDmPrivacyInitial === 'function') {
+                        form._resetDmPrivacyInitial();
+                    }
+                });
+            },
+            error: function(xhr) {
+                let message = 'DM gizlilik ayarlari kaydedilemedi.';
+                if (xhr && xhr.responseText) {
+                    try {
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) {
+                            message = parsed.message;
+                        }
+                    } catch (err) {}
+                }
+                Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: message, background: '#0f172a', color: '#fff' });
+            }
+        });
+    };
+
+    window.updateGameExperienceSettings = function(e) {
+        e.preventDefault();
+
+        const form = document.getElementById('game-experience-form');
+        const checkedValue = function(name, fallback) {
+            const checked = document.querySelector('input[name="' + name + '"]:checked');
+            return checked ? checked.value : fallback;
+        };
+        const favorites = Array.prototype.slice.call(document.querySelectorAll('input[name="quick_favorites[]"]:checked')).map(function(input) {
+            return input.value;
+        }).slice(0, 4);
+
+        $.ajax({
+            url: "{{ base_url() }}/api/user/settings/game-experience",
+            type: "POST",
+            dataType: "json",
+            data: {
+                ui_density: checkedValue('ui_density', 'balanced'),
+                animation_level: checkedValue('animation_level', 'balanced'),
+                left_hud: checkedValue('left_hud', 'detailed'),
+                shout_width: checkedValue('shout_width', 'balanced'),
+                home_layout: checkedValue('home_layout', 'wide'),
+                home_priority: checkedValue('home_priority', 'news'),
+                quick_favorites: favorites,
+                csrf_token: getCsrfToken()
+            },
+            success: function(res) {
+                const payload = res && res.result ? res.result : res;
+
+                if (!payload || payload.error || payload.success !== true || !payload.preferences) {
+                    Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: (payload && payload.message) || 'Oyun deneyimi ayarlari kaydedilemedi.', background: '#0f172a', color: '#fff' });
+                    return;
+                }
+
+                applyGameExperienceState(payload.preferences);
+                showSettingsToast('Oyun deneyimi ayarlari kaydedildi.').then(function() {
+                    if (form && typeof form._resetGameExperienceInitial === 'function') {
+                        form._resetGameExperienceInitial();
+                    }
+                });
+            },
+            error: function(xhr) {
+                let message = 'Oyun deneyimi ayarlari kaydedilemedi.';
+                if (xhr && xhr.responseText) {
+                    try {
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) {
+                            message = parsed.message;
+                        }
+                    } catch (err) {}
+                }
+                Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: message, background: '#0f172a', color: '#fff' });
+            }
+        });
+    };
+
+    window.updateProfile = function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: "{{ base_url() }}/api/user/settings/profile",
+            type: "POST",
+            dataType: "json",
+            data: {
+                email: $('#input-email').val(),
+                avatar: $('#input-avatar').val(),
+                csrf_token: getCsrfToken()
+            },
+            success: function(res) {
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: res.message, background: '#0f172a', color: '#fff' });
+                } else {
+                    showSettingsToast('{{ t("settings.js.profile_saved") }}').then(function() { location.reload(); });
+                }
+            },
+            error: function(xhr) {
+                let message = '{{ t("settings.js.profile_error") }}';
+
+                if (xhr && xhr.responseText) {
+                    try {
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) {
+                            message = parsed.message;
+                        }
+                    } catch (e) {}
+                }
+
+                Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: message, background: '#0f172a', color: '#fff' });
+            }
+        });
+    };
+
+    window.updatePassword = function(e) {
+        e.preventDefault();
+
+        if ($('#input-new-password').val() !== $('#input-new-password-confirm').val()) {
+            Swal.fire({ icon: 'warning', title: '{{ t("settings.js.password_mismatch_title") }}', text: '{{ t("settings.js.password_mismatch_text") }}', background: '#0f172a', color: '#fff' });
+            return;
+        }
+
+        Swal.fire({
+            icon: 'warning',
+            title: '{{ t("settings.security.change_password") }}',
+            text: '{{ t("settings.common.password_confirm") }}',
+            background: '#0f172a',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonText: '{{ t("settings.common.confirm") }}',
+            cancelButtonText: '{{ t("settings.common.cancel") }}'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            $.ajax({
+                url: "{{ base_url() }}/api/user/settings/password",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    old_password: $('#input-old-password').val(),
+                    new_password: $('#input-new-password').val(),
+                    csrf_token: getCsrfToken()
+                },
+                success: function(res) {
+                    if (res && res.error) {
+                        Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: res.message, background: '#0f172a', color: '#fff' });
+                    } else {
+                        showSettingsToast('{{ t("settings.js.password_saved") }}').then(function() {
+                            document.getElementById('security-settings-form').reset();
+                            resetPasswordUx();
+                            const passwordButton = document.getElementById('password-save-btn');
+                            if (passwordButton) passwordButton.disabled = true;
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let message = '{{ t("settings.js.password_error") }}';
+
+                    if (xhr && xhr.responseText) {
+                        try {
+                            const parsed = JSON.parse(xhr.responseText);
+                            if (parsed && parsed.message) {
+                                message = parsed.message;
+                            }
+                        } catch (e) {}
+                    }
+
+                    Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: message, background: '#0f172a', color: '#fff' });
+                }
+            });
+        });
+    };
+</script>
+{% endblock %}
+

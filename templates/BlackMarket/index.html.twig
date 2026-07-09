@@ -1,0 +1,259 @@
+﻿{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in w-full">
+    
+{# 1. ÃœST BAÅLIK VE BÄ°LGÄ° PANELÄ° (v7.0 SÄ°BER TEMALI) #}
+    <div class="glass-panel p-6 border-l-4 border-amber-600 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-950 shadow-[0_0_30px_rgba(217,119,6,0.15)] relative overflow-hidden rounded-xl border border-zinc-800/50">
+        <div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-amber-900/10 to-transparent pointer-events-none"></div>
+        
+        {# Arkaplan tarama Ã§izgileri efekti #}
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJ0cmFuc3BhcmVudCI+PC9yZWN0Pgo8cGF0aCBkPSJNMCAwaDR2MUgweiIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjAzKSI+PC9wYXRoPgo8L3N2Zz4=')] opacity-50 pointer-events-none"></div>
+
+        <div class="flex items-center gap-4 relative z-10">
+            <div class="w-14 h-14 rounded-2xl bg-zinc-900 border border-amber-900/50 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.2)]">
+                <i class="fa-solid fa-user-ninja text-2xl group-hover:opacity-80 transition-opacity"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-zinc-100 uppercase tracking-[0.2em] leading-tight drop-shadow-md">
+                    {{ t('blackmarket.index.hero.title') }} <span class="text-amber-600 text-[10px] align-top">v7.0</span>
+                </h1>
+                <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
+                    </span>
+                    {{ t('blackmarket.index.hero.subtitle') }}
+                </p>
+            </div>
+        </div>
+        
+        <div class="relative z-10 flex gap-3">
+            <a href="{{ path_for('createBlackMarketAd')|default('#') }}" class="group bg-zinc-900 hover:bg-amber-600/10 text-zinc-300 hover:text-amber-500 border border-zinc-700 hover:border-amber-600/50 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_5px_15px_rgba(0,0,0,0.5)] flex items-center gap-2">
+                <i class="fa-solid fa-satellite-dish group-hover:animate-pulse"></i> {{ t('blackmarket.index.hero.create') }}
+            </a>
+        </div>
+    </div>
+
+    {# 2. KARABORSA Ä°LAN AKIÅI #}
+    <div class="glass-panel flex flex-col bg-zinc-950/80 border border-zinc-800/80 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] pb-4 overflow-hidden relative">
+        
+        {# Ãœst Filtre Ã‡ubuÄŸu #}
+        <div class="p-4 border-b border-zinc-800/80 bg-zinc-900/50 flex flex-col sm:flex-row justify-between items-center gap-4 backdrop-blur-sm">
+            
+            <div class="flex gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 custom-scrollbar" id="market-filters">
+                <button onclick="filterMarket('all', this)" class="filter-btn active bg-amber-600/20 text-amber-500 border border-amber-600/50 px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors whitespace-nowrap shadow-[0_0_10px_rgba(217,119,6,0.1)]">{{ t('blackmarket.index.filter.all') }}</button>
+                <button onclick="filterMarket('silah', this)" class="filter-btn bg-zinc-950 text-zinc-500 border border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300 px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors whitespace-nowrap">{{ t('blackmarket.index.filter.weapon') }}</button>
+                <button onclick="filterMarket('yiyecek', this)" class="filter-btn bg-zinc-950 text-zinc-500 border border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300 px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors whitespace-nowrap">{{ t('blackmarket.index.filter.food') }}</button>
+                <button onclick="filterMarket('hammadde', this)" class="filter-btn bg-zinc-950 text-zinc-500 border border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300 px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors whitespace-nowrap">{{ t('blackmarket.index.filter.raw') }}</button>
+                <button onclick="filterMarket('diger', this)" class="filter-btn bg-zinc-950 text-zinc-500 border border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300 px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors whitespace-nowrap">{{ t('blackmarket.index.filter.other') }}</button>
+            </div>
+            
+            <div class="relative group">
+                <input type="text" id="market-search-input" placeholder="{{ t('blackmarket.index.search') }}" class="bg-zinc-950 border border-zinc-800 text-zinc-200 text-[10px] font-bold px-4 py-2 rounded-lg outline-none focus:border-amber-600/50 focus:shadow-[0_0_15px_rgba(217,119,6,0.1)] transition-all w-full sm:w-56 placeholder-zinc-700">
+                <i class="fa-solid fa-crosshairs absolute right-3 top-2.5 text-zinc-600 text-[10px] group-focus-within:text-amber-500 transition-colors"></i>
+            </div>
+        </div>
+
+        {# Ä°lan Listesi (Grid YapÄ±) #}
+        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 relative" id="market-list-container">
+            
+            {# Bildirim Kutusu #}
+            <div id="action-message" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.9)] border bg-zinc-900 text-zinc-300 border-zinc-700 backdrop-blur-md"></div>
+
+            {% if marketItems is defined and marketItems|length > 0 %}
+                {% for item in marketItems %}
+                    
+                    {% set icon = 'fa-box' %}
+                    {% if item.category == 'silah' %}{% set icon = 'fa-gun' %}
+                    {% elseif item.category == 'yiyecek' %}{% set icon = 'fa-burger' %}
+                    {% elseif item.category == 'hammadde' %}{% set icon = 'fa-cubes' %}
+                    {% endif %}
+
+{# V7.0 KART TASARIMI #}
+                    <div class="market-card bg-zinc-900/40 p-5 relative overflow-hidden group border border-zinc-800 hover:border-amber-600/40 hover:-translate-y-1 transition-all duration-300 rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] hover:shadow-[0_8px_25px_rgba(217,119,6,0.08)]" data-category="{{ item.category }}" id="item-card-{{ item.id }}">
+                        
+                        {# Sol Ã¼st minik dekor #}
+                        <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-amber-600/0 group-hover:border-amber-600/30 rounded-tl-xl transition-all"></div>
+
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 bg-zinc-950 rounded-lg flex items-center justify-center border border-zinc-800 group-hover:border-amber-900/50 group-hover:bg-amber-900/10 transition-colors shadow-inner relative overflow-hidden">
+                                <i class="fa-solid {{ icon }} text-2xl text-zinc-600 group-hover:text-amber-500 group-hover:scale-110 transition-all duration-300 z-10"></i>
+                                <div class="absolute inset-0 bg-amber-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-0"></div>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-[15px] font-black text-amber-500 drop-shadow-[0_0_5px_rgba(217,119,6,0.4)] font-mono">{{ item.price }} G</span>
+                                <span class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest item-quantity bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800 inline-block mt-1 group-hover:border-zinc-700">{{ t('blackmarket.index.stock') }}: {{ item.quantity }}</span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-sm font-black text-zinc-300 uppercase tracking-wider mb-2 search-target-title truncate group-hover:text-white transition-colors">{{ item.item_name }}</h3>
+                        
+                        {# Anonim SatÄ±cÄ± #}
+                        <div class="text-[10px] text-zinc-600 font-medium mb-4 flex items-center gap-2 bg-zinc-950/50 p-2 rounded-lg border border-zinc-800/50">
+                            <i class="fa-solid fa-user-secret opacity-60"></i>
+                            <span class="text-zinc-400 blur-[3px] group-hover:blur-[1px] hover:!blur-none transition-all cursor-help font-mono" title="{{ t('blackmarket.index.identity_unknown') }}">
+                                UID-{{ item.seller_id * 137 }}
+                            </span>
+                        </div>
+
+                        {% if my.id|default(0) == item.seller_id %}
+                            <button disabled class="w-full bg-zinc-950 text-zinc-700 border border-zinc-900 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-not-allowed">
+                                <i class="fa-solid fa-lock mr-1"></i> {{ t('blackmarket.index.own_item') }}
+                            </button>
+                        {% else %}
+                            <button onclick="buyBlackMarketItem({{ item.id }}, this)" class="buy-btn w-full bg-zinc-950 hover:bg-amber-600 hover:text-zinc-950 text-zinc-400 border border-zinc-800 hover:border-amber-500 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_10px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_15px_rgba(217,119,6,0.2)]">
+                                <i class="fa-solid fa-fingerprint mr-1"></i> {{ t('blackmarket.index.buy') }}
+                            </button>
+                        {% endif %}
+                    </div>
+
+                {% endfor %}
+            {% else %}
+                <div class="col-span-full flex flex-col items-center justify-center p-12 opacity-50">
+                    <div class="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-zinc-800 shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+                        <i class="fa-solid fa-radar text-3xl text-zinc-700 animate-[spin_4s_linear_infinite]"></i>
+                    </div>
+                    <p class="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{{ t('blackmarket.index.empty') }}</p>
+                </div>
+            {% endif %}
+            
+            <div id="no-results-msg" class="hidden col-span-full bg-zinc-950/80 p-12 text-center flex-col items-center justify-center border border-dashed border-zinc-800 rounded-xl">
+                <i class="fa-solid fa-bug text-3xl text-red-900/50 mb-3"></i>
+                <div class="text-[11px] font-black text-zinc-600 uppercase tracking-widest">{{ t('blackmarket.index.no_match') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* V7.0 Neon Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(217,119,6,0.2); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(217,119,6,0.5); }
+</style>
+
+<script>
+    // Filtreleme (v7.0 UI efektleri eklendi)
+    window.filterMarket = function(category, btnElement) {
+        $('.filter-btn')
+            .removeClass('bg-amber-600/20 text-amber-500 border-amber-600/50 shadow-[0_0_10px_rgba(217,119,6,0.1)]')
+            .addClass('bg-zinc-950 text-zinc-500 border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300');
+        
+        $(btnElement)
+            .removeClass('bg-zinc-950 text-zinc-500 border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300')
+            .addClass('bg-amber-600/20 text-amber-500 border-amber-600/50 shadow-[0_0_10px_rgba(217,119,6,0.1)]');
+
+        $('#market-search-input').val('');
+
+        if (category === 'all') {
+            $('.market-card').fadeIn(300);
+            $('#no-results-msg').hide();
+        } else {
+            $('.market-card').hide();
+            var $filtered = $('.market-card').filter(function() { return $(this).data('category') === category; });
+            $filtered.fadeIn(300);
+            if($filtered.length === 0) { $('#no-results-msg').css('display', 'flex').hide().fadeIn(); } 
+            else { $('#no-results-msg').hide(); }
+        }
+    };
+
+    // Arama
+    $(document).ready(function(){
+        $('#market-search-input').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            
+            $('.filter-btn')
+                .removeClass('bg-amber-600/20 text-amber-500 border-amber-600/50 shadow-[0_0_10px_rgba(217,119,6,0.1)]')
+                .addClass('bg-zinc-950 text-zinc-500 border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300');
+            $('.filter-btn:first')
+                .removeClass('bg-zinc-950 text-zinc-500 border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300')
+                .addClass('bg-amber-600/20 text-amber-500 border-amber-600/50 shadow-[0_0_10px_rgba(217,119,6,0.1)]');
+
+            var visibleCount = 0;
+            $('.market-card').filter(function() {
+                var title = $(this).find('.search-target-title').text().toLowerCase();
+                var isMatch = title.indexOf(value) > -1;
+                $(this).toggle(isMatch);
+                if(isMatch) visibleCount++;
+            });
+
+            if(visibleCount === 0 && $('.market-card').length > 0) { 
+                $('#no-results-msg').css('display', 'flex'); 
+            } else { 
+                $('#no-results-msg').hide(); 
+            }
+        });
+    });
+
+    // SatÄ±n Alma (Hata Ã–nleyici JSON Parse eklendi)
+    window.buyBlackMarketItem = function(itemId, btnElement) {
+        var $btn = $(btnElement);
+        var originalText = $btn.html();
+        
+        // YÃ¼kleniyor efekti
+        $btn.html('<i class="fa-solid fa-circle-notch fa-spin"></i> Ä°ÅŸleniyor').prop('disabled', true).addClass('cursor-wait !bg-zinc-900 !text-zinc-500 !border-zinc-800');
+        var msgBox = $('#action-message');
+        
+        $.ajax({
+            url: '/api/blackmarket/buy/' + itemId,
+            type: 'POST',
+            success: function(response) {
+                // Sunucudan gelen yanÄ±tÄ± gÃ¼venli bir ÅŸekilde JSON objesine dÃ¶nÃ¼ÅŸtÃ¼r
+                if (typeof response === 'string') {
+                    try { response = JSON.parse(response); }
+                    catch(e) {
+                        msgBox.removeClass('hidden bg-red-950/90 border-red-900 text-red-500 bg-zinc-900/90 border-amber-600/50 text-amber-400')
+                              .addClass('bg-red-950/90 border border-red-900 text-red-500')
+                              .html('<i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ t('blackmarket.index.js.invalid_response') }}')
+                              .fadeIn();
+                        $btn.html(originalText).prop('disabled', false).removeClass('cursor-wait !bg-zinc-900 !text-zinc-500 !border-zinc-800');
+                        setTimeout(function(){ msgBox.fadeOut(); }, 3000);
+                        return;
+                    }
+                }
+
+                msgBox.removeClass('hidden bg-red-950/90 border-red-900 text-red-500 bg-zinc-900/90 border-amber-600/50 text-amber-400');
+                
+                if(response.error) {
+                    msgBox.addClass('bg-red-950/90 border border-red-900 text-red-500').html('<i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ t('blackmarket.index.js.denied') }}: ' + response.message).fadeIn();
+                    $btn.html(originalText).prop('disabled', false).removeClass('cursor-wait !bg-zinc-900 !text-zinc-500 !border-zinc-800');
+                } else {
+                    msgBox.addClass('bg-zinc-900/90 border border-amber-600/50 text-amber-400 shadow-[0_0_20px_rgba(217,119,6,0.2)]').html('<i class="fa-solid fa-shield-check mr-2"></i> {{ t('blackmarket.index.js.success') }}: ' + response.message).fadeIn();
+                    
+                    // BaÅŸarÄ± Buton Efekti
+                    $btn.html('<i class="fa-solid fa-check text-green-500"></i>').removeClass('cursor-wait !bg-zinc-900 !text-zinc-500 !border-zinc-800').addClass('bg-green-950/30 border-green-900/50 text-green-500');
+                    
+                    var $card = $('#item-card-' + itemId);
+                    var $stockSpan = $card.find('.item-quantity');
+                    var currentStock = parseInt($stockSpan.text().replace(/[^0-9]/g, ''));
+                    
+                    if(currentStock > 1) {
+                        $stockSpan.text('{{ t('blackmarket.index.stock') }}: ' + (currentStock - 1));
+                        // KartÄ± anlÄ±k olarak yeÅŸil parlat
+                        $card.addClass('border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.2)]').removeClass('border-zinc-800 hover:border-amber-600/40');
+                        
+                        setTimeout(function(){ 
+                            $card.removeClass('border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.2)]').addClass('border-zinc-800 hover:border-amber-600/40');
+                            $btn.html(originalText).prop('disabled', false).removeClass('bg-green-950/30 border-green-900/50 text-green-500'); 
+                        }, 2000);
+                    } else {
+                        // Son Ã¼rÃ¼n satÄ±ldÄ±, kartÄ± yok et
+                        setTimeout(function(){ 
+                            $card.addClass('scale-95 opacity-0').delay(300).queue(function() { $(this).remove(); }); 
+                        }, 1000);
+                    }
+                }
+                setTimeout(function(){ msgBox.fadeOut(); }, 3000);
+            },
+            error: function() {
+                msgBox.removeClass('hidden bg-zinc-900/90 border-amber-600/50 text-amber-400').addClass('bg-red-950/90 border border-red-900 text-red-500').html('<i class="fa-solid fa-plug-circle-xmark mr-2"></i> {{ t('blackmarket.index.js.connection_lost') }}').fadeIn();
+                $btn.html(originalText).prop('disabled', false).removeClass('cursor-wait !bg-zinc-900 !text-zinc-500 !border-zinc-800');
+                setTimeout(function(){ msgBox.fadeOut(); }, 3000);
+            }
+        });
+    };
+</script>
+{% endblock %}
+

@@ -1,0 +1,173 @@
+{# Ülke seçici bileşeni - S-Republik Modern UI Uyumluluğu (Kurşun Geçirmez Versiyon) #}
+
+<div id="tacticalCountrySelector" class="relative font-sans w-40">
+    <div id="countryDropdownBtn" class="flex items-center justify-between py-2 px-3 bg-[#0f172a]/80 border border-slate-700/60 rounded-lg cursor-pointer hover:border-cyan-500/50 hover:bg-[#1e293b]/80 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] group/btn select-none">
+        <div class="flex items-center gap-2 overflow-hidden">
+            <div id="activeCountryFlag" class="w-5 h-3.5 rounded-[2px] overflow-hidden shadow-[0_0_5px_rgba(0,0,0,0.5)] border border-white/10 flex-shrink-0">
+                <img src="" class="w-full h-full object-cover">
+            </div>
+            <span id="activeCountryName" class="text-[10px] font-bold text-slate-300 group-hover/btn:text-cyan-400 uppercase tracking-wider transition-colors truncate">
+                SEÇİNİZ
+            </span>
+        </div>
+        <i id="countryDropdownIcon" class="fa fa-chevron-down text-slate-500 text-[10px] group-hover/btn:text-cyan-400 transition-all duration-300 flex-shrink-0 ml-2"></i>
+    </div>
+</div>
+
+<div id="countryDropdownMenu" class="hidden fixed w-48 bg-[#0f172a] border border-cyan-500/50 rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-hidden z-[999999]">
+    
+    <div class="p-2 bg-slate-900 border-b border-slate-700/80 relative z-10">
+        <div class="relative">
+            <input type="text" id="countrySearchInput" placeholder="ÜLKE ARA..." autocomplete="off"
+                   class="w-full bg-[#0b1120] border border-slate-600 rounded-md text-cyan-50 py-1.5 pl-7 pr-2 text-[10px] font-bold outline-none focus:border-cyan-400 transition uppercase placeholder:text-slate-500 shadow-inner">
+            <i class="fa fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400"></i>
+        </div>
+    </div>
+
+    <ul id="countryListUl" class="max-h-[220px] overflow-y-auto custom-scrollbar bg-[#0f172a] pb-1">
+        {% for country in countryList %}
+            <li class="country-item flex items-center gap-2.5 px-3 py-2.5 hover:bg-cyan-500/10 border-b border-slate-800/50 cursor-pointer transition-colors group/item"
+                data-id="{{ country.id }}" 
+                data-name="{{ country.name }}">
+                
+                <div class="w-5 h-3.5 rounded-[2px] overflow-hidden border border-slate-600 group-hover/item:border-cyan-400 transition-colors flex-shrink-0">
+                    <img src="/htdocs/img/flags/{{ country.id }}.png" onerror="this.src='/htdocs/img/flags/default.png'; this.style.display='none';" class="w-full h-full object-cover grayscale-[20%] group-hover/item:grayscale-0 transition flag-img" alt="{{ country.name }}">
+                </div>
+                
+                <span class="country-name text-[10px] font-semibold text-slate-300 group-hover/item:text-cyan-300 uppercase tracking-wide transition-colors">
+                    {{ country.name }}
+                </span>
+                
+                <div class="ml-auto hidden group-hover/item:block text-[8px] text-cyan-400 font-bold">
+                    <i class="fa fa-check"></i>
+                </div>
+            </li>
+        {% endfor %}
+        
+        <li id="noCountryFound" class="hidden p-3 text-center text-[9px] text-red-400 font-bold uppercase tracking-widest bg-red-500/5">
+            Veri Bulunamadı
+        </li>
+    </ul>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+    
+    .dropdown-open {
+        display: block !important;
+        animation: smoothFadeIn 0.1s ease-out forwards;
+    }
+    
+    @keyframes smoothFadeIn {
+        0% { opacity: 0; transform: translateY(-2px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .rotate-180 { transform: rotate(180deg); }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('countryDropdownBtn');
+    const menu = document.getElementById('countryDropdownMenu');
+    const icon = document.getElementById('countryDropdownIcon');
+    const searchInput = document.getElementById('countrySearchInput');
+    const items = document.querySelectorAll('.country-item');
+    const noFoundMsg = document.getElementById('noCountryFound');
+    
+    const activeName = document.getElementById('activeCountryName');
+    const activeFlagImg = document.querySelector('#activeCountryFlag img');
+
+    // Menüyü body'nin en sonuna taşı (taşma ve gizlenme sorunlarına kesin çözüm)
+    document.body.appendChild(menu);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentCountryId = urlParams.get('country');
+
+    let activeItem = Array.from(items).find(item => item.dataset.id === currentCountryId);
+    if (!activeItem && items.length > 0) activeItem = items[0]; 
+
+    if (activeItem) {
+        activeName.textContent = activeItem.dataset.name;
+        activeFlagImg.src = activeItem.querySelector('.flag-img').src; 
+        
+        activeItem.classList.add('bg-cyan-500/10', 'border-l-2', 'border-l-cyan-400');
+        activeItem.querySelector('.ml-auto').classList.remove('hidden');
+    }
+
+    items.forEach(item => {
+        item.addEventListener('click', function() {
+            urlParams.set('country', this.dataset.id);
+            urlParams.set('page', '1'); 
+            window.location.href = window.location.pathname + '?' + urlParams.toString();
+        });
+    });
+
+    function positionMenu() {
+        // Ölçüm yapabilmek için menüyü görünmez (şeffaf) olarak açıyoruz
+        menu.style.visibility = 'hidden';
+        menu.classList.add('dropdown-open');
+        
+        const rect = btn.getBoundingClientRect();
+        
+        // Menünün yeni konumu tam olarak butonun altı
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = (rect.right - menu.offsetWidth) + 'px'; 
+        
+        // Ölçüm ve yerleştirme bitti, menüyü tekrar görünür yap
+        menu.style.visibility = 'visible';
+    }
+
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (menu.classList.contains('dropdown-open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    function openMenu() {
+        positionMenu();
+        icon.classList.add('rotate-180');
+        setTimeout(() => searchInput.focus(), 50);
+        
+        // Ekran kaydırılırsa menü havada asılı kalmasın diye menüyü kapatıyoruz
+        window.addEventListener('scroll', closeMenu, { passive: true });
+        window.addEventListener('resize', closeMenu, { passive: true });
+    }
+
+    function closeMenu() {
+        menu.classList.remove('dropdown-open');
+        icon.classList.remove('rotate-180');
+        searchInput.value = ''; 
+        filterList(''); 
+        window.removeEventListener('scroll', closeMenu);
+        window.removeEventListener('resize', closeMenu);
+    }
+
+    // Menü dışına tıklanınca kapatma mantığı
+    document.addEventListener('click', function(e) {
+        if (!btn.contains(e.target) && !menu.contains(e.target) && menu.classList.contains('dropdown-open')) {
+            closeMenu();
+        }
+    });
+
+    searchInput.addEventListener('input', (e) => filterList(e.target.value.toLowerCase()));
+
+    function filterList(searchTerm) {
+        let visibleCount = 0;
+        items.forEach(item => {
+            if (item.dataset.name.toLowerCase().includes(searchTerm)) {
+                item.style.display = 'flex';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        noFoundMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+});
+</script>

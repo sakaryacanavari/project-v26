@@ -1,0 +1,37 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+conf.php
+config.php
+
+# Dependencies
+vendor/
+node_modules/
+
+# Runtime / cache / logs
+storage/
+cache/
+logs/
+*.log
+
+# Database dumps / local data
+db.sql
+schema_*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+tmp/
+tmp/mail/

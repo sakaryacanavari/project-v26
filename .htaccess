@@ -1,0 +1,16 @@
+RewriteEngine On
+
+# /htdocs ile gelen eski public URL'leri temiz canonical path'e yonlendir.
+RewriteRule ^htdocs(?:/(.*))?$ /$1 [R=302,L,NE]
+
+# Root URL'de istenen asset yoksa htdocs altindaki gercek dosyaya servis et.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/htdocs/$1 -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/htdocs/$1 -d
+RewriteRule ^(.+)$ htdocs/$1 [L]
+
+# Uygulama route'larini root front controller uzerinden calistir.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

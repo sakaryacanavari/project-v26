@@ -1,0 +1,762 @@
+﻿{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+
+{# ========================================================= #}
+{# KASA (LOOTBOX) Ã–ZEL TEMA DESTEÄÄ° (Light Mode + Dinamik)   #}
+{# ========================================================= #}
+<style>
+    /* V26.300 ECLIPSE-GLASS KASA KUTUSU */
+    #v5-box{
+        --bg: #010308; 
+        --panel: rgba(255,255,255,.015); 
+        --line: rgba(255,255,255,.03);
+        --txt: rgba(248,250,252,.95); 
+        --muted: rgba(148,163,184,.75);
+        --a: var(--brand-primary); 
+        --c: var(--brand-primary); 
+        --gold: #facc15; 
+        --green: #10b981; 
+        --red: #ef4444; 
+        --r: 24px;
+    }
+    
+    #v5-box .card{
+        background: linear-gradient(165deg, rgba(6, 10, 18, 0.85) 0%, rgba(2, 4, 8, 0.98) 100%);
+        border: 1px solid rgba(255,255,255,.02); 
+        border-top: 1px solid color-mix(in srgb, var(--brand-primary) 20%, rgba(255,255,255,0.03));
+        border-radius: var(--r);
+        box-shadow: 0 35px 70px -15px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,.01);
+        backdrop-filter: blur(48px); 
+        position: relative; 
+        overflow: hidden;
+    }
+    /* Ä°nce Arka Plan Dokusu - Daha Silik */
+    #v5-box .card::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+        background-image: repeating-linear-gradient(transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+        opacity: 0.3; z-index: 0;
+    }
+    #v5-box .sub{ color: var(--muted); font-weight: 800; letter-spacing: .15em; text-transform: uppercase; font-size: 10px; }
+
+    /* Flash Efektleri */
+    .flash-bang { position: absolute; inset: 0; background: #ffffff; z-index: 999; opacity: 0; pointer-events: none; }
+    .flash-bang.on { animation: flashBangAnim 1s ease-out both; }
+    .flash-uncommon { position: absolute; inset: 0; background: color-mix(in srgb, var(--brand-primary) 50%, rgba(255,255,255,0.3)); z-index: 998; opacity: 0; pointer-events: none; mix-blend-mode: screen; }
+    .flash-uncommon.on { animation: flashAnim 1s ease-out both; }
+    .flash-rare { position: absolute; inset: 0; background: color-mix(in srgb, var(--brand-primary) 70%, rgba(255,255,255,0.5)); z-index: 998; opacity: 0; pointer-events: none; mix-blend-mode: screen; }
+    .flash-rare.on { animation: flashAnim 1.5s ease-out both; }
+
+    /* Kamera SarsÄ±ntÄ±sÄ± */
+    .near-miss { animation: nearMiss 450ms cubic-bezier(.2,1,.3,1) both; }
+    @keyframes nearMiss { 0%{ transform: scale(1); filter:none; } 55%{ transform: scale(1.015); filter: drop-shadow(0 0 20px color-mix(in srgb, var(--brand-primary) 50%, transparent)); } 100%{ transform: scale(1); filter:none; } }
+    .slow-mo { animation: slowMo 420ms ease-out both; }
+    @keyframes slowMo { from{ filter: brightness(1); } to{ filter: brightness(1.1); } }
+    @keyframes flashBangAnim { 0% { opacity: 1; } 100% { opacity: 0; } }
+    @keyframes flashAnim { 0% { opacity: 1; } 100% { opacity: 0; } }
+    .heavy-shake { animation: heavyShake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes heavyShake { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 10%, 30%, 50%, 70%, 90% { transform: translate(-4px, -4px) rotate(-1deg); } 20%, 40%, 60%, 80% { transform: translate(4px, 4px) rotate(1deg); } }
+
+    /* Rulet Åeridi (Eclipse DerinliÄŸi) */
+    #v5-box .roulette{
+        position: relative; width: 100%; height: 180px; overflow: hidden; border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.015); background: rgba(0,0,0,.7);
+        box-shadow: inset 0 10px 40px rgba(0,0,0,.95); z-index: 10;
+    }
+    #v5-box .track{ display:flex; align-items:center; height:100%; width:max-content; will-change: transform; }
+    
+    /* Lazer SeÃ§ici Ä°mleÃ§ (V26.300) */
+    #v5-box .selector{ position:absolute; top: 0; left: 50%; width: 2px; height: 100%; transform: translateX(-50%); background: linear-gradient(180deg, transparent 0%, var(--brand-primary) 20%, var(--brand-primary) 80%, transparent 100%); box-shadow: 0 0 20px color-mix(in srgb, var(--brand-primary) 60%, transparent); z-index: 12; animation: selectorPulse 2s infinite; }
+    @keyframes selectorPulse { 0%, 100% { opacity: 0.6; box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 30%, transparent); } 50% { opacity: 1; box-shadow: 0 0 25px color-mix(in srgb, var(--brand-primary) 80%, transparent); } }
+    #v5-box .selector::before, #v5-box .selector::after{ content:""; position:absolute; left: 50%; width: 10px; height: 10px; transform: translateX(-50%) rotate(45deg); border-radius: 2px; background: color-mix(in srgb, var(--brand-primary) 30%, transparent); border: 2px solid var(--brand-primary); box-shadow: 0 0 15px color-mix(in srgb, var(--brand-primary) 60%, transparent); }
+    #v5-box .selector::before{ top: -2px; } #v5-box .selector::after{ bottom: -2px; }
+    
+    /* Rulet Kararma Efekti */
+    #v5-box .fade{ position:absolute; inset:0; background: linear-gradient(90deg, rgba(2,4,8,1) 0%, rgba(2,4,8,0) 25%, rgba(2,4,8,0) 75%, rgba(2,4,8,1) 100%); pointer-events:none; z-index: 6; }
+    
+    /* EÅŸya KutularÄ± (V26.300 - Ã‡izgisiz IÅŸÄ±k) */
+    #v5-box .item {
+        width: 136px; height: 130px; margin: 0 8px; border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.015); background: rgba(255,255,255,.01);
+        display:flex; flex-direction: column; align-items:center; justify-content:center; gap: 10px; flex-shrink: 0; position: relative; overflow: hidden;
+    }
+    .tickGlow{ box-shadow: inset 0 0 20px color-mix(in srgb, var(--brand-primary) 20%, transparent); border-color: color-mix(in srgb, var(--brand-primary) 40%, transparent) !important; transform: scale(1.02); }
+
+    /* Rarity Glows instead of borders */
+    #v5-box .rarity-common::after { content:''; position:absolute; bottom:0; left:0; right:0; height:40px; background: linear-gradient(0deg, rgba(148,163,184,.1), transparent); pointer-events:none; }
+    #v5-box .rarity-uncommon::after { content:''; position:absolute; bottom:0; left:0; right:0; height:50px; background: linear-gradient(0deg, color-mix(in srgb, var(--brand-primary) 30%, rgba(59,130,246,0.2)), transparent); pointer-events:none; }
+    #v5-box .rarity-rare::after { content:''; position:absolute; bottom:0; left:0; right:0; height:60px; background: linear-gradient(0deg, color-mix(in srgb, var(--brand-primary) 50%, rgba(168,85,247,0.3)), transparent); pointer-events:none; }
+
+    #v5-box .icon{ font-size: 34px; position: relative; z-index: 2; filter: drop-shadow(0 8px 12px rgba(0,0,0,.7)); transition: transform 0.2s; }
+    #v5-box .name{ position: relative; z-index: 2; text-align:center; font-size: 10px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: rgba(248,250,252,.85); padding: 0 8px; line-height: 1.2; text-shadow: 0 2px 5px rgba(0,0,0,.9); }
+
+    /* Kazanan EÅŸya Efekti (PÃ¼rÃ¼zsÃ¼z ParÄ±ltÄ±) */
+    .winnerGlow{ animation: winnerGlow 1s cubic-bezier(0.18, 1.25, 0.4, 1) both; box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 70%, transparent) inset, 0 0 40px color-mix(in srgb, var(--brand-primary) 20%, transparent) !important; border-color: var(--brand-primary) !important; background: color-mix(in srgb, var(--brand-primary) 12%, rgba(0,0,0,0.6)) !important; z-index: 10; }
+    .winnerGlow .icon { transform: scale(1.15) translateY(-2px); filter: drop-shadow(0 5px 20px color-mix(in srgb, var(--brand-primary) 60%, transparent)); }
+    @keyframes winnerGlow{ 0%{ transform: scale(.95); opacity: 0.8; } 50%{ transform: scale(1.08); opacity: 1; } 100%{ transform: scale(1.05); opacity: 1; } }
+
+    /* Zenith Butonlar (Ultra Dokunsal) */
+    #v5-box .btn{ 
+        border: none; border-radius: 12px; padding: 14px 16px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; font-size: 11px; transition: all .3s cubic-bezier(0.2, 0.8, 0.2, 1); display:inline-flex; align-items:center; justify-content:center; gap: 8px; user-select:none; cursor:pointer;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    #v5-box .btnPrimary{ background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 85%, white), var(--brand-primary)); color: #0c0a09; box-shadow: 0 5px 20px color-mix(in srgb, var(--brand-primary) 20%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.2)); }
+    #v5-box .btnPrimary:hover:not(:disabled){ background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 95%, white), var(--brand-primary)); box-shadow: 0 8px 30px color-mix(in srgb, var(--brand-primary) 35%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 50%, rgba(255,255,255,0.3)); transform: translateY(-2px); filter: brightness(1.05); }
+    #v5-box .btnPrimary:active:not(:disabled){ transform: translateY(0); box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 10%, transparent); }
+
+    #v5-box .btnGold{ background: linear-gradient(135deg, #fde047, #f59e0b); color: #0c0a09; box-shadow: 0 5px 20px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+    #v5-box .btnGold:hover:not(:disabled){ background: linear-gradient(135deg, #fef08a, #f59e0b); box-shadow: 0 8px 30px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4); transform: translateY(-2px); filter: brightness(1.05); }
+    #v5-box .btnGold:active:not(:disabled){ transform: translateY(0); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1); }
+    #v5-box .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    
+    #v5-box .btnPrimary i, #v5-box .btnGold i { color: #0c0a09; opacity: 0.8; }
+    #v5-box .btnGold span { color: #0c0a09; }
+
+    /* Zenith Pity Bar */
+    #v5-box .pity-bar-shell {
+        background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.02); border-radius: 99px; overflow: hidden; height: 6px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+    }
+    #pityBar { height: 100%; border-radius: 99px; position: relative; }
+    #pityBar::after { content:''; position:absolute; top:0; right:0; bottom:0; width:20px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4)); border-radius:99px; }
+
+    /* YÃ¼kseltici Modal (Eclipse Uyumlu) */
+    #upgraderModal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(2,3,6,0.95); backdrop-filter: blur(32px); align-items: center; justify-content: center; }
+    #upgraderModal.active { display: flex; animation: fadeIn 0.3s ease; }
+    .upgrader-modal-content { background: rgba(8, 12, 18, 0.95); border: 1px solid rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.06); border-radius: 24px; box-shadow: 0 40px 80px -20px rgba(0,0,0,1); }
+    .upgrader-wheel-container { position: relative; width: 200px; height: 200px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.02); box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 0 25px rgba(0,0,0,0.95); overflow: hidden; margin: 0 auto; }
+    #upgradeWheel { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--green) 0% 30%, var(--red) 30% 100%); transition: transform 4s cubic-bezier(0.1, 0.8, 0.15, 1); }
+    .upgrade-center-hub { position: absolute; inset: 0; margin: auto; width: 52px; height: 52px; background: #020306; border-radius: 50%; border: 1px solid rgba(255,255,255,0.02); box-shadow: inset 0 2px 10px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10; }
+
+    /* Win Card Zenith */
+    #winCard { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.02); box-shadow: inset 0 2px 15px rgba(0,0,0,0.6); border-radius: 16px; }
+
+    /* SweetAlert V26.300 */
+    .cyber-modal-popup { background: rgba(6, 8, 12, 0.98) !important; backdrop-filter: blur(32px); border: 1px solid rgba(255, 255, 255, 0.02) !important; border-radius: 20px !important; padding: 2rem 1.5rem !important; box-shadow: 0 35px 70px -15px rgba(0,0,0,0.95) !important; }
+    .cyber-modal-title { color: #f8fafc !important; text-transform: uppercase !important; letter-spacing: 0.15em !important; font-weight: 900 !important; font-size: 14px !important; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 14px !important; margin-bottom: 18px !important; display: flex; align-items: center; gap: 8px; }
+    .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; }
+    .cyber-confirm-btn { background: var(--brand-primary) !important; color: #0c0a09 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.08em !important; border-radius: 10px !important; padding: 12px 24px !important; font-size: 10px !important; border: none !important; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important; }
+    .cyber-confirm-btn:hover { transform: translateY(-1px) !important; filter: brightness(1.1); }
+    
+    /* ========================================================= */
+    /* LIGHT MODE (GÃœNDÃœZ MODU) UYARLAMALARI (Zorunlu Ezmeler)   */
+    /* ========================================================= */
+    body.theme-light #v5-box .card {
+        background: #ffffff !important;
+        border-color: rgba(0,0,0,0.1) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
+    }
+    body.theme-light #v5-box .sub, 
+    body.theme-light #pityText, 
+    body.theme-light .text-slate-400 { color: #475569 !important; text-shadow: none !important; font-weight: bold !important; }
+    body.theme-light #v5-box .text-white { color: #0f172a !important; text-shadow: none !important; font-weight: 900 !important; }
+    body.theme-light #vwinnerCard, 
+    body.theme-light .bg-black\/40 { background-color: #f8fafc !important; border-color: rgba(0,0,0,0.1) !important; }
+
+    body.theme-light #v5-box .roulette { 
+        background: #f1f5f9 !important; 
+        border-color: rgba(0,0,0,0.1) !important; 
+        box-shadow: inset 0 5px 15px rgba(0,0,0,0.05) !important; 
+    }
+    body.theme-light #v5-box .fade { 
+        background: linear-gradient(90deg, #ffffff 0%, rgba(255,255,255,0) 25%, rgba(255,255,255,0) 75%, #ffffff 100%) !important; 
+    }
+    
+    body.theme-light #v5-box .item { 
+        background: #ffffff !important; 
+        border-color: rgba(0,0,0,0.1) !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important; 
+    }
+    body.theme-light #v5-box .item .name { 
+        color: #0f172a !important; text-shadow: none !important; font-weight: 900 !important; 
+    }
+    body.theme-light #v5-box .item .icon { 
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)) !important; 
+    }
+
+    body.theme-light #v5-box .pill { background: #f1f5f9 !important; border-color: rgba(0,0,0,0.1) !important; }
+    body.theme-light #v5-box .pill span { color: #0f172a !important; }
+
+    body.theme-light #upgraderModal { background: rgba(255,255,255,0.9) !important; }
+    body.theme-light #upgraderModal > div { background: #ffffff !important; border-color: rgba(0,0,0,0.1) !important; box-shadow: 0 20px 50px rgba(0,0,0,0.1) !important; }
+    body.theme-light #upgraderModal h2 { color: #0f172a !important; }
+    body.theme-light .upgrader-wheel-container { border-color: rgba(0,0,0,0.1) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important; }
+    body.theme-light .upgrade-center-hub { background: #f8fafc !important; border-color: rgba(0,0,0,0.1) !important; }
+    body.theme-light #upgraderModal i#upgradeCenterIcon { color: #64748b !important; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="home-theme-surface space-y-5 animate-fade-in w-full max-w-4xl mx-auto overflow-hidden relative" id="v5-box">
+
+    <div class="card glass-panel p-6 relative">
+        <div class="flash-bang" id="flashBang"></div>
+        <div class="flash-uncommon" id="flashUncommon"></div>
+        <div class="flash-rare" id="flashRare"></div>
+        <div class="legendary-text" id="legendaryText" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3.5rem; font-weight:900; color:#fff; text-shadow:0 0 40px color-mix(in srgb, var(--brand-primary) 80%, transparent); z-index:999; opacity:0; pointer-events:none; text-align:center;">{{ t('box.legendary_drop') }}</div>
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10 border-b border-white/5 pb-4">
+            <div class="min-w-0">
+                <div class="flex items-center gap-3.5 icon-container">
+                    <div class="w-10 h-10 rounded-[10px] flex items-center justify-center relative shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)]"
+                         style="background: color-mix(in srgb, var(--brand-primary) 10%, rgba(0,0,0,0.6));">
+                        <i class="fa-solid fa-box-open text-lg transition-transform case-icon" style="color: var(--brand-primary); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-white font-black tracking-widest uppercase text-[15px] truncate drop-shadow-sm">{{ t('box.title') }}</div>
+                        <div class="sub mt-0.5 opacity-70" style="color: var(--brand-primary);">{{ t('box.subtitle') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap justify-end">
+                <span class="pill bg-black/50 px-3 py-1.5 rounded-lg border border-white/5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
+                    <div class="text-[7px] font-black uppercase tracking-widest text-slate-500 leading-tight text-right">{{ t('box.price_label')|replace({' ': '<br>'})|raw }}</div>
+                    <div class="text-[14px] font-black text-white flex items-center gap-1" id="priceText">
+                        10 <i class="fa-solid fa-coins text-yellow-500 text-[10px] drop-shadow-sm"></i>
+                    </div>
+                </span>
+            </div>
+        </div>
+
+        <div class="mt-5 roulette" id="rouletteBox">
+            <div class="selector" id="rSelector"></div>
+            <div class="beam" id="beam"></div>
+            <div class="fade" id="rFade"></div>
+            <div class="track" id="rouletteTrack"></div>
+        </div>
+
+        <div class="confetti" id="confetti" style="position:absolute; inset:0; pointer-events:none; z-index:99; overflow:hidden;"></div>
+
+        <div class="mt-5 bg-black/40 border border-white/5 rounded-xl p-3 relative z-10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-[8px] font-black tracking-[0.2em] uppercase" style="color: var(--brand-primary);"><i class="fa-solid fa-fire text-orange-500 mr-1 opacity-80"></i> {{ t('box.pity_label') }}</span>
+                <span class="text-[9px] font-black text-slate-400 tracking-wider" id="pityText">0 / 10</span>
+            </div>
+            <div class="pity-bar-shell w-full">
+                <div id="pityBar" class="bg-gradient-to-r from-[color:var(--brand-primary)] to-[color:var(--brand-primary)]/50 transition-all duration-500" style="width: 0%; box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 50%, transparent);"></div>
+            </div>
+        </div>
+
+        <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
+            <div class="sm:col-span-2 flex gap-3">
+                <button id="btn1x" class="btn btnPrimary flex-1 text-[10px]">
+                    <i class="fa-solid fa-key"></i><span>{{ t('box.open_1x') }}</span>
+                </button>
+                <button id="btn5x" class="btn btnGold flex-1 text-[10px]">
+                    <i class="fa-solid fa-bolt"></i><span>{{ t('box.open_5x') }}</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultDisplay" class="mt-4 hidden relative z-10">
+            <div class="text-[9px] font-black tracking-[0.15em] uppercase mb-1.5 pl-1" style="color: var(--brand-primary);"><i class="fa-solid fa-gift mr-1 opacity-80"></i> {{ t('box.won_item') }}</div>
+
+            <div id="winCard" class="p-3 rounded-[14px] flex flex-col sm:flex-row items-center justify-between gap-3 transition-all duration-500">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div id="winIconBox" class="w-12 h-12 rounded-[10px] flex items-center justify-center text-2xl border border-slate-700/50 bg-slate-900/80 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+                        <span id="winIcon" class="drop-shadow-sm">ğŸ</span>
+                    </div>
+                    <div>
+                        <div id="winnerText" class="text-[13px] font-black text-white uppercase tracking-wider drop-shadow-sm">ESP +100</div>
+                        <div id="winnerMeta" class="text-[8px] font-black text-slate-500 uppercase tracking-[0.15em] mt-0.5">{{ t('box.winner_currency') }}</div>
+                        <div id="winnerExtra" class="text-[8px] font-black text-emerald-400 uppercase tracking-[0.15em] mt-0.5 hidden"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button id="btnOpenUpgrader" class="btn bg-gradient-to-r from-emerald-600 to-emerald-500 text-black border-none shadow-[0_4px_10px_rgba(16,185,129,0.2)] hover:shadow-[0_6px_15px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 hidden whitespace-nowrap text-[9px] px-3 py-2"><i class="fa-solid fa-arrow-trend-up text-black opacity-80"></i> {{ t('box.upgrade') }}</button>
+                    <div id="winnerTag" class="px-2.5 py-1 rounded-md text-[8px] font-black tracking-[0.15em] uppercase border border-slate-600/50 bg-slate-600/10 text-slate-400">{{ t('box.status.common') }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="upgraderModal">
+        <div class="upgrader-modal-content text-center p-6 relative max-w-xs w-full mx-4 transition-colors">
+            <h2 class="text-[13px] font-black text-white tracking-[0.2em] mb-2 uppercase drop-shadow-sm flex justify-center items-center gap-2"><i class="fa-solid fa-arrow-trend-up text-emerald-400"></i> {{ t('box.upgrader_title') }}</h2>
+            <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-5 border-b border-white/5 pb-4">
+                {{ t('box.upgrader_risk') }}
+            </p>
+
+            <div class="upgrader-wheel-container">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[8px] border-transparent border-t-white z-20 filter drop-shadow-[0_0_4px_rgba(0,0,0,0.8)]"></div>
+                <div id="upgradeWheel"></div>
+                <div class="upgrade-center-hub">
+                    <i class="fa-solid fa-gem text-slate-500 text-lg drop-shadow-sm" id="upgradeCenterIcon"></i>
+                </div>
+            </div>
+
+            <div class="mt-5 text-[9px] font-black uppercase tracking-widest text-slate-400 bg-black/60 py-2 rounded-lg border border-white/5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]">
+                {{ t('box.success_chance') }}: <span id="upgradeChanceText" class="text-emerald-400 drop-shadow-sm">%</span>
+            </div>
+
+            <div class="mt-4">
+                <button id="btnSpinUpgrade" class="btn btnPrimary w-full py-3.5 text-[10px]"><i class="fa-solid fa-dice text-black opacity-80"></i> {{ t('box.try_luck') }}</button>
+                <button id="btnCloseUpgrade" class="mt-3 text-[8px] text-slate-500 font-black uppercase tracking-[0.2em] hover:text-red-400 transition-colors w-full py-1.5">{{ t('box.cancel') }}</button>
+            </div>
+
+            <div id="upgradeResultText" class="absolute inset-0 bg-black/95 rounded-[24px] flex items-center justify-center flex-col hidden backdrop-blur-md z-30">
+                <div id="urIcon" class="text-4xl mb-2 drop-shadow-lg"></div>
+                <div id="urText" class="text-[16px] font-black tracking-widest uppercase drop-shadow-md"></div>
+                <button onclick="document.getElementById('upgraderModal').classList.remove('active');" class="mt-5 btn btnPrimary px-6 py-2.5 text-[9px]">{{ t('box.continue') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showCyberAlert(icon, title, text) {
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
+            buttonsStyling: false,
+            background: '#080a0f',
+            color: '#f8fafc'
+        });
+    }
+
+    $(function(){
+        const BASE = "{{ base_url() }}";
+        const CSRF = $('meta[name="csrf-token"]').attr('content') || '';
+        const itemsPool = {{ itemsPool|raw }};
+
+        const track = document.getElementById('rouletteTrack');
+        const rouletteBox = document.getElementById('rouletteBox');
+        const beam = document.getElementById('beam');
+        const confetti = document.getElementById('confetti');
+
+        const resultDisplay = document.getElementById('resultDisplay');
+        const winCard = document.getElementById('winCard');
+        const winIconBox = document.getElementById('winIconBox');
+        const winIcon = document.getElementById('winIcon');
+        const winnerText = document.getElementById('winnerText');
+        const winnerMeta = document.getElementById('winnerMeta');
+        const winnerExtra = document.getElementById('winnerExtra');
+        const winnerTag = document.getElementById('winnerTag');
+        const btnOpenUpgrader = document.getElementById('btnOpenUpgrader');
+
+        const itemWidth = 136 + 16;
+        let isOpening = false;
+
+        let pityCount = {{ pityCount|default(0) }};
+        const PITY_MAX = 10;
+
+        let lastWonItemId = {{ lastWonItemId|default(0) }};
+        let lastWonRarity = {{ lastWonRarity|default('""')|raw }};
+
+        // anti-exploit token
+        let upgradeToken = "";
+
+        updatePityUI();
+
+        function safeItem(i){ return itemsPool[i] || itemsPool[0] || { id:0, name:'{{ t('box.unknown_item') }}', icon:'â“', rarity:'rarity-common', type:'{{ t('box.reward')|upper }}' }; }
+
+        function clearFX(){
+            beam.classList.remove('on'); confetti.classList.remove('on'); confetti.innerHTML = '';
+            document.getElementById('flashUncommon').classList.remove('on');
+            document.getElementById('flashRare').classList.remove('on');
+            document.getElementById('legendaryText').style.opacity = '0'; document.getElementById('legendaryText').classList.remove('on');
+            document.getElementById('v5-box').classList.remove('heavy-shake','near-miss','slow-mo');
+            track.querySelectorAll('.item.winnerGlow').forEach(el => el.classList.remove('winnerGlow'));
+            track.querySelectorAll('.tickGlow').forEach(el => el.classList.remove('tickGlow'));
+            btnOpenUpgrader.classList.add('hidden');
+            winnerExtra.classList.add('hidden');
+            winnerExtra.textContent = '';
+        }
+
+        function setBtnsLoading(isLoading){
+            const b1 = $('#btn1x'), b5 = $('#btn5x');
+            if(isLoading){
+                b1.prop('disabled', true); b5.prop('disabled', true);
+            }else{
+                b1.prop('disabled', false); b5.prop('disabled', false);
+                b1.html('<i class="fa-solid fa-key"></i><span>{{ t("box.open_1x") }}</span>');
+                b5.html('<i class="fa-solid fa-bolt"></i><span>{{ t("box.open_5x") }}</span>');
+            }
+        }
+
+        function updatePityUI() {
+            let displayPity = Math.min(pityCount, PITY_MAX);
+            const pct = (displayPity / PITY_MAX) * 100;
+            document.getElementById('pityBar').style.width = pct + '%';
+            document.getElementById('pityText').innerText = displayPity + ' / ' + PITY_MAX;
+
+            if(pityCount >= PITY_MAX) {
+                document.getElementById('pityBar').className = 'bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-500 h-full';
+                document.getElementById('pityText').innerHTML = '<span class="text-yellow-500 animate-pulse drop-shadow-sm">{{ t('box.next_guaranteed_rare') }}</span>';
+            } else {
+                document.getElementById('pityBar').className = 'bg-gradient-to-r from-[color:var(--brand-primary)] to-[color:var(--brand-primary)]/50 transition-all duration-500 h-full';
+            }
+        }
+
+        function mulberry32(seed){
+            let t = seed >>> 0;
+            return function(){
+                t += 0x6D2B79F5;
+                let r = Math.imul(t ^ (t >>> 15), 1 | t);
+                r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+                return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+            };
+        }
+
+        function buildDeterministicTrack(seedInt, winningItemIndex){
+            const rng = mulberry32(seedInt || 123456);
+            const win = safeItem(winningItemIndex);
+
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0px)';
+            track.innerHTML = '';
+
+            for (let i = 0; i < 75; i++) {
+                let item;
+                if(i === 60){
+                    item = win;
+                }else{
+                    const idx = Math.floor(rng() * itemsPool.length);
+                    item = safeItem(idx);
+                }
+
+                const card = document.createElement('div');
+                card.className = `item ${item.rarity || 'rarity-common'}`;
+                card.dataset.i = String(i);
+                card.dataset.r = String(item.rarity || 'rarity-common');
+                card.innerHTML = `<div class="icon">${item.icon || 'â“'}</div><div class="name">${item.name || '{{ t('box.unknown_item') }}'}</div>`;
+                track.appendChild(card);
+            }
+
+            void track.offsetWidth;
+        }
+
+        function renderIdleTrack(){
+            track.style.transition = 'none';
+            track.innerHTML = '';
+
+            const count = 25;
+            const mid = Math.floor(count / 2);
+
+            for (let i = 0; i < count; i++) {
+                const item = safeItem(Math.floor(Math.random() * itemsPool.length));
+                const card = document.createElement('div');
+                card.className = `item ${item.rarity || 'rarity-common'}`;
+                card.dataset.i = String(i);
+                card.dataset.r = String(item.rarity || 'rarity-common');
+                card.innerHTML = `<div class="icon">${item.icon || 'â“'}</div><div class="name">${item.name || '{{ t('box.unknown_item') }}'}</div>`;
+                track.appendChild(card);
+            }
+
+            const targetX = (mid * itemWidth) - (rouletteBox.offsetWidth / 2) + (itemWidth / 2);
+            track.style.transform = `translateX(-${Math.max(0, targetX)}px)`;
+        }
+        renderIdleTrack();
+
+        let rafId = 0;
+        let lastTickIndex = -1;
+        function readTranslateX(el){
+            const tr = getComputedStyle(el).transform;
+            if(!tr || tr === 'none') return 0;
+            const m = tr.match(/matrix\(([^)]+)\)/);
+            if(!m) return 0;
+            const parts = m[1].split(',').map(s => parseFloat(s));
+            return parts.length >= 6 ? parts[4] : 0;
+        }
+        function tickLoop(){
+            const tx = readTranslateX(track);
+            const center = rouletteBox.offsetWidth / 2;
+            const absX = (-tx) + center;
+            const idx = Math.floor(absX / itemWidth);
+
+            if(idx !== lastTickIndex){
+                lastTickIndex = idx;
+                const el = track.querySelector(`.item[data-i="${idx}"]`);
+                if(el){
+                    el.classList.add('tickGlow');
+                    setTimeout(() => el.classList.remove('tickGlow'), 120);
+                }
+            }
+            rafId = requestAnimationFrame(tickLoop);
+        }
+        function startTick(){ stopTick(); rafId = requestAnimationFrame(tickLoop); }
+        function stopTick(){ if(rafId){ cancelAnimationFrame(rafId); rafId = 0; } lastTickIndex = -1; }
+
+        function spawnConfetti(rarity){
+            if(rarity === 'rarity-common') return;
+            confetti.innerHTML = ''; confetti.classList.add('on');
+            let count = rarity === 'rarity-rare' ? 80 : 30;
+            let colors = rarity === 'rarity-rare'
+                ? ['rgba(168,85,247,', 'rgba(250,204,21,', 'rgba(236,72,153,', 'rgba(255,255,255,']
+                : ['rgba(59,130,246,', 'rgba(34,211,238,', 'rgba(255,255,255,'];
+            for(let i=0; i<count; i++){
+                const p = document.createElement('i');
+                p.style.position = 'absolute';
+                const x = Math.floor(Math.random() * 100), delay = Math.floor(Math.random() * 300), w = 5 + Math.floor(Math.random() * 6), h = 8 + Math.floor(Math.random() * 10);
+                const cBase = colors[Math.floor(Math.random() * colors.length)], op = (0.7 + Math.random() * 0.3).toFixed(2);
+                p.style.left = x+'%'; p.style.top = '-20px'; p.style.animation = `fall ${1+Math.random()}s linear ${delay}ms forwards`; p.style.width = w+'px'; p.style.height = h+'px';
+                p.style.background = cBase+op+')'; p.style.boxShadow = `0 0 10px ${cBase} 0.5)`; p.style.transform = `rotate(${Math.floor(Math.random() * 360)}deg)`;
+                confetti.appendChild(p);
+            }
+            if(!document.getElementById('confettiKeyframes')){
+                const style = document.createElement('style');
+                style.id = 'confettiKeyframes';
+                style.innerHTML = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }`;
+                document.head.appendChild(style);
+            }
+            setTimeout(() => { confetti.classList.remove('on'); }, 3000);
+        }
+
+        function applyNearMissIfNeeded(winnerRarity){
+            if(winnerRarity === 'rarity-rare') return;
+            const left = track.querySelector('.item[data-i="59"]');
+            const right = track.querySelector('.item[data-i="61"]');
+            const isNearRare = (left && left.dataset.r === 'rarity-rare') || (right && right.dataset.r === 'rarity-rare');
+            if(!isNearRare) return;
+
+            document.getElementById('v5-box').classList.add('near-miss','slow-mo');
+            setTimeout(() => document.getElementById('v5-box').classList.remove('near-miss','slow-mo'), 520);
+        }
+
+        function showWin(winnerItem, extra){
+            let tagCls = 'border-slate-600/50 bg-slate-600/10 text-slate-400', rTxt = '{{ t('box.status.common') }}', iconBgCls = 'border-slate-700/50 text-slate-300 bg-slate-800/80';
+
+            if(winnerItem.rarity === 'rarity-rare'){
+                tagCls = 'border-purple-500/50 bg-purple-500/10 text-purple-400'; rTxt = '{{ t('box.status.rare') }}';
+                iconBgCls = 'border-purple-500/50 text-purple-400 bg-purple-900/30 shadow-[0_0_20px_rgba(168,85,247,0.3),inset_0_2px_10px_rgba(0,0,0,0.8)]';
+            } else if(winnerItem.rarity === 'rarity-uncommon'){
+                tagCls = 'border-blue-500/50 bg-blue-500/10 text-blue-400'; rTxt = '{{ t('box.status.uncommon') }}';
+                iconBgCls = 'border-blue-500/50 text-blue-400 bg-blue-900/30 shadow-[0_0_20px_rgba(59,130,246,0.3),inset_0_2px_10px_rgba(0,0,0,0.8)]';
+            }
+
+            resultDisplay.classList.remove('hidden');
+
+            winIconBox.className = `w-12 h-12 rounded-[10px] flex items-center justify-center text-2xl border ${iconBgCls}`;
+            winIcon.innerHTML = winnerItem.icon || 'ğŸ';
+            winnerText.textContent = winnerItem.name || '{{ t('box.unknown_item') }}';
+            winnerMeta.textContent = (winnerItem.type ? String(winnerItem.type).toUpperCase() : '{{ t('box.reward')|upper }}');
+
+            winnerTag.textContent = rTxt;
+            winnerTag.className = `px-2.5 py-1 rounded-md text-[8px] font-black tracking-[0.15em] uppercase border ${tagCls}`;
+
+            if(extra && extra.note){
+                winnerExtra.textContent = extra.note;
+                winnerExtra.classList.remove('hidden');
+            }else{
+                winnerExtra.classList.add('hidden');
+                winnerExtra.textContent = '';
+            }
+
+            if(rTxt !== '{{ t('box.status.rare') }}' && (winnerItem.id || 0) > 0 && String(winnerItem.type || '').toUpperCase() !== 'CURRENCY'){
+                btnOpenUpgrader.classList.remove('hidden');
+            } else {
+                btnOpenUpgrader.classList.add('hidden');
+            }
+        }
+
+        $('#btn1x').on('click', function() {
+            if(isOpening) return;
+            isOpening = true;
+            clearFX();
+            setBtnsLoading(true);
+
+            $('#btn1x').html('<i class="fa-solid fa-spinner fa-spin text-black opacity-80"></i> <span class="label">{{ t('box.opening') }}</span>');
+            resultDisplay.classList.add('hidden');
+
+            const clientSeed = Date.now() ^ Math.floor(Math.random() * 1e9);
+
+            $.post(BASE + '/api/box/open', { csrf_token: CSRF, client_seed: clientSeed })
+                .done(function(res) {
+                    if(!res || res.error === 1 || !res.winner_item){
+                        showCyberAlert('error', '{{ t('box.alert.action_failed') }}', res && res.message ? res.message : '{{ t('box.alert.generic_error') }}');
+                        setBtnsLoading(false); isOpening = false;
+                        return;
+                    }
+
+                    const spinSeed = (res.spin_seed !== undefined) ? parseInt(res.spin_seed, 10) : clientSeed;
+                    const winnerIndex = res.winner_index || 0;
+
+                    upgradeToken = String(res.upgrade_token || "");
+
+                    setTimeout(() => {
+
+                        $('#flashBang').addClass('on'); setTimeout(() => $('#flashBang').removeClass('on'), 1000);
+
+                        buildDeterministicTrack(spinSeed, winnerIndex);
+
+                        startTick();
+
+                        track.style.transition = 'transform 6.8s cubic-bezier(0.12, 0.95, 0.1, 1)';
+                        let targetX = (60 * itemWidth) - (rouletteBox.offsetWidth / 2) + (itemWidth / 2) + (Math.floor(Math.random() * 40) - 20);
+
+                        rouletteBox.classList.remove('shake'); void rouletteBox.offsetWidth; rouletteBox.classList.add('shake');
+                        track.style.transform = `translateX(-${targetX}px)`;
+
+                        setTimeout(() => {
+                            track.style.transition = 'transform 300ms cubic-bezier(0.2, 1, 0.3, 1)';
+                            track.style.transform = `translateX(-${Math.max(0, targetX - 18)}px)`;
+                        }, 6600);
+
+                        setTimeout(() => {
+                            stopTick();
+
+                            track.style.transition = 'transform 200ms ease-out';
+                            track.style.transform = `translateX(-${targetX}px)`;
+
+                            beam.classList.add('on');
+                            track.querySelector('.item[data-i="60"]')?.classList.add('winnerGlow');
+
+                            if(res.pity_count !== undefined) {
+                                pityCount = parseInt(res.pity_count, 10) || 0;
+                                updatePityUI();
+                            }
+
+                            applyNearMissIfNeeded(res.winner_item.rarity);
+
+                            if (res.winner_item.rarity === 'rarity-uncommon') {
+                                document.getElementById('flashUncommon').classList.add('on');
+                                spawnConfetti(res.winner_item.rarity);
+                            } else if (res.winner_item.rarity === 'rarity-rare') {
+                                document.getElementById('flashRare').classList.add('on');
+                                document.getElementById('v5-box').classList.add('heavy-shake');
+                                document.getElementById('legendaryText').style.opacity = '1';
+                                document.getElementById('legendaryText').classList.add('on');
+                                spawnConfetti(res.winner_item.rarity);
+                            }
+
+                            lastWonItemId = parseInt(res.last_won_item_id || res.winner_item.id || 0, 10) || 0;
+                            lastWonRarity = String(res.last_won_rarity || res.winner_item.rarity || '');
+
+                            const extra = {};
+                            if(res.duplicate_converted){
+                                const sc = parseInt(res.scrap_gained || 0, 10) || 0;
+                                extra.note = `{{ t('box.duplicate_scrap')|replace({ ':amount': '${sc}' }) }}`;
+                            }
+
+                            showWin(res.winner_item, extra);
+                            setBtnsLoading(false); isOpening = false;
+                        }, 6920);
+                    }, 800);
+                })
+                .fail(function() {
+                    showCyberAlert('error', '{{ t('box.alert.connection_title') }}', '{{ t('box.alert.connection_copy') }}');
+                    stopTick();
+                    setBtnsLoading(false); isOpening = false;
+                });
+        });
+
+        $('#btn5x').on('click', function() {
+            showCyberAlert('info', '{{ t('box.alert.info') }}', '{{ t('box.alert.five_open_missing') }}');
+        });
+
+        let upgradeSpinning = false;
+
+        function upgradeChanceFor(rarity){
+            if(rarity === 'rarity-common') return 0.55;
+            if(rarity === 'rarity-uncommon') return 0.30;
+            return 0;
+        }
+
+        function updateUpgradeUI(){
+            const ch = upgradeChanceFor(lastWonRarity);
+            document.getElementById('upgradeChanceText').textContent = '%' + Math.round(ch * 100);
+            const greenPct = Math.max(0, Math.min(100, Math.round(ch * 100)));
+            document.getElementById('upgradeWheel').style.background =
+                `conic-gradient(var(--green) 0% ${greenPct}%, var(--red) ${greenPct}% 100%)`;
+        }
+
+        btnOpenUpgrader.addEventListener('click', () => {
+            if(!lastWonItemId || upgradeChanceFor(lastWonRarity) <= 0){
+                btnOpenUpgrader.classList.add('hidden');
+                return;
+            }
+            updateUpgradeUI();
+            document.getElementById('upgraderModal').classList.add('active');
+            document.getElementById('upgradeResultText').classList.add('hidden');
+            document.getElementById('upgradeWheel').style.transition = 'none';
+            document.getElementById('upgradeWheel').style.transform = 'rotate(0deg)';
+            document.getElementById('upgradeCenterIcon').className = 'fa-solid fa-gem text-slate-500 text-xl drop-shadow-sm';
+        });
+
+        document.getElementById('btnCloseUpgrade').addEventListener('click', () => {
+            if(!upgradeSpinning) document.getElementById('upgraderModal').classList.remove('active');
+        });
+
+        document.getElementById('btnSpinUpgrade').addEventListener('click', () => {
+            if(upgradeSpinning) return;
+            if(!lastWonItemId) return;
+
+            upgradeSpinning = true;
+            document.getElementById('btnSpinUpgrade').innerHTML = '<i class="fa-solid fa-spinner fa-spin text-black opacity-80"></i> {{ t('box.upgrade.spinning') }}';
+            document.getElementById('btnCloseUpgrade').style.opacity = '0.3';
+            document.getElementById('upgradeCenterIcon').className = 'fa-solid fa-spinner fa-spin text-slate-500 text-xl';
+
+            $.post(BASE + '/api/box/upgrade', {
+                csrf_token: CSRF,
+                item_id: lastWonItemId,
+                upgrade_token: upgradeToken
+            }).done(function(res){
+                if(!res || res.error === 1){
+                    showCyberAlert('error', '{{ t('base.dropdown.bug') }}', res && res.message ? res.message : '{{ t('box.upgrade.failed_action') }}');
+                    upgradeSpinning = false;
+                    document.getElementById('btnSpinUpgrade').innerHTML = '<i class="fa-solid fa-dice text-black opacity-80"></i> {{ t('box.try_luck') }}';
+                    document.getElementById('btnCloseUpgrade').style.opacity = '1';
+                    document.getElementById('upgradeCenterIcon').className = 'fa-solid fa-gem text-slate-500 text-xl drop-shadow-sm';
+                    return;
+                }
+
+                const ch = parseFloat(res.chance || upgradeChanceFor(lastWonRarity)) || 0.30;
+                const isWin = !!res.win;
+                const greenPct = Math.round(ch * 100);
+
+                let targetDegree = 0;
+                if(isWin){
+                    const winAngle = Math.floor(Math.random() * Math.max(10, Math.min(100, greenPct) - 10)) + 5;
+                    targetDegree = (360 * 5) + (360 - Math.floor((winAngle / 100) * 360));
+                }else{
+                    const loseAngle = Math.floor(Math.random() * 200) + 120;
+                    targetDegree = (360 * 5) + (360 - loseAngle);
+                }
+
+                const wheel = document.getElementById('upgradeWheel');
+                wheel.style.transition = 'transform 4s cubic-bezier(0.1, 0.8, 0.15, 1)';
+                wheel.style.transform = `rotate(${targetDegree}deg)`;
+
+                setTimeout(() => {
+                    const resPanel = document.getElementById('upgradeResultText');
+                    const urIcon = document.getElementById('urIcon');
+                    const urText = document.getElementById('urText');
+
+                    resPanel.classList.remove('hidden');
+
+                    if(isWin){
+                        const toName = res.to_item && res.to_item.name ? String(res.to_item.name) : '{{ t('box.upgrade.top_tier') }}';
+                        urIcon.innerHTML = 'âœ¨';
+                        urText.innerHTML = '<span class="text-emerald-400 drop-shadow-md">{{ t('box.upgrade_success')|upper }}</span>';
+                        urText.innerHTML += `<div class="text-[11px] text-slate-300 mt-1.5 font-bold">${toName}</div>`;
+                    }else{
+                        urIcon.innerHTML = 'ğŸ’¥';
+                        urText.innerHTML = '<span class="text-red-500 drop-shadow-md">{{ t('box.upgrade_failed')|upper }}</span>';
+                        urText.innerHTML += '<div class="text-[10px] text-slate-400 mt-1.5 font-bold">{{ t('box.item_destroyed') }}</div>';
+                    }
+
+                    btnOpenUpgrader.classList.add('hidden');
+                    lastWonItemId = 0;
+                    lastWonRarity = '';
+                    upgradeToken = '';
+
+                    upgradeSpinning = false;
+                    document.getElementById('btnSpinUpgrade').innerHTML = '<i class="fa-solid fa-dice text-black opacity-80"></i> {{ t('box.try_luck') }}';
+                    document.getElementById('btnCloseUpgrade').style.opacity = '1';
+                    document.getElementById('upgradeCenterIcon').className = 'fa-solid fa-gem text-slate-500 text-xl drop-shadow-sm';
+                }, 4200);
+
+            }).fail(function(){
+                showCyberAlert('error', '{{ t('box.alert.connection_title') }}', '{{ t('box.alert.server_unreachable') }}');
+                upgradeSpinning = false;
+                document.getElementById('btnSpinUpgrade').innerHTML = '<i class="fa-solid fa-dice text-black opacity-80"></i> {{ t('box.try_luck') }}';
+                document.getElementById('btnCloseUpgrade').style.opacity = '1';
+                document.getElementById('upgradeCenterIcon').className = 'fa-solid fa-gem text-slate-500 text-xl drop-shadow-sm';
+            });
+        });
+    });
+    </script>
+{% endblock %}

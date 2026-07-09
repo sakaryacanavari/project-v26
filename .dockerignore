@@ -1,0 +1,10 @@
+.git
+.idea
+node_modules
+vendor
+tmp
+screenshots
+*.log
+*.zip
+*.rar
+*.7z

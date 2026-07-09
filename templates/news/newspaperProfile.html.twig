@@ -1,0 +1,468 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* --- V26.1 NEURO-GLASS CORE CSS --- */
+    .home-theme-surface .glass-panel {
+        background: linear-gradient(160deg, rgba(8, 12, 22, 0.75) 0%, rgba(2, 4, 10, 0.95) 100%) !important;
+        backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important; /* Yönlü üst ışık */
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 20px 40px -10px rgba(0, 0, 0, 0.9);
+    }
+    
+    .home-theme-surface .theme-divider { border-color: rgba(255, 255, 255, 0.03) !important; }
+
+    .home-theme-surface .theme-button {
+        background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.3);
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .home-theme-surface .theme-button:hover {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 15%, rgba(255,255,255,0.1)) 0%, color-mix(in srgb, var(--brand-primary) 5%, rgba(255,255,255,0.02)) 100%) !important;
+        border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent) !important;
+        color: #fff;
+        text-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 80%, transparent);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px -5px color-mix(in srgb, var(--brand-primary) 50%, transparent), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .home-theme-surface .theme-button i { transition: transform 0.3s ease; }
+    .home-theme-surface .theme-button:hover i { transform: scale(1.15); color: var(--brand-primary); }
+
+    /* --- V26.1 ARCHIVE FILTERS --- */
+    .archive-sort-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+        min-height: 30px; padding: 0 12px; border-radius: 99px;
+        background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.03);
+        color: #64748b; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em;
+        transition: all 0.3s ease; white-space: nowrap; box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .archive-sort-btn:hover { 
+        border-color: rgba(255,255,255,0.1); color: #f8fafc; 
+        background: rgba(255,255,255,0.03); transform: translateY(-1px); 
+    }
+    .archive-sort-btn.is-active {
+        background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+        border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent); color: #fff;
+        box-shadow: 0 0 15px color-mix(in srgb, var(--brand-primary) 20%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 40%, transparent);
+        text-shadow: 0 0 5px color-mix(in srgb, var(--brand-primary) 80%, transparent);
+    }
+
+    .archive-select {
+        width: 100%; min-height: 32px; padding: 0 12px; border-radius: 10px;
+        background: rgba(4, 6, 12, 0.7); border: 1px solid rgba(255,255,255,0.05);
+        color: #fff; font-size: 10px; font-weight: 800; outline: none; transition: all 0.3s ease;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); appearance: none;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+        background-repeat: no-repeat; background-position: right 10px center; background-size: 8px auto;
+    }
+    .archive-select:focus {
+        border-color: var(--brand-primary);
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 0 0 2px color-mix(in srgb, var(--brand-primary) 20%, transparent);
+    }
+    .archive-select option { background: #0f172a; color: #fff; }
+
+    /* --- V26.1 STAT TILES --- */
+    .stat-tile-v26 {
+        background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.4) 100%);
+        border: 1px solid rgba(255,255,255,0.03);
+        border-top: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-tile-v26::before {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at top right, rgba(255,255,255,0.03) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    .stat-tile-v26:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.3) 100%);
+        border-color: rgba(255,255,255,0.08);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+</style>
+
+{% set totalArticles = articles|length %}
+{% set totalViews = 0 %}
+{% set totalVotes = 0 %}
+{% set latestArticleTs = 0 %}
+{% set latestArticleLabel = '-' %}
+{% set weeklyArticleCount = 0 %}
+{% set monthlyArticleCount = 0 %}
+{% set topArticleTitle = '-' %}
+{% set topArticleViews = 0 %}
+{% set categoryMap = {} %}
+
+{% for article in articles %}
+    {% set articleViews = article.views|default(0) + 0 %}
+    {% set articleVotes = article.votes|default(0) + 0 %}
+    {% set articleTs = article.created_at is not empty ? article.created_at|date('U') : 0 %}
+    {% set articleCategory = article.category|default('Makale') %}
+    {% set totalViews = totalViews + articleViews %}
+    {% set totalVotes = totalVotes + articleVotes %}
+    {% if articleTs > latestArticleTs %}
+        {% set latestArticleTs = articleTs %}
+        {% set latestArticleLabel = article.created_at|date('d.m.Y H:i') %}
+    {% endif %}
+    {% if articleTs >= ("now"|date('U') - 604800) %}
+        {% set weeklyArticleCount = weeklyArticleCount + 1 %}
+    {% endif %}
+    {% if articleTs >= ("now"|date('U') - 2592000) %}
+        {% set monthlyArticleCount = monthlyArticleCount + 1 %}
+    {% endif %}
+    {% if articleViews > topArticleViews %}
+        {% set topArticleViews = articleViews %}
+        {% set topArticleTitle = article.title %}
+    {% endif %}
+    {% set categoryMap = categoryMap|merge({ (articleCategory): articleCategory }) %}
+{% endfor %}
+
+{% set averageWeeklyPublications = monthlyArticleCount > 0 ? (monthlyArticleCount / 4)|round(1, 'common') : 0 %}
+
+<div class="space-y-4 max-w-[1400px] mx-auto animate-fade-in w-full overflow-hidden">
+    
+    <div class="glass-panel p-5 rounded-2xl relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-[color:var(--brand-primary)] opacity-[0.08] blur-[60px] pointer-events-none"></div>
+        <i class="fa-solid fa-newspaper absolute -right-4 -bottom-4 text-8xl text-white/[0.02] pointer-events-none rotate-12"></i>
+
+        <div class="relative z-10 flex flex-col xl:flex-row xl:items-start justify-between gap-4">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 mb-2.5 flex-wrap">
+                    <span class="inline-flex items-center rounded-md bg-[color:var(--brand-primary)]/10 border border-[color:var(--brand-primary)]/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] text-[color:var(--brand-primary)] shadow-[0_0_10px_color-mix(in_srgb,var(--brand-primary)_15%,transparent)]">
+                        <i class="fa-solid fa-check-circle mr-1"></i> {{ t('news.profile.verified') }}
+                    </span>
+                </div>
+
+                <h1 class="text-[18px] md:text-[22px] font-black text-white uppercase tracking-wider leading-tight drop-shadow-sm mb-2">
+                    {{ newspaper.name }}
+                </h1>
+
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em] leading-snug max-w-xl border-l-2 border-white/10 pl-2.5">
+                    <i class="fa-solid fa-quote-left text-[color:var(--brand-primary)]/50 mr-1 text-[8px]"></i> {{ newspaper.description }}
+                </p>
+
+                <div class="mt-4 flex items-center gap-2">
+                    <div class="inline-flex items-center gap-2.5 rounded-xl bg-black/40 border border-white/5 px-3.5 py-2 shadow-inner">
+                        <div class="w-7 h-7 rounded-lg bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)] flex items-center justify-center shrink-0 border border-[color:var(--brand-primary)]/20 shadow-[inset_0_0_8px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)]">
+                            <i class="fa-solid fa-users text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-[7px] text-slate-500 font-black uppercase tracking-[0.2em]">{{ t('news.profile.audience') }}</div>
+                            <div class="mt-0.5 flex items-baseline gap-1.5">
+                                <span class="text-[15px] font-black text-white leading-none drop-shadow-md" id="sub-count">{{ newspaper.subscribers|default(0) }}</span>
+                                <span class="text-[8px] font-black uppercase tracking-[0.1em] text-slate-400">{{ t('news.profile.subscribers') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2.5 shrink-0 relative z-10 w-full xl:w-auto xl:items-end mt-2 xl:mt-0">
+                {% if newspaper.uid == my.id %}
+                    <a href="{{ path_for('createArticle') }}" class="shout-action !rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] !bg-[color:var(--brand-primary)]/10 !border-[color:var(--brand-primary)]/30 !text-[color:var(--brand-primary)] hover:!bg-[color:var(--brand-primary)]/20 hover:!border-[color:var(--brand-primary)]/50 flex items-center justify-center gap-1.5 w-full xl:w-auto shadow-[0_0_15px_color-mix(in_srgb,var(--brand-primary)_15%,transparent)] hover:!text-white transition-all">
+                        <i class="fa-solid fa-pen-nib"></i> <span class="label">{{ t('news.profile.write') }}</span>
+                    </a>
+                {% else %}
+                    <button onclick="toggleSubscription({{ newspaper.id }})" id="btn-subscribe" class="w-full xl:w-auto px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap flex items-center justify-center gap-2 transition-all shadow-md {{ isSubscribed ? 'bg-black/60 text-slate-300 hover:bg-red-500/10 hover:text-red-400 border border-white/5 hover:border-red-500/30' : 'bg-gradient-to-r from-[color:var(--brand-primary)] to-[color:var(--brand-primary)]/80 hover:brightness-110 text-black shadow-[0_0_20px_color-mix(in_srgb,var(--brand-primary)_40%,transparent)] hover:-translate-y-0.5 border-none' }}">
+                        {% if isSubscribed %}
+                            <i class="fa-solid fa-bell-slash"></i> {{ t('news.profile.unsubscribe') }}
+                        {% else %}
+                            <i class="fa-solid fa-bell animate-bounce"></i> {{ t('news.profile.subscribe') }}
+                        {% endif %}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(280px,auto)] gap-4 items-stretch">
+        
+        <div class="glass-panel h-full p-4 rounded-2xl relative overflow-hidden flex flex-col border-l-[3px] border-l-[color:var(--brand-primary)]">
+            <h2 class="text-[9px] font-black text-white uppercase tracking-[0.2em] border-b border-white/5 pb-2.5 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-[color:var(--brand-primary)]"></i> {{ t('news.profile.stats') }}
+            </h2>
+            <div class="grid flex-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 auto-rows-fr">
+                
+                <div class="stat-tile-v26 p-3 flex flex-col justify-center">
+                    <div class="flex items-center justify-between gap-1.5 mb-2">
+                        <div class="w-7 h-7 rounded-lg border border-white/5 bg-white/5 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-file-lines text-slate-400 text-[10px]"></i>
+                        </div>
+                    </div>
+                    <div class="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">{{ t('news.profile.stats.total_articles') }}</div>
+                    <div class="mt-0.5 text-[16px] font-black text-white leading-none">{{ totalArticles }}</div>
+                </div>
+
+                <div class="stat-tile-v26 p-3 flex flex-col justify-center">
+                    <div class="flex items-center justify-between gap-1.5 mb-2">
+                        <div class="w-7 h-7 rounded-lg border border-[color:var(--brand-primary)]/20 bg-[color:var(--brand-primary)]/10 flex items-center justify-center shrink-0 shadow-[0_0_8px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)]">
+                            <i class="fa-solid fa-eye text-[color:var(--brand-primary)] text-[10px]"></i>
+                        </div>
+                    </div>
+                    <div class="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">{{ t('news.profile.stats.total_reads') }}</div>
+                    <div class="mt-0.5 text-[16px] font-black text-white leading-none">{{ totalViews }}</div>
+                </div>
+
+                <div class="stat-tile-v26 p-3 flex flex-col justify-center">
+                    <div class="flex items-center justify-between gap-1.5 mb-2">
+                        <div class="w-7 h-7 rounded-lg border border-amber-500/20 bg-amber-500/10 flex items-center justify-center shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
+                            <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+                        </div>
+                    </div>
+                    <div class="text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">{{ t('news.profile.stats.total_votes') }}</div>
+                    <div class="mt-0.5 text-[16px] font-black text-white leading-none">{{ totalVotes }}</div>
+                </div>
+
+                <div class="stat-tile-v26 !bg-gradient-to-br !from-[color:var(--brand-primary)]/10 !to-black/50 !border-[color:var(--brand-primary)]/20 p-3 flex flex-col justify-center shadow-[inset_0_0_15px_color-mix(in_srgb,var(--brand-primary)_10%,transparent)]">
+                    <div class="flex items-center justify-between gap-1.5 mb-2">
+                        <div class="w-7 h-7 rounded-lg border border-[color:var(--brand-primary)]/30 bg-[color:var(--brand-primary)]/20 flex items-center justify-center shrink-0 shadow-[0_0_10px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]">
+                            <i class="fa-solid fa-trophy text-[color:var(--brand-primary)] text-[10px]"></i>
+                        </div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.15em] text-[color:var(--brand-primary)] drop-shadow-sm">{{ topArticleViews }} {{ t('news.profile.stats.views_suffix') }}</div>
+                    </div>
+                    <div class="text-[7px] font-black uppercase tracking-[0.1em] text-slate-400">{{ t('news.profile.stats.most_read') }}</div>
+                    <div class="mt-0.5 text-[11px] font-black text-white uppercase leading-tight truncate drop-shadow-sm" title="{{ topArticleTitle }}">
+                        {{ topArticleTitle }}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="glass-panel h-full p-4 rounded-2xl relative overflow-hidden flex flex-col border-l-[3px] border-l-amber-500">
+            <h2 class="text-[9px] font-black text-white uppercase tracking-[0.18em] border-b border-white/5 pb-2.5 mb-3 flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-days text-amber-400"></i> {{ t('news.profile.schedule') }}
+            </h2>
+            <div class="flex flex-1 flex-col gap-2.5">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="stat-tile-v26 p-3">
+                        <div class="text-[7px] font-black uppercase tracking-[0.1em] text-slate-500">{{ t('news.profile.last_30_days') }}</div>
+                        <div class="mt-1 flex items-center justify-between gap-1">
+                            <div class="text-[16px] font-black text-white leading-none">{{ monthlyArticleCount }}</div>
+                            <i class="fa-solid fa-calendar text-slate-500/50 text-[10px]"></i>
+                        </div>
+                    </div>
+                    <div class="stat-tile-v26 p-3">
+                        <div class="text-[7px] font-black uppercase tracking-[0.1em] text-slate-500">{{ t('news.profile.this_week') }}</div>
+                        <div class="mt-1 flex items-center justify-between gap-1">
+                            <div class="text-[16px] font-black text-white leading-none">{{ weeklyArticleCount }}</div>
+                            <i class="fa-solid fa-bolt text-amber-400/60 text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-tile-v26 !bg-gradient-to-r !from-amber-500/10 !to-black/40 !border-amber-500/20 p-3 flex-1 flex flex-col justify-center shadow-[inset_0_0_12px_rgba(245,158,11,0.08)]">
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <div class="text-[8px] font-black uppercase tracking-[0.15em] text-amber-400 drop-shadow-sm">{{ t('news.profile.weekly_avg') }}</div>
+                        <div class="shrink-0 rounded bg-black/50 px-1.5 py-0.5 border border-white/5 shadow-inner">
+                            <div class="text-[7px] font-black uppercase tracking-[0.1em] text-slate-400">{{ t('news.profile.last_30_short') }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-1.5">
+                        <span class="text-[18px] font-black text-white leading-none">{{ averageWeeklyPublications }}</span>
+                        <span class="text-[8px] font-black uppercase tracking-[0.1em] text-amber-500/70">{{ t('news.profile.content') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-4 md:p-6 rounded-2xl relative overflow-hidden">
+        <h2 class="text-[12px] font-black text-white uppercase tracking-[0.15em] border-b border-white/5 pb-3 mb-4 flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-[color:var(--brand-primary)]/10 border border-[color:var(--brand-primary)]/20 flex items-center justify-center text-[color:var(--brand-primary)] text-xs shadow-[0_0_8px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)]"><i class="fa-solid fa-box-archive"></i></div> {{ t('news.profile.archive.sort') }}
+        </h2>
+
+        {% if articles|length > 0 %}
+            <div class="mb-5 grid grid-cols-1 xl:grid-cols-[180px_minmax(0,1fr)] gap-4 bg-black/30 p-3.5 rounded-xl border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                <div>
+                    <label class="block text-[7px] font-black uppercase tracking-[0.15em] text-slate-500 mb-1.5 ml-1">{{ t('news.profile.archive.category') }}</label>
+                    <select id="archive-category-filter" class="archive-select">
+                        <option value="all">{{ t('news.profile.archive.all_categories') }}</option>
+                        {% for categoryLabel in categoryMap %}
+                            <option value="{{ categoryLabel|e('html_attr') }}">{{ categoryLabel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[7px] font-black uppercase tracking-[0.15em] text-slate-500 mb-1.5 ml-1">{{ t('news.profile.archive.sort') }}</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="archive-sort-btn is-active" data-sort="latest">
+                            <i class="fa-solid fa-clock opacity-70"></i> {{ t('news.profile.archive.latest') }}
+                        </button>
+                        <button type="button" class="archive-sort-btn" data-sort="views">
+                            <i class="fa-solid fa-eye opacity-70"></i> {{ t('news.profile.archive.most_read') }}
+                        </button>
+                        <button type="button" class="archive-sort-btn" data-sort="votes">
+                            <i class="fa-solid fa-star opacity-70"></i> {{ t('news.profile.archive.most_voted') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div id="archive-list" class="grid grid-cols-1 gap-3">
+            {% for article in articles %}
+                <a
+                    href="{{ path_for('showArticle', {id: article.id}) }}"
+                    class="article-archive-card relative block bg-black/40 border border-white/5 rounded-xl p-3.5 hover:bg-black/60 hover:border-white/10 transition-all duration-300 group shadow-inner {{ article.is_promoted ? 'border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'hover:shadow-[0_4px_15px_rgba(0,0,0,0.3)]' }}"
+                    data-category="{{ article.category|default('Makale')|e('html_attr') }}"
+                    data-promoted="{{ article.is_promoted ? '1' : '0' }}"
+                    data-views="{{ article.views|default(0) }}"
+                    data-votes="{{ article.votes|default(0) }}"
+                    data-created="{{ article.created_at is not empty ? article.created_at|date('U') : 0 }}">
+
+                    <div class="absolute left-0 top-2 bottom-2 w-[3px] rounded-r bg-gradient-to-b from-[color:var(--brand-primary)]/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 {{ article.is_promoted ? 'from-amber-500/80 !opacity-100' : '' }}"></div>
+
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10 pl-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                                {% if article.is_promoted %}
+                                    <span class="inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-[0.1em] text-amber-400">
+                                        <i class="fa-solid fa-bolt"></i> {{ t('news.home.promoted') }}
+                                    </span>
+                                {% endif %}
+                                <span class="inline-flex items-center gap-1 rounded bg-[color:var(--brand-primary)]/10 border border-[color:var(--brand-primary)]/20 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-[0.1em] text-[color:var(--brand-primary)]">
+                                    {{ article.category|default('Makale') }}
+                                </span>
+                                <span class="text-[8px] text-slate-500 font-bold ml-1">
+                                    <i class="fa-regular fa-clock mr-0.5 opacity-50"></i> {{ article.created_at|default(t('news.home.recent')) }}
+                                </span>
+                            </div>
+
+                            <h3 class="text-[13px] md:text-[14px] font-black text-slate-200 uppercase tracking-wide group-hover:text-white transition-colors truncate">
+                                {{ article.title }}
+                            </h3>
+                        </div>
+
+                        <div class="flex items-center gap-3.5 border-t md:border-t-0 border-white/5 pt-2.5 md:pt-0 shrink-0">
+                            <div class="flex items-center gap-3 bg-black/60 px-3 py-1.5 rounded-lg border border-white/5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)]">
+                                <div class="flex items-center gap-1.5 text-slate-400 group-hover:text-white transition-colors" title="{{ t('news.profile.archive.reads') }}">
+                                    <i class="fa-solid fa-eye text-[10px] opacity-70"></i>
+                                    <span class="text-[10px] font-black">{{ article.views }}</span>
+                                </div>
+                                <div class="w-px h-3 bg-white/10"></div>
+                                <div class="flex items-center gap-1.5 text-amber-500/80 group-hover:text-amber-400 transition-colors" title="{{ t('news.profile.archive.support_title') }}">
+                                    <i class="fa-solid fa-star text-[10px] opacity-70"></i>
+                                    <span class="text-[10px] font-black">{{ article.votes }}</span>
+                                </div>
+                            </div>
+
+                            <div class="opacity-0 transform translate-x-[-3px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pr-1 text-[color:var(--brand-primary)] text-xs hidden md:block">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+
+            {% if articles|length == 0 %}
+                <div id="archive-empty-state" class="text-center py-12 rounded-xl border border-white/5 bg-black/30 shadow-inner flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 bg-slate-800/40 rounded-lg flex items-center justify-center mb-3 border border-white/5">
+                        <i class="fa-solid fa-folder-open text-xl text-slate-500 opacity-70"></i>
+                    </div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ t('news.profile.empty.title') }}</div>
+                    <p class="text-[9px] font-medium mt-1 text-slate-500">{{ t('news.profile.empty.subtitle') }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if articles|length > 0 %}
+            <div id="archive-filter-empty" class="hidden text-center py-12 rounded-xl border border-white/5 bg-black/30 shadow-inner mt-3">
+                <div class="w-12 h-12 bg-slate-800/40 rounded-lg flex items-center justify-center mx-auto mb-3 border border-white/5">
+                    <i class="fa-solid fa-filter-circle-xmark text-lg text-slate-500 opacity-70"></i>
+                </div>
+                <div class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ t('news.profile.empty.filtered_title') }}</div>
+                <p class="text-[8px] font-medium mt-1 text-slate-500">{{ t('news.profile.empty.filtered_subtitle') }}</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    window.toggleSubscription = function(newspaperId) {
+        var btn = $('#btn-subscribe');
+        var originalHtml = btn.html();
+
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i>');
+
+        $.ajax({
+            url: "{{ base_url() }}/api/newspaper/subscribe",
+            type: 'POST',
+            data: { id: newspaperId },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: '{{ t(''news.profile.js.access_denied'') }}', text: res.message, background: '#0f172a', color: '#fff' });
+                    btn.prop('disabled', false).html(originalHtml);
+                } else {
+                    location.reload();
+                }
+            },
+            error: function() {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.profile.js.system_error'') }}', text: '{{ t(''news.profile.js.db_unreachable'') }}', background: '#0f172a', color: '#fff' });
+                btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    };
+
+    window.newspaperArchiveState = {
+        category: 'all',
+        sort: 'latest'
+    };
+
+    window.applyArchiveFilters = function() {
+        var state = window.newspaperArchiveState || {};
+        var list = document.getElementById('archive-list');
+        if (!list) return;
+
+        var cards = Array.prototype.slice.call(list.querySelectorAll('.article-archive-card'));
+        if (!cards.length) return;
+
+        cards.forEach(function(card) {
+            var matchCategory = state.category === 'all' || card.dataset.category === state.category;
+            card.style.display = matchCategory ? '' : 'none';
+        });
+
+        var visibleCards = cards.filter(function(card) { return card.style.display !== 'none'; });
+
+        visibleCards.sort(function(a, b) {
+            if (state.sort === 'views') return parseInt(b.dataset.views || '0', 10) - parseInt(a.dataset.views || '0', 10);
+            if (state.sort === 'votes') return parseInt(b.dataset.votes || '0', 10) - parseInt(a.dataset.votes || '0', 10);
+            return parseInt(b.dataset.created || '0', 10) - parseInt(a.dataset.created || '0', 10);
+        });
+
+        visibleCards.forEach(function(card) { list.appendChild(card); });
+
+        var emptyState = document.getElementById('archive-filter-empty');
+        if (emptyState) {
+            emptyState.classList.toggle('hidden', visibleCards.length > 0);
+            if(visibleCards.length === 0) emptyState.style.display = 'block';
+            else emptyState.style.display = '';
+        }
+    };
+
+    $(function() {
+        $('#archive-category-filter').on('change', function() {
+            window.newspaperArchiveState.category = $(this).val();
+            window.applyArchiveFilters();
+        });
+
+        $('.archive-sort-btn[data-sort]').on('click', function() {
+            $('.archive-sort-btn[data-sort]').removeClass('is-active');
+            $(this).addClass('is-active');
+            window.newspaperArchiveState.sort = $(this).data('sort');
+            window.applyArchiveFilters();
+        });
+
+        window.applyArchiveFilters();
+    });
+</script>
+{% endblock %}
+

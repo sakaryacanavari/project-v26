@@ -1,0 +1,86 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in w-full max-w-4xl mx-auto">
+    <div class="glass-panel p-5 border-l-4 border-fuchsia-500 bg-fuchsia-950/10 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-fuchsia-600/20 border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-400">
+            <i class="fa-solid fa-users-viewfinder text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-sm font-black text-white uppercase tracking-[0.2em] leading-tight">Siyasi Parti Kurulum Merkezi</h1>
+            <p class="text-[9px] text-fuchsia-400 font-black uppercase tracking-widest mt-1">Bağımsız Veri Hattı Aktif</p>
+        </div>
+    </div>
+
+    <div class="glass-panel p-8 border-t-2 border-fuchsia-500">
+        <div class="space-y-6">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Parti Adı</label>
+                <input id="v12-name" type="text" placeholder="Minimum 5 karakter..." class="w-full bg-black/60 border border-white/10 text-white p-4 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500 transition-all shadow-inner">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manifesto</label>
+                <textarea id="v12-desc" placeholder="Vizyonunuzu giriniz..." class="w-full min-h-[160px] bg-black/60 border border-white/10 text-white p-4 rounded-xl text-[11px] font-bold outline-none focus:border-fuchsia-500 transition-all resize-none shadow-inner"></textarea>
+            </div>
+
+            <div class="pt-4 border-t border-white/5">
+                <button id="v12-create-btn" type="button" class="w-full bg-fuchsia-700 hover:bg-fuchsia-600 text-white py-4 rounded-xl font-black text-[11px] uppercase border border-fuchsia-400/30 transition-all shadow-lg active:scale-95 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-flag"></i> OLUŞUMU KUR ({{ creationCost }} Altın)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).off('click', '#v12-create-btn').on('click', '#v12-create-btn', function(e) {
+            e.preventDefault();
+            var nameVal = $('#v12-name').val().trim();
+            var descVal = $('#v12-desc').val().trim();
+            var $btn = $(this);
+
+            if (nameVal.length < 5 || descVal.length < 5) {
+                alert("Uyarı: İsim ve Manifesto en az 5 karakter olmalıdır.");
+                return;
+            }
+
+            $btn.prop('disabled', true).html('İŞLENİYOR...');
+
+            $.post("{{ base_url() }}/api/party/create", { name: nameVal, description: descVal }, function(res) {
+                
+                // 1. İHTİMAL: Sunucu direkt partinin ID numarasını döndürdüyse (Örn: 25)
+                if ($.isNumeric(res)) {
+                    alert("Başarılı! Parti resmi olarak kuruldu.");
+                    window.location.href = "{{ base_url() }}/party/" + res + "/slug";
+                    return;
+                }
+
+                // 2. İHTİMAL: Sunucu JSON paketi gönderdiyse
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch(e) {}
+                }
+                
+                if (res.error > 0) {
+                    if (res.error == 6) {
+                        alert("Hata: Bütçeniz Yetersiz. Bu işlem için {{ creationCost }} Altın gereklidir.");
+                    } else {
+                        alert("Hata: " + (res.message || "İşlem reddedildi. İsim alınmış olabilir."));
+                    }
+                    $btn.prop('disabled', false).html('<i class="fa-solid fa-flag"></i> OLUŞUMU KUR ({{ creationCost }} Altın)');
+                } else if (res.result) {
+                    alert("Başarılı! Parti resmi olarak kuruldu.");
+                    window.location.href = "{{ base_url() }}/party/" + res.result + "/slug";
+                } else {
+                    // Yanıt başarıyla geldi ama beklenen formatta değilse
+                    alert("İşlem tamamlandı! Sayfa yenileniyor...");
+                    window.location.href = "{{ base_url() }}/parties";
+                }
+
+            }).fail(function(xhr) {
+                alert("Sunucu Bağlantı Hatası (XHR: " + xhr.status + ")");
+                $btn.prop('disabled', false).html('<i class="fa-solid fa-flag"></i> OLUŞUMU KUR ({{ creationCost }} Altın)');
+            });
+        });
+    </script>
+</div>
+{% endblock %}

@@ -1,0 +1,680 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in w-full overflow-hidden" id="v2-investment-center">
+    <style>
+        /* =============================
+           INVESTMENT CENTER v26.300 — PROJECT-NEXUS SHARP-GLASS
+           ============================= */
+        #v2-investment-center {
+            --company-accent: var(--brand-primary);
+            --company-accent-text: color-mix(in srgb, var(--brand-primary) 90%, #ffffff);
+            --company-accent-strong: color-mix(in srgb, var(--brand-primary) 60%, #020617);
+            --company-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+            --company-accent-border: color-mix(in srgb, var(--brand-primary) 30%, transparent);
+            --company-accent-glow: color-mix(in srgb, var(--brand-primary) 40%, transparent);
+        }
+
+        /* --- Sharp Glass Panel --- */
+        #v2-investment-center .holo-panel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            background: linear-gradient(145deg, rgba(8, 12, 20, 0.85) 0%, rgba(2, 4, 10, 0.98) 100%);
+            border: 1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 15px 35px -10px rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Zarif Scrollbar (Sadece gerektiğinde, telefonda vs. cıkar) */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--brand-primary) 30%, transparent); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+
+        .hero-grid, .selected-summary, .quality-head, .guide-grid, .selected-detail-grid { display: grid; gap: 16px; }
+        .hero-grid { grid-template-columns: minmax(0,1fr) auto; align-items: center; }
+        .hero-main, .selected-main, .quality-head-main, .module-cell, .sector-head-main { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        
+        /* Çizgisiz, Derin İkon Kutuları */
+        .hero-icon, .selected-icon, .quality-head-icon, .module-icon {
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.5); border: none; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+        }
+        .hero-icon { width: 54px; height: 54px; border-radius: 14px; color: var(--company-accent-text); background: color-mix(in srgb, var(--company-accent) 10%, rgba(0,0,0,0.6)); }
+        
+        .hero-title { font-size: 1rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .2em; line-height: 1.2; drop-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .hero-sub { margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 900; color: var(--company-accent-text); text-transform: uppercase; letter-spacing: .12em; opacity: 0.8; }
+        .hero-sub span { width: 6px; height: 6px; border-radius: 50%; background: var(--company-accent); box-shadow: 0 0 10px var(--company-accent); }
+        
+        .hero-stats { display: grid; grid-template-columns: repeat(2, minmax(0,160px)); gap: 12px; }
+        .hero-stat { position: relative; z-index: 1; padding: 12px 16px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.03); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .hero-stat-label, .metric-caption, .empty-copy { font-size: 9px; color: #64748b; }
+        .hero-stat-label, .sector-title, .quality-table thead th, .module-chip, .small-chip, .metric-caption, .build-btn, .company-cta, .empty-title { text-transform: uppercase; font-weight: 900; letter-spacing: .12em; }
+        .hero-stat-value { margin-top: 6px; font-size: 18px; font-weight: 900; color: #fff; }
+
+        .guide-head { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .guide-head-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .guide-head-main i { color: var(--company-accent-text); opacity: 0.8; }
+        .guide-head-title { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .15em; drop-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .guide-head-copy { font-size: 10px; color: #94a3b8; line-height: 1.45; font-weight: 600; }
+        .guide-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+        .guide-card {
+            position: relative; z-index: 1; padding: 16px; border-radius: 12px;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.02);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
+        }
+        .guide-step {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 24px; height: 24px; border-radius: 8px;
+            background: var(--company-accent-soft); border: none; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            color: var(--company-accent-text); font-size: 11px; font-weight: 900; flex-shrink: 0;
+        }
+        .guide-title { margin-top: 12px; font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .1em; }
+        .guide-copy { margin-top: 6px; font-size: 10px; line-height: 1.45; color: #94a3b8; font-weight: 600; }
+        .guide-points { margin-top: 12px; display: grid; gap: 6px; }
+        .guide-point { display: flex; align-items: flex-start; gap: 8px; font-size: 9px; line-height: 1.45; color: #cbd5e1; font-weight: 600; }
+        .guide-point i { color: var(--company-accent-text); margin-top: 2px; flex-shrink: 0; opacity: 0.8; }
+        
+        .guide-tags { margin-top: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .guide-tag {
+            display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 0 8px;
+            border-radius: 6px; background: rgba(0,0,0,0.4); border: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+            color: #cbd5e1; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em;
+        }
+        .guide-tag i { color: var(--company-accent-text); opacity: 0.7; }
+        
+        .catalog-stack { display: grid; gap: 18px; }
+        .sector-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .sector-title { font-size: 11px; color: var(--company-accent-text); letter-spacing: .15em; drop-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .small-chip {
+            display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 0 10px;
+            border-radius: 6px; background: rgba(0,0,0,0.4); border: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+            color: #94a3b8; font-size: 9px;
+        }
+        .small-chip i, .quality-head-chip i, .module-chip i { color: var(--company-accent-text); opacity: 0.8; }
+        
+        .sector-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .company-card {
+            position: relative; z-index: 1; width: 100%; min-height: 132px; padding: 14px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.02); background: rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; justify-content: space-between; gap: 10px; text-align: left; transition: all .25s ease;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .company-card:hover, .company-card.tech-slot-active { 
+            background: color-mix(in srgb, var(--brand-primary) 5%, rgba(0,0,0,0.5));
+            border-color: color-mix(in srgb, var(--brand-primary) 15%, transparent); 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02);
+        }
+        .company-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); border: none; flex-shrink: 0; box-shadow: inset 0 2px 5px rgba(0,0,0,0.6); }
+        .company-icon img, .selected-icon img, .quality-head-icon img, .module-icon img { object-fit: contain; }
+        .company-icon img { width: 24px; height: 24px; transition: transform .25s ease; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .company-card:hover .company-icon img, .company-card.tech-slot-active .company-icon img { transform: scale(1.1); filter: drop-shadow(0 0 8px color-mix(in srgb, var(--company-accent) 60%, transparent)); }
+        
+        .company-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .08em; line-height: 1.2; word-break: break-word; drop-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .company-desc { margin-top: 4px; font-size: 9px; line-height: 1.4; color: #64748b; font-weight: 600; }
+        .company-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+        .company-cta { display: inline-flex; align-items: center; gap: 6px; font-size: 8px; color: var(--company-accent-text); opacity: 0.8; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+        
+        /* Selected Detail Layouts */
+        .selected-summary {
+            display: none; grid-template-columns: minmax(0,1fr) auto; align-items: center; padding: 14px 18px;
+            border-radius: 12px; background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.02); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .selected-summary.is-active { display: grid; }
+        .selected-icon, .quality-head-icon { width: 44px; height: 44px; border-radius: 10px; }
+        .selected-icon img { width: 24px; height: 24px; }
+        .selected-title, .quality-head-title { font-size: 12px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .1em; drop-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .selected-sub, .quality-head-sub { margin-top: 4px; font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+        .selected-metrics, .quality-head-metrics, .module-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        
+        .selected-detail { display: none; position: relative; z-index: 1; padding: 16px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.02); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .selected-detail.is-active { display: block; }
+        .selected-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .selected-detail-title { font-size: 10px; font-weight: 900; color: var(--company-accent-text); text-transform: uppercase; letter-spacing: .15em; }
+        .selected-detail-grid { grid-template-columns: repeat(3, minmax(0,1fr)); margin-top: 14px; }
+        
+        .detail-card { padding: 14px; border-radius: 10px; background: rgba(255,255,255,0.02); border: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); }
+        .detail-card-title { font-size: 9px; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: .1em; }
+        .detail-card-copy { margin-top: 6px; font-size: 10px; line-height: 1.5; color: #94a3b8; font-weight: 600; }
+        
+        .detail-accent {
+            display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0 10px; border-radius: 6px;
+            background: rgba(0,0,0,0.4); border: none; color: #94a3b8;
+            font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .detail-accent.is-beginner { color: #34d399; background: rgba(16, 185, 129, 0.1); }
+        .detail-accent.is-advanced { color: #facc15; background: rgba(245, 158, 11, 0.1); }
+        
+        .detail-list { margin-top: 10px; display: grid; gap: 6px; }
+        .detail-list-item { display: flex; align-items: flex-start; gap: 8px; font-size: 9px; line-height: 1.45; color: #cbd5e1; font-weight: 600; }
+        .detail-list-item i { margin-top: 2px; color: var(--company-accent-text); flex-shrink: 0; opacity: 0.8; }
+        
+        .quality-panel { border-top: 2px solid var(--company-accent); }
+        .quality-head { grid-template-columns: minmax(0,1fr) auto; align-items: center; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.03); position: relative; z-index: 1; }
+        .quality-head-chip, .module-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0 10px; border-radius: 6px; background: rgba(0,0,0,0.4); border: none; color: #94a3b8; font-size: 8px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
+        
+        /* Çizgisiz Badgeler */
+        .quality-badge.q1 { color: #cbd5e1; }
+        .quality-badge.q2 { color: #93c5fd; }
+        .quality-badge.q3 { color: #6ee7b7; }
+        .quality-badge.q4 { color: #fde047; }
+        .quality-badge.q5 { color: #f9a8d4; }
+        .quality-badge.q-plus { color: #e9d5ff; }
+        
+        .quality-table-wrap { position: relative; z-index: 1; margin-top: 16px; overflow-x: auto; }
+        
+        /* Table (Masaüstü sorunsuz, width düzenlemesi yapıldı) */
+        .quality-table { width: 100%; border-spacing: 0 6px; border-collapse: separate; table-layout: auto; }
+        .quality-table thead th { padding: 0 14px 6px; font-size: 9px; color: #64748b; white-space: nowrap; text-align: left; }
+        
+        /* V26 Table Row Styling */
+        .quality-row { background: rgba(0,0,0,0.3); transition: all .2s ease; }
+        .quality-row:hover { background: color-mix(in srgb, var(--company-accent) 6%, transparent); transform: translateX(2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .quality-row td { padding: 12px 14px; vertical-align: middle; border-top: 1px solid rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .quality-row:hover td { border-color: color-mix(in srgb, var(--company-accent) 15%, transparent); }
+        .quality-row td:first-child { border-left: 2px solid transparent; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        .quality-row:hover td:first-child { border-left-color: var(--company-accent); }
+        .quality-row td:last-child { border-right: 1px solid rgba(255,255,255,0.02); border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        .module-icon { width: 40px; height: 40px; border-radius: 10px; }
+        .module-icon img { width: 22px; height: 22px; }
+        .module-copy { min-width: 0; display: grid; gap: 4px; }
+        .module-title { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .05em; line-height: 1.2; }
+        
+        .metric-stack { display: grid; gap: 4px; justify-items: flex-start; }
+        .metric-pill {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; padding: 0 10px;
+            border-radius: 6px; border: none; background: rgba(0,0,0,0.4);
+            color: #fff; font-size: 10px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .metric-pill.green { color: #6ee7b7; }
+        .metric-pill.gray { color: #cbd5e1; }
+        .metric-pill.gold { color: #fde047; }
+        .metric-pill.local { color: #f8fafc; }
+        .metric-pill img { width: 14px; height: 14px; object-fit: contain; }
+        .metric-caption { text-align: left; letter-spacing: .05em; font-size: 8px; }
+        
+        .action-cell { display: flex; justify-content: flex-end; }
+        
+        /* Build Button */
+        .cyber-btn.build-btn {
+            position: relative; overflow: hidden; min-width: 110px; min-height: 32px; padding: 0 12px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px; 
+            background: var(--company-accent); color: #000; border: none; 
+            font-size: 9px; font-weight: 900; transition: all .2s ease;
+        }
+        .cyber-btn.build-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 4px 10px color-mix(in srgb, var(--company-accent) 40%, transparent); }
+        
+        .empty-state { position: relative; z-index: 1; padding: 24px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px dashed rgba(255,255,255,.05); text-align: center; }
+        .empty-title { margin-top: 12px; font-size: 11px; color: #e2e8f0; }
+        .empty-copy { margin-top: 6px; }
+        
+        /* SweetAlert V26 Modals */
+        .cyber-modal-popup { background: rgba(12, 16, 24, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; border-radius: 16px !important; padding: 2rem 1.5rem !important; }
+        .cyber-modal-title { color: #f8fafc !important; text-transform: uppercase !important; letter-spacing: 0.15em !important; font-weight: 900 !important; font-size: 14px !important; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 14px !important; margin-bottom: 18px !important; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; }
+        .cyber-confirm-btn { background: var(--brand-primary) !important; color: #000 !important; font-weight: 900 !important; text-transform: uppercase !important; border-radius: 8px !important; padding: 12px 24px !important; font-size: 11px !important; border: none !important; }
+        .cyber-cancel-btn { background: rgba(0,0,0,0.5) !important; color: #cbd5e1 !important; border: 1px solid rgba(255,255,255,0.1) !important; font-weight: 900 !important; text-transform: uppercase !important; border-radius: 8px !important; padding: 12px 24px !important; font-size: 11px !important; }
+
+        @media (max-width: 1180px) {
+            .hero-grid, .selected-summary, .quality-head, .selected-detail-grid { grid-template-columns: 1fr; }
+            .hero-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .guide-grid { grid-template-columns: 1fr; }
+            .selected-metrics, .quality-head-metrics { justify-content: flex-start; }
+        }
+        @media (max-width: 768px) {
+            .hero-stats { grid-template-columns: 1fr; }
+            .sector-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .quality-table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
+        @media (max-width: 560px) {
+            .sector-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+
+    {% set companyCount = 0 %}
+    {% for sector in sectors %}
+        {% set companyCount = companyCount + sector|length %}
+    {% endfor %}
+
+    {# ===== HERO PANEL ===== #}
+    <div class="holo-panel p-5 md:p-6">
+        <div class="hero-grid relative z-10">
+            <div class="hero-main">
+                <div class="hero-icon"><i class="fa-solid fa-briefcase text-2xl"></i></div>
+                <div>
+                    <div class="hero-title">Sektörel Yatırım Paneli</div>
+                    <div class="hero-sub"><span></span>Tesis Kurulum Protokolü: Çevrimiçi</div>
+                </div>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-label">Toplam Sektör</div>
+                    <div class="hero-stat-value">{{ sectors|length }}</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-label">Toplam Tesis Modeli</div>
+                    <div class="hero-stat-value">{{ companyCount }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== GUIDE PANEL ===== #}
+    <div class="holo-panel p-5 md:p-6">
+        <div class="guide-head">
+            <div>
+                <div class="guide-head-main">
+                    <i class="fa-solid fa-compass-drafting text-lg"></i>
+                    <div class="guide-head-title">Mini Rehber</div>
+                </div>
+                <div class="guide-head-copy mt-1.5">Tesis kurarken hangi zinciri önce açman gerektiğini hızlıca görmek için bu akışı kullan.</div>
+            </div>
+            <div class="small-chip hidden md:inline-flex"><i class="fa-solid fa-route"></i> 3 Adımlı Akış</div>
+        </div>
+        <div class="guide-grid relative z-10 mt-4">
+            <div class="guide-card">
+                <div class="guide-step">1</div>
+                <div class="guide-title">Ham Maddeyi Kur</div>
+                <div class="guide-copy">Temel girdiyi üreten tesisler, sonraki fabrikaların besleme hattını açmak için en güvenli başlangıçtır.</div>
+                <div class="guide-points">
+                    <div class="guide-point"><i class="fa-solid fa-check"></i><span>Düşük bütçeyle daha kolay başlanır.</span></div>
+                    <div class="guide-point"><i class="fa-solid fa-check"></i><span>Sonraki işleme zinciri için stok temeli oluşturur.</span></div>
+                </div>
+                <div class="guide-tags">
+                    <span class="guide-tag"><i class="fa-solid fa-seedling"></i> Temel Girdi</span>
+                    <span class="guide-tag"><i class="fa-solid fa-arrow-up-right-dots"></i> Düşük Maliyet</span>
+                </div>
+            </div>
+            <div class="guide-card">
+                <div class="guide-step">2</div>
+                <div class="guide-title">İşleme Hattını Aç</div>
+                <div class="guide-copy">Ham ürünü daha değerli ara ürünlere çevirecek tesisleri ikinci aşamada ekle ve zinciri verimli hale getir.</div>
+                <div class="guide-points">
+                    <div class="guide-point"><i class="fa-solid fa-check"></i><span>Ham ürün tek başına kalmaz, değer kazanır.</span></div>
+                    <div class="guide-point"><i class="fa-solid fa-check"></i><span>Birden fazla tesis tipi birbirini beslemeye başlar.</span></div>
+                </div>
+                <div class="guide-tags">
+                    <span class="guide-tag"><i class="fa-solid fa-gears"></i> Dönüşüm</span>
+                    <span class="guide-tag"><i class="fa-solid fa-link"></i> Zincir Kur</span>
+                </div>
+            </div>
+            <div class="guide-card">
+                <div class="guide-step">3</div>
+                <div class="guide-title">Nihai Üretimi Büyüt</div>
+                <div class="guide-copy">Tedarik ve maaş akışın oturduğunda yüksek Q seviyelerine çıkarak nihai ürün kapasitesini büyüt.</div>
+                <div class="guide-points">
+                    <div class="guide-point"><i class="fa-solid fa-check"></i><span>Yüksek Q seviyeleri daha pahalı ama daha verimlidir.</span></div>
+                    <div class="guide-point"><i class="fa-solid fa-check"></i><span>İşçi ve maaş bütçesi hazır olmadan acele etme.</span></div>
+                </div>
+                <div class="guide-tags">
+                    <span class="guide-tag"><i class="fa-solid fa-arrow-trend-up"></i> Verim</span>
+                    <span class="guide-tag"><i class="fa-solid fa-medal"></i> Yüksek Q</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== SECTORS & CATALOG ===== #}
+    <div class="holo-panel p-5 md:p-6">
+        <div class="catalog-stack relative z-10">
+            <div>
+                <div class="sector-head mb-4">
+                    <div class="sector-head-main">
+                        <i class="fa-solid fa-layer-group text-lg" style="color: var(--company-accent-text);"></i>
+                        <div class="sector-title">Tesis Kataloğu</div>
+                    </div>
+                    <div class="small-chip hidden sm:inline-flex"><i class="fa-solid fa-cubes"></i>{{ companyCount }} Seçenek</div>
+                </div>
+                <div class="sector-grid mt-2">
+                    {% for sectorName, sector in sectors %}
+                        {% for company in sector %}
+                            {% set companyNameLower = company.name|lower %}
+                            {% set companyDescription = 'Sanayi uretimi icin temel tesis modeli.' %}
+                            {% set companyTypeLabel = 'Genel Uretim' %}
+                            {% set companyBeforeLabel = 'Temel gelir ve ilk tesis butcesi hazir olmali.' %}
+                            {% set companyAfterLabel = 'Daha yuksek Q seviyesi ve bagli uretim hatlari acilir.' %}
+                            {% set beginnerFriendly = false %}
+                            {% if 'weapon' in companyNameLower %}
+                                {% set companyDescription = 'Silah uretir ve savunma sanayine cikti saglar.' %}
+                                {% set companyTypeLabel = 'Savunma' %}
+                                {% set companyBeforeLabel = 'Maas butcesi ve temel ekonomi otursun.' %}
+                                {% set companyAfterLabel = 'Savunma stogu ve silah zinciri buyur.' %}
+                            {% elseif 'raw food' in companyNameLower %}
+                                {% set companyDescription = 'Ham gida uretir ve isleme tesislerini besler.' %}
+                                {% set companyTypeLabel = 'Ham Gida' %}
+                                {% set companyBeforeLabel = 'Baslangic icin direkt kurulabilir.' %}
+                                {% set companyAfterLabel = 'Food Factory gibi isleme tesisleri acilir.' %}
+                                {% set beginnerFriendly = true %}
+                            {% elseif 'food' in companyNameLower %}
+                                {% set companyDescription = 'Islenmis gida uretir ve tuketim zincirine cikti saglar.' %}
+                                {% set companyTypeLabel = 'Gida' %}
+                                {% set companyBeforeLabel = 'Raw Food Factory gibi ham girdi kaynagi kurulu olmali.' %}
+                                {% set companyAfterLabel = 'Tuketim ve maas verimliligi icin daha guclu hat kurulur.' %}
+                            {% elseif 'house' in companyNameLower %}
+                                {% set companyDescription = 'Yapi urunu uretir ve konut zincirini destekler.' %}
+                                {% set companyTypeLabel = 'Konut' %}
+                                {% set companyBeforeLabel = 'Baslangic icin direkt kurulabilir.' %}
+                                {% set companyAfterLabel = 'Konut ve yapi zinciri daha verimli hale gelir.' %}
+                                {% set beginnerFriendly = true %}
+                            {% endif %}
+                            {% set firstQualityKey = company.qualities|keys|first %}
+                            {% set firstQuality = company.qualities[firstQualityKey] %}
+                            {% set workerNeed = firstQuality.workers|default(0) %}
+                            {% set requirementText = workerNeed > 0
+                                ? 'Kurulumdan sonra is ilani acman, en az ' ~ workerNeed ~ ' isci bulman ve duzenli maas odemen gerekecek.'
+                                : 'Dusuk seviyelerde isci ihtiyaci olmayabilir ama yuksek Q seviyelerinde is ilanlari ve maas yonetimi gerekecek.' %}
+                            <button
+                                type="button"
+                                onclick="window.openCompanyOptions(event, {{ company.id }})"
+                                class="company-card company-slot-btn-js"
+                                data-company-id="{{ company.id }}"
+                                data-company-name="{{ company.name|e('html_attr') }}"
+                                data-sector-name="{{ companyTypeLabel|e('html_attr') }}"
+                                data-quality-count="{{ company.qualities|length }}"
+                                data-company-icon="img/companies/{{ company.id }}.png"
+                                data-company-description="{{ companyDescription|e('html_attr') }}"
+                                data-beginner-friendly="{{ beginnerFriendly ? '1' : '0' }}"
+                                data-before-label="{{ companyBeforeLabel|e('html_attr') }}"
+                                data-after-label="{{ companyAfterLabel|e('html_attr') }}"
+                                data-requirement-text="{{ requirementText|e('html_attr') }}">
+                                <div class="sector-head-main">
+                                    <div class="company-icon">
+                                        <img src="img/companies/{{ company.id }}.png" alt="{{ company.name }}">
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="company-name">{{ company.name }}</div>
+                                        <div class="company-desc">{{ companyDescription }}</div>
+                                        <div class="company-meta">
+                                            <span class="small-chip"><i class="fa-solid fa-layer-group"></i>{{ company.qualities|length }} KDM</span>
+                                            {% if beginnerFriendly %}
+                                                <span class="small-chip !text-emerald-400"><i class="fa-solid fa-seedling text-emerald-400"></i>Kolay</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="company-cta"><i class="fa-solid fa-arrow-down"></i>Kurulum Seçenekleri</div>
+                            </button>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== SELECTED COMPANY DYNAMICS ===== #}
+    <div id="selected-company-summary" class="selected-summary mt-2">
+        <div class="selected-main">
+            <div class="selected-icon"><img id="selected-company-icon" src="img/companies/1.png" alt="Sirket"></div>
+            <div>
+                <div id="selected-company-name" class="selected-title">Seçili Tesis</div>
+                <div id="selected-company-sub" class="selected-sub">Kurulum seçenekleri hazır</div>
+            </div>
+        </div>
+        <div class="selected-metrics">
+            <span class="small-chip"><i class="fa-solid fa-layer-group"></i><span id="selected-company-levels">0 Kademe</span></span>
+            <span class="small-chip"><i class="fa-solid fa-industry"></i><span id="selected-company-sector">Sektör</span></span>
+        </div>
+    </div>
+
+    <div id="selected-company-detail" class="selected-detail mt-2">
+        <div class="selected-detail-head">
+            <div class="selected-detail-title">Tesis Detay ve Zincir Bilgisi</div>
+            <span id="selected-company-beginner" class="detail-accent is-advanced">
+                <i class="fa-solid fa-compass"></i> Standart
+            </span>
+        </div>
+        <div class="selected-detail-grid">
+            <div class="detail-card">
+                <div class="detail-card-title">Kurulum Sonrası</div>
+                <div id="selected-company-requirement" class="detail-card-copy">Bu tesisi actiginda is ilani, isci ve maas akisi burada gorunecek.</div>
+                <div class="detail-list">
+                    <div class="detail-list-item"><i class="fa-solid fa-bullhorn"></i><span>İş ilanı yönetimi açılır.</span></div>
+                    <div class="detail-list-item"><i class="fa-solid fa-sack-dollar"></i><span>Maaş ödemesi gerekir.</span></div>
+                </div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-card-title">Zincir Önerisi</div>
+                <div class="detail-list">
+                    <div class="detail-list-item"><i class="fa-solid fa-arrow-left"></i><span id="selected-company-before">Önceki adım.</span></div>
+                    <div class="detail-list-item"><i class="fa-solid fa-arrow-right"></i><span id="selected-company-after">Sonraki adım.</span></div>
+                </div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-card-title">Tesis Bilgisi</div>
+                <div id="selected-company-description" class="detail-card-copy">Secili tesisin oyundaki rolu ve uretim amaci burada gorunecek.</div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== QUALITY OPTIONS TABLES ===== #}
+    <div id="company-options-container" class="space-y-6 mt-2">
+        {% for sectorName, sector in sectors %}
+            {% for company in sector %}
+                {% set companyNameLower = company.name|lower %}
+                {% set companyTypeLabel = 'Genel Uretim' %}
+                {% if 'weapon' in companyNameLower %}
+                    {% set companyTypeLabel = 'Savunma' %}
+                {% elseif 'raw food' in companyNameLower %}
+                    {% set companyTypeLabel = 'Ham Gida' %}
+                {% elseif 'food' in companyNameLower %}
+                    {% set companyTypeLabel = 'Gida' %}
+                {% elseif 'house' in companyNameLower %}
+                    {% set companyTypeLabel = 'Konut' %}
+                {% endif %}
+                <div data-id="{{ company.id }}" class="company-qualities holo-panel p-6 quality-panel hidden">
+                    <div class="quality-head">
+                        <div class="quality-head-main">
+                            <div class="quality-head-icon"><img src="img/companies/{{ company.id }}.png" alt="{{ company.name }}"></div>
+                            <div>
+                                <div class="quality-head-title">{{ company.name }} Kurulum Seçenekleri</div>
+                                <div class="quality-head-sub">{{ companyTypeLabel }} / {{ company.qualities|length }} kademe seçeneği</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quality-table-wrap custom-scrollbar">
+                        <table class="quality-table">
+                            <thead>
+                                <tr>
+                                    <th>Şirket Modülü ve Kademe</th>
+                                    <th>Üretim Getirisi</th>
+                                    <th>İstihdam İhtiyacı</th>
+                                    <th>Kurulum Maliyeti</th>
+                                    <th class="text-right">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs text-white font-bold">
+                                {% for quality, data in company.qualities %}
+                                    <tr class="quality-row">
+                                        <td>
+                                            <div class="module-cell">
+                                                <div class="module-icon"><img src="img/companies/{{ company.id }}.png" alt="{{ company.name }}"></div>
+                                                <div class="module-copy">
+                                                    <div class="module-title">{{ company.name }}</div>
+                                                    <div class="module-meta">
+                                                        <span class="module-chip quality-badge {{ quality == 1 ? 'q1' : (quality == 2 ? 'q2' : (quality == 3 ? 'q3' : (quality == 4 ? 'q4' : (quality == 5 ? 'q5' : 'q-plus')))) }}">Q{{ quality }}</span>
+                                                        <span class="module-chip"><i class="fa-solid fa-boxes-stacked"></i>{{ data.product_amount }} Br.</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="metric-stack">
+                                                <div class="metric-pill green">
+                                                    <i class="fa-solid fa-arrow-up text-[10px]"></i> +{{ data.product_amount }}
+                                                    {% if company.product is defined %}<img src="img/products/{{ company.product }}.png" alt="Urun">{% endif %}
+                                                </div>
+                                                <div class="metric-caption">Günlük Kapasite</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="metric-stack">
+                                                <div class="metric-pill gray"><i class="fa-solid fa-users"></i>{{ data.workers }}</div>
+                                                <div class="metric-caption">İşçi İhtiyacı</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="metric-stack">
+                                                {% if data.currency == "gold" %}
+                                                    <div class="metric-pill gold"><img src="img/icons/gold.png" alt="Gold">{{ data.price }}</div>
+                                                {% else %}
+                                                    <div class="metric-pill local"><img src="img/flags/{{ my.location.country.id }}.png" alt="Flag">{{ data.price }}</div>
+                                                {% endif %}
+                                                <div class="metric-caption">Yatırım Bedeli</div>
+                                            </div>
+                                        </td>
+                                        <td class="text-right">
+                                            <div class="action-cell">
+                                                <button type="button" onclick="window.buildCompany({{ company.id }}, {{ quality }}, '{{ company.name|e('js') }} Q{{ quality }}')" class="cyber-btn build-btn">
+                                                    <i class="fa-solid fa-hammer"></i> Kur
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div id="company-options-empty" class="empty-state mt-4">
+        <div class="w-14 h-14 mx-auto rounded-xl bg-black/50 border border-white/5 flex items-center justify-center shadow-inner" style="color: var(--company-accent-text);">
+            <i class="fa-solid fa-city text-xl opacity-80"></i>
+        </div>
+        <div class="empty-title">Kurulum Seçimi Bekleniyor</div>
+        <div class="empty-copy">Yukarıdan bir tesis modeli seçtiğinde, kurulum seviyeleri (Q) ve yatırım maliyetleri burada listelenecektir.</div>
+    </div>
+
+    <script>
+        const companyThemeStyles = getComputedStyle(document.getElementById('v2-investment-center'));
+        const companyAccent = (companyThemeStyles.getPropertyValue('--company-accent') || '#06b6d4').trim();
+
+        window.openCompanyOptions = function(event, targetId) {
+            event.preventDefault();
+            $('.company-qualities').addClass('hidden').removeClass('animate-fade-in');
+            $('.company-slot-btn-js').removeClass('tech-slot-active');
+            const $button = $(event.currentTarget);
+            const $targetPanel = $('.company-qualities[data-id="' + targetId + '"]');
+            
+            $button.addClass('tech-slot-active');
+            $targetPanel.removeClass('hidden').addClass('animate-fade-in');
+            $('#company-options-empty').addClass('hidden');
+            
+            $('#selected-company-name').text($button.data('company-name') || 'Secili Tesis');
+            $('#selected-company-sub').text('Seçenekler hazır / ' + ($button.data('quality-count') || 0) + ' kademe');
+            $('#selected-company-levels').text(($button.data('quality-count') || 0) + ' Kademe');
+            $('#selected-company-sector').text($button.data('sector-name') || 'Sektor');
+            $('#selected-company-icon').attr('src', $button.data('company-icon') || 'img/companies/1.png');
+            
+            $('#selected-company-summary').addClass('is-active');
+            $('#selected-company-description').text($button.data('company-description') || 'Secili tesis aciklamasi.');
+            $('#selected-company-requirement').text($button.data('requirement-text') || 'Gereksinimler.');
+            $('#selected-company-before').text($button.data('before-label') || 'Oncesi yok.');
+            $('#selected-company-after').text($button.data('after-label') || 'Sonrasi yok.');
+            
+            const isBeginnerFriendly = String($button.data('beginner-friendly') || '0') === '1';
+            const $beginnerBadge = $('#selected-company-beginner');
+            $beginnerBadge.removeClass('is-beginner is-advanced');
+            if (isBeginnerFriendly) {
+                $beginnerBadge.addClass('is-beginner').html('<i class="fa-solid fa-seedling"></i> Başlangıç Dostu');
+            } else {
+                $beginnerBadge.addClass('is-advanced').html('<i class="fa-solid fa-compass"></i> İleri Seviye');
+            }
+            
+            $('#selected-company-detail').addClass('is-active');
+            if ($targetPanel.length) {
+                $('html, body').animate({ scrollTop: $targetPanel.offset().top - 80 }, 400);
+            }
+        };
+
+        window.buildCompany = function(companyId, quality, name) {
+            Swal.fire({
+                title: '<i class="fa-solid fa-hammer text-[color:var(--brand-primary)] mr-2"></i> Kurulum Onayı',
+                html: `<div class="text-xs text-slate-300 font-bold leading-relaxed mb-2"><b>${name}</b> tesisinin inşasını onaylıyor musunuz?</div><div class="text-[10px] text-amber-400 font-black uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg inline-block">Gerekli bakiye tahsil edilecektir.</div>`,
+                showCancelButton: true,
+                confirmButtonText: 'İNŞA ET',
+                cancelButtonText: 'İPTAL',
+                background: '#0a0c14', color: '#f8fafc',
+                customClass: {
+                    popup: 'cyber-modal-popup',
+                    title: 'cyber-modal-title',
+                    confirmButton: 'cyber-confirm-btn',
+                    cancelButton: 'cyber-cancel-btn',
+                    actions: 'gap-3 mt-5 w-full flex-col-reverse md:flex-row justify-center'
+                },
+                buttonsStyling: false
+            }).then(function(result) {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                Swal.fire({
+                    title: '<i class="fa-solid fa-spinner fa-spin text-[color:var(--brand-primary)] mr-2"></i> İnşa Ediliyor...',
+                    html: '<div class="text-[10px] text-slate-400 font-black tracking-widest uppercase mt-2">Lojistik ağlarına bağlanıyor...</div>',
+                    background: '#0a0c14', color: '#f8fafc',
+                    showConfirmButton: false, allowOutsideClick: false,
+                    customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' }
+                });
+
+                $.ajax({
+                    url: "{{ base_url() }}/api/company/create",
+                    type: "POST",
+                    data: {
+                        id: companyId,
+                        quality: quality,
+                        csrf_token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        if (typeof res === 'string') {
+                            try { res = JSON.parse(res); } catch (e) {}
+                        }
+                        if (res.error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '<i class="fa-solid fa-ban text-red-500 mr-2"></i> İNŞAAT DURDURULDU',
+                                text: res.message,
+                                background: '#0a0c14', color: '#f8fafc',
+                                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn !bg-red-600' },
+                                buttonsStyling: false
+                            });
+                            return;
+                        }
+                        Swal.fire({
+                            icon: 'success',
+                            title: '<i class="fa-solid fa-check-circle text-[color:var(--brand-primary)] mr-2"></i> SİSTEM AKTİF',
+                            text: res.message,
+                            background: '#0a0c14', color: '#f8fafc',
+                            timer: 2000, showConfirmButton: false,
+                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' }
+                        }).then(function() {
+                            window.location.href = "{{ path_for('myCompanies') }}";
+                        });
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '<i class="fa-solid fa-plug-circle-xmark text-red-500 mr-2"></i> BAĞLANTI KOPTU',
+                            text: 'Karargah sunucusu yanıt vermiyor. Lütfen sayfayı yenileyin.',
+                            background: '#0a0c14', color: '#f8fafc',
+                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn !bg-red-600' },
+                            buttonsStyling: false
+                        });
+                    }
+                });
+            });
+        };
+
+        if (typeof peque !== 'undefined' && peque.company) {
+            peque.company.createInit = function() {};
+        }
+    </script>
+</div>
+{% endblock %}

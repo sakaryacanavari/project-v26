@@ -1,0 +1,257 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* --- V26.100 ZENITH-GLASS CORE CSS --- */
+    .home-theme-surface .glass-panel {
+        background: linear-gradient(165deg, rgba(12, 16, 24, 0.65) 0%, rgba(4, 6, 10, 0.9) 100%);
+        backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.02) !important;
+        border-top: 1px solid color-mix(in srgb, var(--brand-primary) 25%, rgba(255,255,255,0.03)) !important;
+        border-radius: 24px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.01), 0 25px 50px -12px rgba(0, 0, 0, 0.95);
+    }
+
+    /* Zenith Input Styling - Ultra Mat & Derin */
+    .cyber-input-field {
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.02) !important;
+        color: #f8fafc !important;
+        border-radius: 14px !important;
+        padding: 14px 18px !important;
+        font-size: 13px !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: inset 0 3px 10px rgba(0,0,0,0.6);
+    }
+    
+    .cyber-input-field:focus {
+        background: rgba(0, 0, 0, 0.7) !important;
+        border-color: color-mix(in srgb, var(--brand-primary) 40%, transparent) !important;
+        box-shadow: inset 0 3px 10px rgba(0,0,0,0.8), 0 0 0 1px color-mix(in srgb, var(--brand-primary) 10%, transparent) !important;
+        outline: none;
+    }
+
+    .cyber-input-field::placeholder {
+        color: #64748b !important;
+        font-weight: 500;
+        opacity: 0.5;
+    }
+
+    /* Zenith Button Styling - Pürüzsüz & Dokunsal */
+    .btn-create-primary {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 70%, white), var(--brand-primary));
+        color: #0c0a09;
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 4px 15px color-mix(in srgb, var(--brand-primary) 15%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 20%, rgba(255,255,255,0.15));
+        border: none;
+    }
+    .btn-create-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px color-mix(in srgb, var(--brand-primary) 25%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.25));
+        filter: brightness(1.05);
+    }
+    .btn-create-primary:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 10%, transparent);
+    }
+    .btn-create-primary:disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+    }
+
+    /* Zenith Modals - Tam Uyumlu Form Matlığı */
+    .cyber-modal-popup {
+        background: rgba(8, 10, 14, 0.98) !important;
+        backdrop-filter: blur(32px);
+        border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        border-radius: 24px !important;
+        padding: 2.5rem 2rem !important;
+        box-shadow: 0 30px 60px -15px rgba(0,0,0,0.95) !important;
+    }
+    .cyber-modal-title {
+        color: #f8fafc !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.15em !important;
+        font-weight: 900 !important;
+        font-size: 14px !important;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        padding-bottom: 14px !important;
+        margin-bottom: 18px !important;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .title-amber { color: #facc15 !important; border-color: rgba(245, 158, 11, 0.1) !important; }
+    .title-red { color: #f87171 !important; border-color: rgba(239, 68, 68, 0.1) !important; }
+    .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; line-height: 1.6 !important; }
+    
+    .cyber-confirm-btn {
+        background: var(--brand-primary) !important;
+        color: #0c0a09 !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+        border-radius: 12px !important;
+        padding: 14px 28px !important;
+        font-size: 10px !important;
+        border: none !important;
+        transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    }
+    .cyber-confirm-btn:hover { transform: translateY(-1px) !important; }
+    .btn-amber { background: #fbbf24 !important; color: #000 !important; }
+    .btn-red { background: #ef4444 !important; color: #fff !important; }
+</style>
+
+<div class="home-theme-surface max-w-2xl mx-auto animate-fade-in w-full mt-6 md:mt-12">
+    <div class="glass-panel p-6 md:p-10 relative overflow-hidden">
+        
+        <i class="fa-solid fa-satellite-dish absolute -right-8 -bottom-8 text-[160px] text-[color:var(--brand-primary)] opacity-[0.015] pointer-events-none rotate-[15deg]"></i>
+
+        <div class="mb-8 border-b border-white/5 pb-5 relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div>
+                <h1 class="text-[18px] md:text-[22px] font-black text-white uppercase tracking-wider flex items-center gap-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-[color:var(--brand-primary)]/10 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                        <i class="fa-solid fa-bullhorn text-[color:var(--brand-primary)] text-[16px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"></i>
+                    </div>
+                    {{ t('news.create_newspaper.title') }}
+                </h1>
+                <p class="text-[10px] text-slate-500 font-bold uppercase mt-2.5 tracking-[0.15em] pl-1">
+                    {{ t('news.create_newspaper.subtitle') }}
+                </p>
+            </div>
+            
+            <div class="shrink-0 bg-black/40 px-4 py-2.5 rounded-xl flex items-center gap-3 shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]">
+                <div class="text-[8px] font-black uppercase tracking-widest text-slate-500 leading-snug text-right">{{ t('news.create_newspaper.cost')|replace({' ': '<br>'})|raw }}</div>
+                <div class="text-[18px] font-black text-white flex items-center gap-1.5" style="text-shadow: 0 2px 4px rgba(0,0,0,0.6);">
+                    {{ creationCost|default('2') }} <i class="fa-solid fa-coins text-yellow-500 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"></i>
+                </div>
+            </div>
+        </div>
+
+        <form id="newspaper-creation-form" onsubmit="submitCyberForm(event)" class="space-y-6 relative z-10">
+            
+            <div class="group">
+                <label class="text-[9px] font-black text-slate-500 group-focus-within:text-[color:var(--brand-primary)] uppercase tracking-[0.18em] ml-1 mb-2 block transition-colors">
+                    {{ t('news.create_newspaper.name') }}
+                </label>
+                <div class="relative">
+                    <input type="text" name="name" required class="cyber-input-field w-full font-bold" placeholder="{{ t('news.create_newspaper.name_placeholder') }}">
+                </div>
+            </div>
+
+            <div class="group">
+                <label class="text-[9px] font-black text-slate-500 group-focus-within:text-[color:var(--brand-primary)] uppercase tracking-[0.18em] ml-1 mb-2 block transition-colors">
+                    {{ t('news.create_newspaper.description') }}
+                </label>
+                <div class="relative">
+                    <textarea name="description" required class="cyber-input-field w-full font-medium h-28 resize-none leading-relaxed" placeholder="{{ t('news.create_newspaper.description_placeholder') }}"></textarea>
+                </div>
+            </div>
+
+            <div class="pt-5 mt-2 border-t border-white/5">
+                <button type="submit" id="btn-create-news" class="btn-create-primary w-full rounded-xl py-4 font-black text-[12px] uppercase tracking-[0.15em] flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-satellite-dish opacity-80 animate-pulse text-sm"></i>
+                    <span class="label">{{ t('news.create_newspaper.submit') }}</span>
+                </button>
+            </div>
+            
+            <div class="text-center mt-4 p-3 bg-black/20 rounded-xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
+                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    <i class="fa-solid fa-shield-halved mr-1.5 text-[color:var(--brand-primary)] opacity-40"></i> {{ t('news.create_newspaper.notice') }}
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    window.submitCyberForm = function (e) {
+        e.preventDefault();
+
+        var nameVal = $('input[name="name"]').val().trim();
+        var descVal = $('textarea[name="description"]').val().trim();
+        var $btn = $('#btn-create-news');
+        var originalHtml = $btn.html();
+
+        if (nameVal.length < 4 || descVal.length < 10) {
+            Swal.fire({
+                icon: 'warning',
+                title: '<i class="fa-solid fa-triangle-exclamation mr-2 text-yellow-500"></i> {{ t('news.create_newspaper.warning_title') }}',
+                text: '{{ t('news.create_newspaper.warning_text') }}',
+                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber' },
+                buttonsStyling: false
+            });
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin text-sm"></i> <span class="label">{{ t('news.create_newspaper.loading') }}</span>');
+
+        $.ajax({
+            url: "{{ base_url() }}/api/newspaper/create",
+            type: 'POST',
+            data: { name: nameVal, description: descVal },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function (res) {
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch (err) {}
+                }
+
+                var payload = (res && typeof res.result === 'object') ? res.result : res;
+                var hasError = !!(payload && (payload.error === true || payload.error === 1));
+                var newspaperId = 0;
+
+                if (payload && payload.id) {
+                    newspaperId = parseInt(payload.id, 10) || 0;
+                } else if (res && typeof res.result === 'number') {
+                    newspaperId = parseInt(res.result, 10) || 0;
+                }
+
+                if (hasError) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '<i class="fa-solid fa-ban mr-2 text-red-500"></i> {{ t('news.create_newspaper.error_title') }}',
+                        text: payload.message || '{{ t('news.create_newspaper.error_text') }}',
+                        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' },
+                        buttonsStyling: false
+                    });
+                    $btn.prop('disabled', false).html(originalHtml);
+                    return;
+                }
+
+                if (newspaperId < 1) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '<i class="fa-solid fa-link-slash mr-2 text-red-500"></i> {{ t('news.create_newspaper.redirect_error_title') }}',
+                        text: '{{ t('news.create_newspaper.redirect_error_text') }}',
+                        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' },
+                        buttonsStyling: false
+                    });
+                    $btn.prop('disabled', false).html(originalHtml);
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '<i class="fa-solid fa-check-circle mr-2 text-[color:var(--brand-primary)]"></i> {{ t('news.create_newspaper.success_title') }}',
+                    text: '{{ t('news.create_newspaper.success_text') }}',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' },
+                    buttonsStyling: false
+                }).then(function () {
+                    window.location.href = "{{ base_url() }}/newspaper/" + newspaperId;
+                });
+            },
+            error: function (xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '<i class="fa-solid fa-plug-circle-xmark mr-2 text-red-500"></i> {{ t('news.create_newspaper.connection_error_title') }}',
+                    text: '{{ t('news.create_newspaper.connection_error_text') }} (' + xhr.status + ')',
+                    customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' },
+                    buttonsStyling: false
+                });
+                $btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    };
+</script>
+{% endblock %}

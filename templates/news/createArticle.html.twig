@@ -1,0 +1,265 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* --- V26.9 ULTIMATE DEEP-FOCUS CSS --- */
+    .home-theme-surface .glass-panel {
+        background: linear-gradient(155deg, rgba(10, 15, 25, 0.5) 0%, rgba(2, 4, 10, 0.8) 100%);
+        backdrop-filter: blur(36px);
+        border: 1px solid rgba(255, 255, 255, 0.02) !important;
+        border-top: 1px solid color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.04)) !important;
+        border-radius: 20px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.01), 0 20px 40px -10px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Enhanced & Compact Input Styling */
+    .cyber-input-field {
+        background: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        color: #f8fafc !important;
+        border-radius: 12px !important;
+        padding: 12px 16px !important;
+        font-size: 13px !important;
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+        appearance: none; /* Select için oku gizler */
+    }
+    
+    .cyber-input-field:focus {
+        background: rgba(0, 0, 0, 0.7) !important;
+        border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent) !important;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 0 0 1px color-mix(in srgb, var(--brand-primary) 15%, transparent) !important;
+        outline: none;
+    }
+
+    .cyber-input-field::placeholder {
+        color: #64748b !important;
+        font-weight: 600;
+        opacity: 0.5;
+    }
+    
+    .cyber-input-field option {
+        background: #0f172a;
+        color: #fff;
+    }
+
+    /* V26.9 Refined Button Styling */
+    .btn-create-primary {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 80%, white), var(--brand-primary));
+        color: #0c0a09;
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 4px 15px color-mix(in srgb, var(--brand-primary) 20%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.1));
+        border: none;
+    }
+    .btn-create-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-primary) 30%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 40%, rgba(255,255,255,0.2));
+        filter: brightness(1.1);
+    }
+    .btn-create-primary:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 15%, transparent);
+    }
+    .btn-create-primary:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    /* V26.9 Minimal Modals */
+    .cyber-modal-popup {
+        background: rgba(8, 10, 15, 0.98) !important;
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+        border-radius: 20px !important;
+        padding: 2rem 1.5rem !important;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.9) !important;
+    }
+    .cyber-modal-title {
+        color: #f8fafc !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.15em !important;
+        font-weight: 900 !important;
+        font-size: 14px !important;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        padding-bottom: 12px !important;
+        margin-bottom: 16px !important;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .title-amber { color: #facc15 !important; border-color: rgba(245, 158, 11, 0.1) !important; }
+    .title-red { color: #f87171 !important; border-color: rgba(239, 68, 68, 0.1) !important; }
+    .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; }
+    .cyber-confirm-btn {
+        background: var(--brand-primary) !important;
+        color: #0c0a09 !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+        border-radius: 10px !important;
+        padding: 12px 24px !important;
+        font-size: 10px !important;
+        border: none !important;
+        transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    }
+    .cyber-confirm-btn:hover { transform: translateY(-1px) !important; }
+    .btn-amber { background: #fbbf24 !important; color: #000 !important; }
+    .btn-red { background: #ef4444 !important; color: #fff !important; }
+</style>
+
+<div class="home-theme-surface max-w-4xl mx-auto animate-fade-in w-full mt-6 md:mt-10">
+    <div class="glass-panel p-6 md:p-10 relative overflow-hidden">
+        
+        <i class="fa-solid fa-satellite-dish absolute -right-6 -bottom-6 text-[160px] text-[color:var(--brand-primary)] opacity-[0.02] pointer-events-none rotate-12"></i>
+
+        <div class="mb-8 border-b border-white/5 pb-5 relative z-10 flex flex-col justify-start">
+            <h1 class="text-[20px] md:text-[24px] font-black text-white uppercase tracking-wider flex items-center gap-3.5" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                <div class="w-11 h-11 rounded-[12px] bg-[color:var(--brand-primary)]/10 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                    <i class="fa-solid fa-feather-pointed text-[color:var(--brand-primary)] text-[18px]"></i>
+                </div>
+                    {{ t('news.create_article.title') }}
+            </h1>
+                <p class="text-[10px] text-slate-400 font-bold uppercase mt-2.5 tracking-[0.15em] pl-1 opacity-80">
+                    {{ t('news.create_article.subtitle') }}
+            </p>
+        </div>
+
+        <div class="space-y-6 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="group">
+                    <label class="text-[9px] font-black text-slate-500 group-focus-within:text-[color:var(--brand-primary)] uppercase tracking-widest ml-1 mb-1.5 block transition-colors">
+                        {{ t('news.create_article.article_title') }}
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="art-title" class="cyber-input-field w-full font-bold" placeholder="{{ t('news.create_article.article_title_placeholder') }}">
+                    </div>
+                </div>
+                
+                <div class="group">
+                    <label class="text-[9px] font-black text-slate-500 group-focus-within:text-[color:var(--brand-primary)] uppercase tracking-widest ml-1 mb-1.5 block transition-colors">
+                        {{ t('news.create_article.category') }}
+                    </label>
+                    <div class="relative">
+                        <select id="art-category" class="cyber-input-field w-full font-bold cursor-pointer pr-10">
+                            <option value="1">{{ t('news.create_article.category.politics') }}</option>
+                            <option value="2">{{ t('news.create_article.category.economy') }}</option>
+                            <option value="3">{{ t('news.create_article.category.military') }}</option>
+                            <option value="4">{{ t('news.create_article.category.social') }}</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="group">
+                <label class="text-[9px] font-black text-slate-500 group-focus-within:text-[color:var(--brand-primary)] uppercase tracking-widest ml-1 mb-1.5 block transition-colors">
+                    {{ t('news.create_article.content') }}
+                </label>
+                <div class="relative">
+                    <textarea id="art-text" class="cyber-input-field w-full font-medium h-[350px] leading-relaxed resize-y" placeholder="{{ t('news.create_article.content_placeholder') }}"></textarea>
+                </div>
+            </div>
+
+            <div class="pt-5 flex flex-col md:flex-row justify-end gap-3 border-t border-white/5 mt-3">
+                <a href="{{ path_for('newspaperList') }}" class="w-full md:w-auto bg-black/40 border border-white/5 text-slate-400 hover:bg-black/60 hover:text-white hover:border-white/10 px-8 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all text-center shadow-inner">
+                    {{ t('news.create_article.cancel') }}
+                </a>
+                <button id="btn-publish" onclick="publishArticle()" class="btn-create-primary w-full md:w-auto rounded-xl px-10 py-3.5 font-black text-[11px] uppercase tracking-[0.15em] flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-satellite-dish opacity-80 animate-pulse text-sm"></i>
+                    <span class="label">{{ t('news.create_article.submit') }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.publishArticle = function() {
+    var title = $('#art-title').val().trim();
+    var text = $('#art-text').val().trim();
+    var category = $('#art-category').val();
+    var btn = $('#btn-publish');
+    var originalHtml = btn.html();
+
+    if (title.length < 4 || text.length < 10) {
+        Swal.fire({
+            icon: 'warning',
+                    title: '<i class="fa-solid fa-triangle-exclamation mr-2 text-yellow-500"></i> {{ t('news.create_article.warning_title') }}',
+                    text: '{{ t('news.create_article.warning_text') }}',
+            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber' },
+            buttonsStyling: false
+        });
+        return;
+    }
+
+    btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin text-sm"></i> <span class="label">{{ t('news.create_article.loading') }}</span>');
+
+    $.ajax({
+        url: "{{ base_url() }}/api/article/create",
+        type: 'POST',
+        data: { title: title, text: text, category: category },
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch (e) {}
+            }
+
+            var payload = (res && typeof res.result === 'object') ? res.result : res;
+            var hasError = !!(payload && (payload.error === true || payload.error === 1));
+            var articleId = 0;
+
+            if (payload && payload.id) {
+                articleId = parseInt(payload.id, 10) || 0;
+            } else if (res && typeof res.result === 'number') {
+                articleId = parseInt(res.result, 10) || 0;
+            }
+
+            if (hasError) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '<i class="fa-solid fa-ban mr-2 text-red-500"></i> {{ t('news.create_article.error_title') }}',
+                    text: payload.message || '{{ t('news.create_article.error_text') }}',
+                    customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' },
+                    buttonsStyling: false
+                });
+                btn.prop('disabled', false).html(originalHtml);
+                return;
+            }
+
+            if (articleId < 1) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '<i class="fa-solid fa-link-slash mr-2 text-red-500"></i> {{ t('news.create_article.redirect_error_title') }}',
+                    text: '{{ t('news.create_article.redirect_error_text') }}',
+                    customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' },
+                    buttonsStyling: false
+                });
+                btn.prop('disabled', false).html(originalHtml);
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: '<i class="fa-solid fa-check-circle mr-2 text-[color:var(--brand-primary)]"></i> {{ t('news.create_article.success_title') }}',
+                text: '{{ t('news.create_article.success_text') }}',
+                timer: 2000,
+                showConfirmButton: false,
+                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' },
+                buttonsStyling: false
+            }).then(function () {
+                window.location.href = "{{ base_url() }}/news/article/" + articleId;
+            });
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: '<i class="fa-solid fa-plug-circle-xmark mr-2 text-red-500"></i> {{ t('news.create_article.connection_error_title') }}',
+                text: '{{ t('news.create_article.connection_error_text') }}',
+                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' },
+                buttonsStyling: false
+            });
+            btn.prop('disabled', false).html(originalHtml);
+        }
+    });
+};
+</script>
+{% endblock %}

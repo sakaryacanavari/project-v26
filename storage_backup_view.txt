@@ -1,0 +1,346 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in w-full overflow-hidden" id="v2-storage-center">
+    
+    <style>
+        #v2-storage-center {
+            --storage-accent: var(--brand-primary);
+            --storage-accent-text: color-mix(in srgb, var(--brand-primary) 78%, #ffffff);
+            --storage-accent-strong: color-mix(in srgb, var(--brand-primary) 72%, #020617);
+            --storage-accent-soft: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+            --storage-accent-border: color-mix(in srgb, var(--brand-primary) 34%, transparent);
+            --storage-accent-glow: color-mix(in srgb, var(--brand-primary) 58%, transparent);
+        }
+        /* Q Harfi Ä°Ã§in Ã–zel SÄ±nÄ±f (Daha dengeli kalÄ±nlÄ±k ve boyut) */
+        .cyber-q-text {
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-weight: bold !important; /* 900'den normal kalÄ±na Ã§ekildi */
+            font-size: 12px !important;  /* 14px'ten 12px'e kÃ¼Ã§Ã¼ltÃ¼ldÃ¼ */
+            letter-spacing: 0.5px !important;
+        }
+
+        /* --- v2.0 LOJÄ°STÄ°K MERKEZÄ° ARAYÃœZ (SÄ°BERPUNK) --- */
+        #v2-storage-center .holo-panel {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(2, 6, 23, 0.95));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Dekoratif Tarama Ã‡izgileri */
+        #v2-storage-center .holo-panel::after {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background-image: repeating-linear-gradient(transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+            opacity: 0.5;
+        }
+
+        /* Tech-Border Efekti */
+        .tech-border-top-cyan { border-top: 2px solid var(--storage-accent); box-shadow: inset 0 15px 15px -15px var(--storage-accent-glow); }
+
+        /* Kargo SlotlarÄ± (Item Cards) */
+        .tech-slot {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            z-index: 10;
+        }
+        .tech-slot::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, color-mix(in srgb, var(--storage-accent) 10%, transparent) 0%, transparent 70%);
+            opacity: 0; transition: opacity 0.3s; z-index: -1;
+        }
+        .tech-slot:hover {
+            border-color: var(--storage-accent-border);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px var(--storage-accent-soft);
+        }
+        .tech-slot:hover::before { opacity: 1; }
+
+        /* Miktar Rozeti (Digital Counter) */
+        .qty-badge {
+            position: absolute; top: -1px; right: -1px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 78%, #1f2937), color-mix(in srgb, var(--storage-accent) 56%, #020617));
+            border-bottom-left-radius: 10px;
+            color: #fff; font-family: Arial, sans-serif; font-weight: bold; font-size: 12px;
+            padding: 4px 8px; box-shadow: -2px 2px 10px var(--storage-accent-glow);
+            border-left: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Askeri Stil Butonlar */
+        .cyber-btn {
+            position: relative; overflow: hidden; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .cyber-btn::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s; z-index: -1;
+        }
+        .cyber-btn:hover::before { left: 100%; }
+        
+        .btn-cyan { background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 78%, #1f2937), color-mix(in srgb, var(--storage-accent) 56%, #020617)); color: #fff; border: 1px solid var(--storage-accent); box-shadow: 0 0 15px var(--storage-accent-soft); }
+        .btn-cyan:hover { background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 68%, #111827), color-mix(in srgb, var(--storage-accent) 46%, #020617)); box-shadow: 0 0 25px var(--storage-accent-glow); transform: translateY(-2px); }
+
+        /* Taktiksel Terminal InputlarÄ± */
+        .cyber-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--storage-accent-border);
+            color: #e2e8f0;
+            transition: all 0.3s;
+        }
+        .cyber-input:focus {
+            outline: none; border-color: var(--storage-accent); background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 15px var(--storage-accent-glow), inset 0 0 10px var(--storage-accent-soft);
+        }
+        
+        .cyber-input option {
+            background: #0f172a; color: #e2e8f0; 
+        }
+
+        .storage-theme-shell {
+            border-left-color: var(--storage-accent) !important;
+            background: linear-gradient(180deg, color-mix(in srgb, var(--storage-accent) 7%, rgba(2, 6, 23, 0.96)), rgba(2, 6, 23, 0.94));
+        }
+
+        .storage-theme-icon {
+            background: linear-gradient(180deg, color-mix(in srgb, var(--storage-accent) 16%, transparent), color-mix(in srgb, var(--storage-accent) 10%, rgba(2, 6, 23, 0.52)));
+            border-color: var(--storage-accent-border) !important;
+            color: var(--storage-accent-text) !important;
+            box-shadow: 0 0 20px var(--storage-accent-soft);
+        }
+
+        .storage-theme-sub {
+            color: var(--storage-accent-text);
+        }
+
+        .storage-theme-sub .storage-theme-dot {
+            background: var(--storage-accent);
+            box-shadow: 0 0 8px var(--storage-accent);
+        }
+
+        .storage-theme-title-icon,
+        .storage-theme-q {
+            color: var(--storage-accent-text);
+        }
+
+        .storage-empty-shell {
+            border-color: var(--storage-accent-border) !important;
+        }
+
+        .storage-empty-cta {
+            background: color-mix(in srgb, var(--storage-accent) 10%, transparent);
+            color: var(--storage-accent-text);
+            border-color: var(--storage-accent-border) !important;
+        }
+
+        .storage-empty-cta:hover {
+            background: color-mix(in srgb, var(--storage-accent) 20%, transparent);
+        }
+    </style>
+
+    {# --- 2. ÃœRÃœN Ä°SÄ°MLERÄ° SÃ–ZLÃœÄÃœ (ID'leri Ä°simlere Ã‡evirir) --- #}
+    {% set item_names = {
+        '1': 'Ekmek',
+        '2': 'Silah',
+        '3': 'Bilet',
+        '4': 'Ev',
+        '5': 'Savunma Sistemi',
+        '6': 'Hastane',
+        '7': 'Hammadde (GÄ±da)',
+        '8': 'Hammadde (Silah)',
+        '9': 'Hammadde (Ev)',
+        '10': 'Hammadde (Bilet)'
+    } %}
+    {% set item_names = {
+        '1': t('storage.item.bread'),
+        '2': t('storage.item.weapon'),
+        '3': t('storage.item.ticket'),
+        '4': t('storage.item.house'),
+        '5': t('storage.item.defense'),
+        '6': t('storage.item.hospital'),
+        '7': t('storage.item.raw_food'),
+        '8': t('storage.item.raw_weapon'),
+        '9': t('storage.item.raw_house'),
+        '10': t('storage.item.raw_ticket')
+    } %}
+
+    {# --- ÃœST BAÅLIK (HEADER) --- #}
+    <div class="holo-panel storage-theme-shell border-l-4 p-5">
+        <div class="flex justify-between items-center relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="storage-theme-icon w-12 h-12 rounded-xl border flex items-center justify-center">
+                    <i class="fa-solid fa-box-archive text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-black text-white uppercase tracking-[0.25em] leading-tight text-shadow-sm">{{ t('storage.hero.title') }}</h1>
+                    <p class="storage-theme-sub text-[10px] font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
+                        <span class="storage-theme-dot w-2 h-2 rounded-full animate-pulse"></span> {{ t('storage.hero.subtitle') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- MEVCUT STOK DURUMU (KARGO BÃ–LMESÄ°) --- #}
+    <div class="holo-panel p-6 tech-border-top-cyan relative">
+        <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4 relative z-10">
+                <i class="storage-theme-title-icon fa-solid fa-cubes text-lg"></i> {{ t('storage.panel.stock') }}
+                <i class="storage-theme-title-icon fa-solid fa-cubes text-lg"></i> Mevcut Stok Durumu
+            </h2>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-5 relative z-10" id="storage-section">
+            {% if items|length > 0 %}
+                {% for item in items %}
+                    {% set translatedName = item_names[item.item] | default('Urun #' ~ item.item) %}
+                    {% set translatedName = item_names[item.item] | default('ÃœrÃ¼n #' ~ item.item) %}
+
+                    <div class="tech-slot p-4 text-center group cursor-default">
+                        
+                        {# Dijital Miktar Rozeti #}
+                        <div class="qty-badge">x{{ item.quantity }}</div>
+
+                        {# Kargo Ä°konu #}
+                        <div class="h-14 flex items-center justify-center mb-2 mt-2">
+                            <img class="max-h-full max-w-full opacity-90 drop-shadow-[0_5px_10px_rgba(0,0,0,0.8)] group-hover:opacity-100 transition-all duration-300 group-hover:scale-110" src="img/products/{{ item.item }}.png" alt="{{ translatedName }}">
+                        </div>
+                        
+                        {# Kargo Etiketi (Name & Quality) #}
+                        <div class="text-[10px] text-white uppercase leading-none mt-3 pt-3 border-t border-white/10 transition-colors" style="border-top-color: rgba(255,255,255,0.10);" onmouseover="this.style.borderTopColor='var(--storage-accent-border)'" onmouseout="this.style.borderTopColor='rgba(255,255,255,0.10)'">
+                            {% if item.quality > 0 %}
+                                <span class="storage-theme-q cyber-q-text block mb-1">Q{{ item.quality }} {{ t('storage.item.module') }}</span>
+                                <span class="storage-theme-q cyber-q-text block mb-1">Q{{ item.quality }} ModÃ¼l</span>
+                            {% else %}
+                                <span class="text-slate-500 cyber-q-text block mb-1">{{ t('storage.item.standard') }}</span>
+                                <span class="text-slate-500 cyber-q-text block mb-1">Standart</span>
+                            {% endif %}
+                            
+                            {# ÃœRÃœN Ä°SMÄ° #}
+                            <div class="mt-1.5 text-slate-300 font-bold text-[10px] tracking-widest truncate px-1" title="{{ translatedName }}">{{ translatedName }}</div>
+                        </div>
+
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="storage-empty-shell col-span-full py-16 text-center bg-black/40 rounded-xl border border-dashed relative z-10">
+                    <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-inner">
+                        <i class="fa-solid fa-box-open text-2xl text-slate-500"></i>
+                    <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest mb-5">{{ t('storage.empty.title') }}</p>
+                    <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest mb-5">Sistemde aktif kargo kaydÄ± bulunamadÄ±.</p>
+                        <i class="fa-solid fa-satellite-dish"></i> {{ t('storage.empty.cta') }}
+                        <i class="fa-solid fa-satellite-dish"></i> Pazardan Ä°kmal SaÄŸla
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# --- SATIÅ EMRÄ° OLUÅTUR (TAKTÄ°KSEL TERMÄ°NAL) --- #}
+    {% if items|length > 0 %}
+    <div class="holo-panel p-6 tech-border-top-cyan bg-black/40 relative">
+            <i class="storage-theme-title-icon fa-solid fa-file-invoice-dollar text-lg"></i> {{ t('storage.panel.sell') }}
+            <i class="storage-theme-title-icon fa-solid fa-file-invoice-dollar text-lg"></i> KÃ¼resel SatÄ±ÅŸ Terminali
+        </h2>
+        
+        <form id="sell-item-form" action="{{ path_for('marketSell') }}" method="post" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end relative z-10">
+            
+                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-crosshairs mr-1"></i> {{ t('storage.form.item') }}</label>
+                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-crosshairs mr-1"></i> Ä°hraÃ§ Edilecek ÃœrÃ¼n</label>
+                <div class="relative">
+                    <select id="item" name="item" class="cyber-input cyber-q-text w-full p-3.5 rounded-lg appearance-none cursor-pointer">
+                        {% for item in items %}
+                            {% set translatedName = item_names[item.item] | default('ÃœrÃ¼n #' ~ item.item) %}
+                                Q{{ item.quality }} - {{ translatedName|upper }} ({{ t('storage.form.max') }}: {{ item.quantity }})
+                                Q{{ item.quality }} - {{ translatedName|upper }} (Maks: {{ item.quantity }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <i class="storage-theme-title-icon fa-solid fa-chevron-down absolute right-4 top-4 text-[10px] pointer-events-none"></i>
+                </div>
+            </div>
+
+                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-weight-hanging mr-1"></i> {{ t('storage.form.quantity') }}</label>
+                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-weight-hanging mr-1"></i> Tedarik MiktarÄ± (Adet)</label>
+                <input id="quantity" name="quantity" type="number" value="1" min="1" class="cyber-input w-full p-3.5 rounded-lg text-xs font-bold">
+            </div>
+
+                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-tag mr-1"></i> {{ t('storage.form.price') }} ({{ my.location.country.currency|upper }})</label>
+                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-tag mr-1"></i> Birim Fiyat ({{ my.location.country.currency|upper }})</label>
+                <div class="relative">
+                    <input id="price" name="price" type="number" step="0.01" placeholder="0.00" class="cyber-input w-full p-3.5 pl-10 rounded-lg text-xs font-bold">
+                    <i class="fa-solid fa-coins absolute left-4 top-4 text-yellow-500 text-[11px]"></i>
+                </div>
+            </div>
+
+                <i class="fa-solid fa-satellite-dish mr-2"></i> {{ t('storage.form.submit') }}
+                <i class="fa-solid fa-satellite-dish mr-2"></i> SatÄ±ÅŸ Emrini Ver
+            </button>
+            
+        </form>
+    </div>
+    {% endif %}
+    
+    <script>
+        $(function () {
+            // Orijinal motoru baÅŸlat
+            if (typeof peque !== 'undefined' && peque.market) {
+                peque.market.initStorage(); 
+            }
+
+            // Ekstra kalite (quality) yakalayÄ±cÄ±
+            $('#item').on('change', function() {
+                let selected = $(this).find('option:selected');
+                let q = selected.data('quality');
+                let max = selected.data('max');
+                
+                $('#quantity').attr('max', max);
+                
+                if($('#hidden-quality').length === 0) {
+                    $('#sell-item-form').append('<input type="hidden" name="quality" id="hidden-quality" value="'+q+'">');
+                } else {
+                    $('#hidden-quality').val(q);
+                }
+            }).trigger('change');
+
+            // AJAX ile Form GÃ¶nderimi
+            $('#sell-item-form').on('submit', function(e) {
+                e.preventDefault(); 
+
+                let form = $(this);
+                let url = form.attr('action');
+                let data = form.serialize(); 
+                let btn = form.find('button[type="submit"]');
+
+                btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-2"></i> Ä°ÅŸleniyor...');
+
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: data,
+                    dataType: "json",
+                    success: function(response) {
+                        if(response === true || response.success) {
+                            alert("SatÄ±ÅŸ emri baÅŸarÄ±yla oluÅŸturuldu!");
+                            window.location.reload(); 
+                        } else {
+                            alert("Ä°ÅŸlem baÅŸarÄ±sÄ±z: " + (response.message || "Bilinmeyen bir hata oluÅŸtu."));
+                            btn.prop('disabled', false).html('<i class="fa-solid fa-satellite-dish mr-2"></i> SatÄ±ÅŸ Emrini Ver');
+                        }
+                    },
+                    error: function() {
+                        alert("Sunucu ile iletiÅŸim kurulamadÄ±.");
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-satellite-dish mr-2"></i> SatÄ±ÅŸ Emrini Ver');
+                    }
+                });
+            });
+        });
+    </script>
+</div>
+{% endblock %}

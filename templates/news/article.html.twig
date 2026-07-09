@@ -1,0 +1,1047 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% macro render_comment(comment, currentUserId, articleOwnerId) %}
+    {% import _self as macros %}
+    <div id="comment-{{ comment.id }}" class="comment-thread {{ comment.depth == 0 ? 'comment-thread-root' : '' }} {{ comment.depth > 0 ? 'ml-0 md:ml-6 mt-3' : 'mt-4' }}" {% if comment.depth == 0 %}data-sort-vip="{{ (comment.is_pinned or comment.is_author_pinned) ? 1 : 0 }}" data-sort-votes="{{ comment.votes|default(0) }}" data-sort-latest="{{ comment.created_at|date('U') }}" data-sort-oldest="{{ comment.created_at|date('U') }}"{% endif %}>
+        
+        <div class="glass-panel p-3.5 md:p-4 rounded-xl relative transition-all duration-300 {{ (comment.is_pinned or comment.is_author_pinned) ? 'border-amber-500/30 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.08)] border-l-4 border-l-amber-500' : 'border-white/5 bg-black/20 hover:bg-black/30 hover:border-white/10 hover:shadow-[0_2px_10px_rgba(0,0,0,0.3)]' }}">
+            
+            {% if comment.is_pinned or comment.is_author_pinned %}
+                <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent"></div>
+            {% endif %}
+
+            <div class="flex flex-col gap-2">
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap mb-2">
+                            {% if comment.is_pinned %}
+                                <span class="inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] text-amber-400">
+                                    <i class="fa-solid fa-fire"></i> {{ t('news.article.comment.vip') }}
+                                </span>
+                            {% endif %}
+                            {% if comment.is_author_pinned %}
+                                <span data-author-pin-badge class="inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] text-amber-300">
+                                    <i class="fa-solid fa-thumbtack"></i> Yazar {{ t('news.article.comment.pin') }}di
+                                </span>
+                            {% endif %}
+                            {% if comment.parent_id > 0 and comment.mention_nick %}
+                                <span class="inline-flex items-center gap-1 rounded bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] text-cyan-300">
+                                    <i class="fa-solid fa-reply"></i> @{{ comment.mention_nick }}
+                                </span>
+                            {% endif %}
+                            {% if comment.is_edited %}
+                                <span class="inline-flex items-center gap-1 rounded bg-slate-500/10 border border-slate-500/20 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] text-slate-400">
+                                    <i class="fa-solid fa-pen"></i> {{ t('news.article.comment.edited') }}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 shrink-0 rounded-lg bg-black/50 border border-white/10 shadow-sm flex items-center justify-center text-[12px] font-black text-white relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-br from-[color:var(--brand-primary)]/20 to-transparent"></div>
+                                <span class="relative z-10">{{ comment.nick|slice(0, 1)|upper }}</span>
+                            </div>
+                            <div class="min-w-0 pt-0.5">
+                                <div class="text-[12px] font-black tracking-wide text-white">{{ comment.nick }}</div>
+                                <div class="mt-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-slate-500 flex items-center gap-1.5 flex-wrap">
+                                    <span><i class="fa-regular fa-clock mr-1 opacity-50"></i>{{ comment.created_at|date("d.m.Y H:i") }}</span>
+                                    {% if comment.is_pinned and comment.pin_amount > 0 %}
+                                        <span class="text-amber-400">&bull; {{ comment.pin_amount|number_format(0, '.', '') }} {{ comment.pin_currency == 'gold' ? 'ALTIN' : comment.pin_currency|upper }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comment-reaction-palette shrink-0">
+                        <button type="button" onclick="toggleReactionMenu(event, this)" class="comment-reaction-trigger text-[9px] font-black text-slate-400 hover:text-white transition-all uppercase bg-black/40 hover:bg-black/60 px-2.5 py-1.5 rounded-lg border border-white/5 shadow-inner" aria-expanded="false">
+                            <i class="fa-solid fa-face-smile mr-1.5 opacity-70"></i> {{ t('news.article.comment.react') }}
+                        </button>
+                        <div class="comment-reaction-menu" data-reaction-menu>
+                            <button type="button" onclick="reactToComment({{ comment.id }}, 'brain')" class="comment-reaction-option {{ 'brain' in comment.my_reactions ? 'is-active' : '' }}">
+                                <i class="fa-solid fa-brain comment-reaction-icon"></i> {{ t('news.article.comment.reaction.brain') }}
+                            </button>
+                            <button type="button" onclick="reactToComment({{ comment.id }}, 'clown')" class="comment-reaction-option {{ 'clown' in comment.my_reactions ? 'is-active' : '' }}">
+                                <i class="fa-solid fa-masks-theater comment-reaction-icon"></i> {{ t('news.article.comment.reaction.clown') }}
+                            </button>
+                            <button type="button" onclick="reactToComment({{ comment.id }}, 'sword')" class="comment-reaction-option {{ 'sword' in comment.my_reactions ? 'is-active' : '' }}">
+                                <i class="fa-solid fa-hand-fist comment-reaction-icon"></i> {{ t('news.article.comment.reaction.sword') }}
+                            </button>
+                            <button type="button" onclick="reactToComment({{ comment.id }}, 'shield')" class="comment-reaction-option {{ 'shield' in comment.my_reactions ? 'is-active' : '' }}">
+                                <i class="fa-solid fa-shield-halved comment-reaction-icon"></i> {{ t('news.article.comment.reaction.shield') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-[12px] text-slate-300 leading-relaxed whitespace-pre-wrap mt-1 font-medium">{{ comment.message }}</p>
+
+                <div class="flex flex-col gap-2 mt-2">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        {% if comment.reactions.brain > 0 %}<span class="comment-reaction-badge"><i class="fa-solid fa-brain opacity-70"></i> {{ comment.reactions.brain }}</span>{% endif %}
+                        {% if comment.reactions.clown > 0 %}<span class="comment-reaction-badge clown"><i class="fa-solid fa-masks-theater opacity-70"></i> {{ comment.reactions.clown }}</span>{% endif %}
+                        {% if comment.reactions.sword > 0 %}<span class="comment-reaction-badge sword"><i class="fa-solid fa-hand-fist opacity-70"></i> {{ comment.reactions.sword }}</span>{% endif %}
+                        {% if comment.reactions.shield > 0 %}<span class="comment-reaction-badge shield"><i class="fa-solid fa-shield-halved opacity-70"></i> {{ comment.reactions.shield }}</span>{% endif %}
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-1.5 border-t border-white/5 pt-2.5">
+                        {% if articleOwnerId == currentUserId or comment.uid == currentUserId %}
+                            <button type="button" onclick="togglePinComment({{ comment.id }}, this)" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-amber-400/80 hover:text-amber-300">
+                                <i class="fa-solid fa-thumbtack mr-1"></i> <span class="label">{{ comment.is_author_pinned ? '{{ t('news.article.comment.unpin') }}' : '{{ t('news.article.comment.pin') }}' }}</span>
+                            </button>
+                        {% endif %}
+                        
+                        {% if comment.uid == currentUserId %}
+                            <button type="button" onclick="editComment({{ comment.id }}, '{{ comment.message|e('js') }}')" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-indigo-400/80 hover:text-indigo-300">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i> <span class="label">{{ t('news.article.comment.edit') }}</span>
+                            </button>
+                            <button type="button" onclick="deleteComment({{ comment.id }})" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-red-400/80 hover:text-red-300 hover:bg-red-500/10">
+                                <i class="fa-solid fa-trash mr-1"></i> <span class="label">{{ t('news.article.comment.delete') }}</span>
+                            </button>
+                        {% endif %}
+                        
+                        <button type="button" onclick="replyToComment({{ comment.id }}, '{{ comment.nick|e('js') }}', {{ comment.uid }})" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-400/80 hover:text-cyan-300">
+                            <i class="fa-solid fa-reply mr-1"></i> <span class="label">{{ t('news.article.comment.reply') }}</span>
+                        </button>
+                        
+                        <button type="button" onclick="voteComment({{ comment.id }}, this)" data-votes="{{ comment.votes }}" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-thumbs-up mr-1 text-[color:var(--brand-primary)] opacity-80"></i> 
+                            <span class="label text-slate-300">{{ t('news.article.comment.like') }} <span class="ml-1 bg-black/50 px-1 py-0.5 rounded text-white">{{ comment.votes }}</span></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if comment.children is not empty %}
+            <div class="mt-2.5 rounded-xl border border-white/5 bg-black/20 p-2.5 shadow-inner relative">
+                <div class="absolute left-6 top-0 bottom-6 w-[1px] bg-white/5 pointer-events-none hidden md:block"></div>
+                
+                <div class="flex items-center justify-between gap-3 mb-1.5 px-2">
+                    <div class="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500 flex items-center gap-1.5">
+                        <i class="fa-solid fa-level-down-alt opacity-50"></i> {{ comment.children|length }} yanit
+                    </div>
+                    {% if comment.children|length > 2 %}
+                        <button type="button" onclick="toggleReplies(this)" class="reply-toggle-btn inline-flex items-center gap-1.5 rounded-lg bg-black/40 px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/10 transition-colors">
+                            <i class="fa-solid fa-chevron-down"></i> <span class="label">+{{ comment.children|length - 2 }} {{ t('news.article.comment.show_replies') }}</span>
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="space-y-2 relative z-10" data-replies-container>
+                    {% for child in comment.children %}
+                        <div class="reply-thread-item{% if loop.index > 2 %} reply-thread-hidden hidden{% endif %}">
+                            {{ macros.render_comment(child, currentUserId, articleOwnerId) }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% block content %}
+{% import _self as macros %}
+{% set articleCategoryLabel = article.category == 1 ? t('news.article.category.politics') : (article.category == 2 ? t('news.article.category.economy') : (article.category == 3 ? t('news.article.category.military') : (article.category == 4 ? t('news.article.category.social') : t('news.article.category.general')))) %}
+{% set articlePlainText = article.text|default('')|striptags %}
+{% set articleWordCount = articlePlainText ? articlePlainText|split(' ')|length : 0 %}
+{% set articleReadMinutes = (articleWordCount / 180)|round(0, 'ceil') %}
+{% if articleReadMinutes < 1 %}{% set articleReadMinutes = 1 %}{% endif %}
+{% set commentMaxLength = 250 %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* --- V19 COMPACT CYBER-GLASS CORE --- */
+    .home-theme-surface .glass-panel {
+        background: linear-gradient(145deg, rgba(6, 9, 17, 0.65) 0%, rgba(2, 4, 10, 0.9) 100%) !important;
+        backdrop-filter: blur(32px);
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+    }
+    .home-theme-surface .theme-divider { border-color: rgba(255, 255, 255, 0.04) !important; }
+
+    /* Modals (SweetAlert V19) */
+    .cyber-modal-popup { background: linear-gradient(145deg, #09090b, #020617) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05) !important; border-radius: 24px !important; padding: 2rem !important; backdrop-filter: blur(16px); }
+    .cyber-modal-promote { border-color: rgba(245, 158, 11, 0.3) !important; box-shadow: 0 0 40px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255,255,255,0.05) !important; }
+    .cyber-modal-danger { border-color: rgba(239, 68, 68, 0.3) !important; box-shadow: 0 0 40px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255,255,255,0.05) !important; }
+    
+    .cyber-modal-title { color: #fff !important; text-transform: uppercase !important; letter-spacing: 0.15em !important; font-weight: 900 !important; font-size: 16px !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 15px !important; margin-bottom: 20px !important; }
+    .title-amber { color: #fcd34d !important; border-color: rgba(245, 158, 11, 0.2) !important; }
+    .title-red { color: #fca5a5 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+    
+    .cyber-input-group label { color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: 900; letter-spacing: 0.1em; margin-bottom: 6px; display: block; text-align: left; }
+    .cyber-input { background: rgba(0, 0, 0, 0.5) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; color: #fff !important; border-radius: 12px !important; padding: 12px 16px !important; font-size: 13px !important; width: 100% !important; outline: none !important; transition: all 0.3s ease; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); }
+    .cyber-input:focus { border-color: color-mix(in srgb, var(--brand-primary) 60%, transparent) !important; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 0 0 2px color-mix(in srgb, var(--brand-primary) 15%, transparent) !important; }
+    
+    .swal2-actions { gap: 12px !important; margin-top: 25px !important; }
+    .cyber-confirm-btn { background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 60%, white 40%), var(--brand-primary)) !important; color: #000 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; border-radius: 99px !important; padding: 12px 28px !important; font-size: 11px !important; box-shadow: 0 4px 15px color-mix(in srgb, var(--brand-primary) 40%, transparent) !important; border: none !important; transition: all 0.3s ease; }
+    .cyber-confirm-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-primary) 50%, transparent) !important; }
+    .btn-amber { background: linear-gradient(135deg, #fcd34d, #f59e0b) !important; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3) !important; }
+    .btn-red { background: linear-gradient(135deg, #fca5a5, #ef4444) !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important; }
+    .cyber-cancel-btn { background: rgba(0,0,0,0.4) !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; color: #94a3b8 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; border-radius: 99px !important; padding: 12px 24px !important; font-size: 11px !important; transition: all 0.3s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,0.02) !important; }
+    .cyber-cancel-btn:hover { background: rgba(255,255,255,0.05) !important; color: #fff !important; transform: translateY(-1px); }
+
+    /* Buttons & Actions */
+    .shout-action { display: inline-flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.04); color: #94a3b8; border-radius: 8px; transition: all 0.2s ease; cursor: pointer; }
+    .shout-action:hover { background: rgba(255, 255, 255, 0.05); color: #fff; border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .shout-action i { transition: transform 0.2s ease; }
+    .shout-action:hover i { transform: scale(1.1); }
+    
+    .article-side-card { border-radius: 20px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+    .article-action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; border-radius: 12px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; transition: all 0.3s ease; padding: 0 14px; cursor: pointer; }
+    .article-meta-tile { border-radius: 12px; background: rgba(0,0,0,0.4); padding: 10px 12px; border: 1px solid rgba(255,255,255,0.03); box-shadow: inset 0 1px 3px rgba(0,0,0,0.6); }
+    .article-meta-tile .k { color: #64748b; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
+    .article-meta-tile .v { margin-top: 4px; color: #fff; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Comments Filter Tabs */
+    .comment-sort-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; padding: 0 12px; border-radius: 99px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); color: #94a3b8; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s ease; white-space: nowrap; }
+    .comment-sort-btn:hover { border-color: rgba(255,255,255,0.15); color: #fff; background: rgba(255,255,255,0.05); }
+    .comment-sort-btn.is-active { background: color-mix(in srgb, var(--brand-primary) 20%, transparent); border-color: var(--brand-primary); color: #fff; box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 25%, transparent); }
+    
+    .comment-load-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 20px; border-radius: 99px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; transition: all 0.3s ease; }
+    .comment-load-btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .comment-thread-hidden { display: none !important; }
+
+    /* Reaction Menus */
+    .comment-reaction-palette { position: relative; }
+    .comment-reaction-trigger { min-width: 90px; display: inline-flex; align-items: center; justify-content: center; }
+    .comment-reaction-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; min-width: 160px; padding: 6px; border-radius: 12px; background: rgba(10, 12, 20, 0.95); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 15px 35px rgba(0,0,0,0.8); display: flex; gap: 4px; flex-direction: column; opacity: 0; visibility: hidden; transform: translateY(-8px) scale(0.96); transform-origin: top right; pointer-events: none; transition: opacity .2s ease, transform .2s cubic-bezier(0.2, 0.8, 0.2, 1), visibility .2s ease; }
+    .comment-reaction-palette.is-open .comment-reaction-menu { opacity: 1; visibility: visible; transform: translateY(0) scale(1); pointer-events: auto; }
+    .comment-reaction-option { display: inline-flex; align-items: center; gap: 8px; width: 100%; min-height: 30px; padding: 0 10px; border-radius: 8px; background: transparent; color: #cbd5e1; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; transition: all .15s ease; border: none; cursor: pointer; }
+    .comment-reaction-option:hover, .comment-reaction-option.is-active { background: rgba(255,255,255,0.06); color: #fff; }
+    .comment-reaction-icon { width: 12px; text-align: center; color: var(--brand-primary); opacity: 0.8; }
+    .comment-reaction-badge { display: inline-flex; align-items: center; gap: 5px; min-height: 20px; padding: 0 6px; border-radius: 6px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.03); color: #cbd5e1; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
+    .comment-reaction-badge.clown { color: #fda4af; }
+    .comment-reaction-badge.sword { color: #fca5a5; }
+    .comment-reaction-badge.shield { color: #93c5fd; }
+
+    /* Article Format Fixes */
+    .article-content-text img { max-width: 100% !important; height: auto !important; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin: 12px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+</style>
+
+<div id="article-page" class="space-y-6 max-w-[1500px] mx-auto animate-fade-in w-full overflow-hidden">
+    <div class="glass-panel p-5 md:p-7 rounded-3xl relative overflow-hidden">
+        <div class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-[color:var(--brand-primary)] opacity-10 blur-[100px] pointer-events-none"></div>
+
+        <div class="relative z-10 xl:grid xl:grid-cols-[minmax(0,1fr)_280px] xl:gap-8">
+            <div class="min-w-0">
+                <div class="border-b border-white/5 pb-5">
+                    <div class="flex items-center gap-2 mb-3 flex-wrap">
+                        {% if article.is_promoted %}
+                            <span class="inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)] animate-pulse">
+                                <i class="fa-solid fa-bolt"></i> {{ t('news.article.promoted') }}
+                            </span>
+                        {% endif %}
+                        <span class="inline-flex items-center rounded bg-[color:var(--brand-primary)]/10 border border-[color:var(--brand-primary)]/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[color:var(--brand-primary)]">
+                            {{ articleCategoryLabel }}
+                        </span>
+                    </div>
+
+                    <h1 class="text-[20px] md:text-[24px] font-black text-white uppercase tracking-wide leading-tight drop-shadow-sm mb-4">
+                        {{ article.title }}
+                    </h1>
+
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-xl bg-black/50 border border-white/10 shadow-[0_0_8px_rgba(0,0,0,0.5)] flex items-center justify-center text-[14px] font-black text-white relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-[color:var(--brand-primary)]/30 to-transparent"></div>
+                                    <span class="relative z-10">{{ article.creator.nick|slice(0, 1)|upper }}</span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[8px] text-slate-500 font-black uppercase tracking-[0.15em]">{{ t('news.article.author') }}</span>
+                                    <span class="text-[11px] font-black text-white uppercase tracking-wider drop-shadow-sm">{{ article.creator.nick }}</span>
+                                </div>
+                            </div>
+
+                            <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+
+                            <div class="flex items-center gap-3">
+                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <i class="fa-regular fa-clock text-slate-500"></i> {{ article.created_at|date("d.m.Y H:i") }}
+                                </span>
+                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <i class="fa-solid fa-eye text-slate-500"></i> {{ article.views }} {{ t('news.article.reads') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if article.creator.id != my.id %}
+                            <button onclick="toggleSubscriptionFromArticle({{ article.creator.id }})" id="btn-sub-art" class="shout-action px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] {{ isSubscribed ? 'is-active' : '' }}">
+                                <i class="fa-solid {{ isSubscribed ? 'fa-bell-slash' : 'fa-bell' }} mr-1"></i> <span class="label">{{ isSubscribed ? '{{ t('news.article.unsubscribe') }}' : '{{ t('news.article.subscribe') }}' }}</span>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-5 bg-black/30 border border-white/5 rounded-2xl p-5 shadow-inner article-content-text">
+                    <div class="text-slate-200 text-[13px] leading-relaxed whitespace-pre-wrap font-medium">{{ article.text }}</div>
+                </div>
+            </div>
+
+            <aside class="mt-6 xl:mt-0 xl:sticky xl:top-6 h-fit space-y-4">
+                <div class="article-side-card p-4">
+                    <div class="flex items-start justify-between gap-3 border-b border-white/5 pb-3 mb-3">
+                        <div class="min-w-0">
+                            <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--brand-primary)] drop-shadow-sm">{{ t('news.article.quick_actions') }}</div>
+                            <div class="mt-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-slate-500">{{ t('news.article.quick_actions_hint') }}</div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <div class="rounded-xl bg-black/50 border border-white/5 px-2.5 py-1.5 text-center min-w-[60px] shadow-inner">
+                                <div class="text-[7px] font-black uppercase tracking-[0.16em] text-slate-500">Destek</div>
+                                <div class="text-[13px] font-black leading-none text-white mt-0.5">{{ article.votes }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid {{ article.creator.id != my.id ? 'grid-cols-2' : 'grid-cols-1' }} gap-2 mb-2">
+                        <button data-id="{{ article.id }}" id="custom-vote-btn" class="article-action-btn bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-black border border-amber-500/30 hover:shadow-[0_0_10px_rgba(245,158,11,0.3)] disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-hand-holding-heart text-xs"></i> {{ t('news.article.vote') }}
+                        </button>
+                        {% if article.creator.id != my.id %}
+                            <button onclick="endorseArticle({{ article.id }})" class="article-action-btn bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary)] hover:text-white border border-[color:var(--brand-primary)]/30 hover:shadow-[0_0_10px_color-mix(in_srgb,var(--brand-primary)_40%,transparent)]">
+                                <i class="fa-solid fa-coins text-xs"></i> {{ t('news.article.donate') }}
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid {{ article.creator.id == my.id and not article.is_promoted ? 'grid-cols-2' : 'grid-cols-1' }} gap-2 mb-2">
+                        <button type="button" onclick="copyArticleLink()" class="article-action-btn bg-black/40 text-slate-300 hover:text-white border border-white/5 hover:border-white/20 shadow-inner">
+                            <i class="fa-solid fa-link text-xs"></i> {{ t('news.article.copy_link') }}
+                        </button>
+                        {% if article.creator.id == my.id and not article.is_promoted %}
+                            <button onclick="promoteArticle({{ article.id }})" class="article-action-btn bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-black border border-yellow-500/30 hover:shadow-[0_0_10px_rgba(234,179,8,0.3)]">
+                                <i class="fa-solid fa-bullhorn text-xs"></i> {{ t('news.article.promote') }}
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <button type="button" onclick="scrollToComments()" class="article-action-btn bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-black border border-cyan-500/30 hover:shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                            <i class="fa-solid fa-comments text-xs"></i> {{ t('news.article.comments') }}
+                        </button>
+                        <button type="button" onclick="scrollToTopArea()" class="article-action-btn bg-black/40 text-slate-300 hover:text-white border border-white/5 hover:border-white/20 shadow-inner">
+                            <i class="fa-solid fa-arrow-up text-xs"></i> {{ t('news.article.back_top') }}
+                        </button>
+                    </div>
+
+                    {% if article.creator.id == my.id %}
+                        <div class="grid grid-cols-2 gap-2 mb-3 pt-3 border-t border-white/5">
+                            <button onclick="openEditModal()" class="article-action-btn bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border border-indigo-500/30 hover:shadow-[0_0_10px_rgba(99,102,241,0.3)]">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i> Duzenle
+                            </button>
+                            <button onclick="deleteArticle({{ article.id }})" class="article-action-btn bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/30 hover:shadow-[0_0_10px_rgba(220,38,38,0.3)]">
+                                <i class="fa-solid fa-trash text-xs"></i> Sil
+                            </button>
+                        </div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="article-meta-tile">
+                            <div class="k">{{ t('news.article.meta.category') }}</div>
+                            <div class="v">{{ articleCategoryLabel }}</div>
+                        </div>
+                        <div class="article-meta-tile">
+                            <div class="k">{{ t('news.article.meta.comment') }}</div>
+                            <div class="v">{{ comments|length }}</div>
+                        </div>
+                        <div class="article-meta-tile">
+                            <div class="k">{{ t('news.article.meta.time') }}</div>
+                            <div class="v">{{ articleReadMinutes }} {{ t('news.article.meta.minute') }}</div>
+                        </div>
+                        <div class="article-meta-tile">
+                            <div class="k">{{ t('news.article.meta.word') }}</div>
+                            <div class="v">{{ articleWordCount }}</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <div class="xl:grid xl:grid-cols-[minmax(0,1fr)_280px] xl:gap-8 mt-6" id="comments-section">
+        
+        <div class="glass-panel p-5 md:p-7 rounded-3xl relative overflow-hidden">
+            <div class="border-b border-white/5 pb-4 mb-5">
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <h3 class="text-[15px] font-black text-white uppercase tracking-[0.15em] flex items-center gap-2 drop-shadow-sm">
+                            <div class="w-7 h-7 rounded-lg bg-[color:var(--brand-primary)]/20 border border-[color:var(--brand-primary)]/30 flex items-center justify-center text-[color:var(--brand-primary)] text-xs shadow-[0_0_8px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)]"><i class="fa-solid fa-comments"></i></div> {{ t('news.article.comments') }}
+                        </h3>
+                    </div>
+                    
+                    <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+                        <div class="flex flex-wrap gap-2">
+                            <span class="inline-flex items-center gap-1.5 rounded-md bg-black/40 border border-white/5 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-slate-300 shadow-inner">
+                                <i class="fa-solid fa-comment-dots text-[color:var(--brand-primary)] opacity-80"></i> {{ comments|length }} {{ t('news.article.comment_count') }}
+                            </span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-1.5 bg-black/30 p-1 rounded-full border border-white/5" id="comment-sorters">
+                            <button type="button" onclick="sortComments('vip', this)" class="comment-sort-btn is-active"><i class="fa-solid fa-fire text-amber-500"></i> VIP</button>
+                            <button type="button" onclick="sortComments('useful', this)" class="comment-sort-btn"><i class="fa-solid fa-star text-yellow-400"></i> {{ t('news.article.useful') }}</button>
+                            <button type="button" onclick="sortComments('latest', this)" class="comment-sort-btn"><i class="fa-solid fa-clock text-cyan-400"></i> Yeni</button>
+                            <button type="button" onclick="sortComments('oldest', this)" class="comment-sort-btn"><i class="fa-solid fa-bars-staggered text-slate-400"></i> Eski</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-black/30 border border-white/5 rounded-2xl p-1.5 shadow-inner mb-6 focus-within:border-[color:var(--brand-primary)]/30 focus-within:shadow-[0_0_15px_color-mix(in_srgb,var(--brand-primary)_10%,transparent)] transition-all duration-300">
+                <div class="px-4 pt-3 pb-2 flex items-center justify-between gap-2 border-b border-white/5">
+                    <div class="text-[10px] font-black uppercase tracking-[0.15em] text-white">{{ t('news.article.new_comment') }}</div>
+                    <div class="text-[8px] font-bold uppercase tracking-[0.1em] text-slate-500">{{ t('news.article.forum_terminal') }}</div>
+                </div>
+
+                <div id="reply-target-shell" class="hidden items-center justify-between gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 mx-3 mt-3 shadow-inner">
+                    <div class="min-w-0">
+                        <div class="text-[8px] font-black uppercase tracking-[0.16em] text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">{{ t('news.article.reply_mode_active') }}</div>
+                        <div class="mt-0.5 text-[11px] font-black text-white truncate">Hedef: <span id="reply-target-nick" class="text-cyan-300"></span></div>
+                    </div>
+                    <button type="button" onclick="clearReplyTarget()" class="shout-action px-2.5 py-1.5 text-[8px] font-black uppercase tracking-[0.1em] hover:text-red-400 hover:border-red-500/30">
+                        Iptal
+                    </button>
+                </div>
+
+                <textarea id="comment-msg" maxlength="{{ commentMaxLength }}" class="w-full bg-transparent border-none px-4 py-3 text-[13px] text-slate-200 outline-none font-medium resize-none placeholder-slate-500" placeholder="{{ t('news.article.comment_placeholder') }}" rows="2"></textarea>
+                <input type="hidden" id="comment-parent-id" value="0">
+                <input type="hidden" id="comment-mention-uid" value="0">
+
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 bg-black/40 rounded-[14px] border-t border-white/5 mt-1">
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="vip-comment-toggle" onclick="togglePinnedComment()" class="shout-action !rounded-lg px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/50">
+                            <i class="fa-solid fa-fire mr-1"></i> <span class="label">{{ t('news.article.vip_highlight') }}</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 w-full lg:w-auto lg:justify-end">
+                        <div class="text-[9px] font-black uppercase tracking-[0.1em] text-slate-500 whitespace-nowrap bg-black/50 px-2.5 py-1.5 rounded-md border border-white/5 shadow-inner">
+                            <span id="comment-char-count" class="text-slate-300">0</span> / {{ commentMaxLength }}
+                        </div>
+                        <button onclick="sendComment({{ article.id }})" id="btn-send-comment" class="shout-submit inline-flex items-center justify-center gap-1.5 px-6 py-2 text-[10px] w-full lg:w-auto">
+                            <i class="fa-solid fa-rotate spinner"></i>
+                            <span class="label">{{ t('news.article.send') }}</span>
+                            <i class="fa-solid fa-paper-plane ml-0.5 opacity-70"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4" id="comment-list">
+                {% for comment in comments %}
+                    {{ macros.render_comment(comment, my.id, article.creator.id) }}
+                {% else %}
+                    <div class="text-center py-10 rounded-[20px] border border-white/5 bg-black/20 shadow-inner">
+                        <i class="fa-regular fa-comment-dots text-3xl mb-3 text-slate-600 opacity-50"></i>
+                        <div class="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-1">Hic {{ t('news.article.comment_count') }} yapilmamis</div>
+                        <div class="text-[10px] font-medium text-slate-500">{{ t('news.article.no_comments_subtitle') }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if comments|length > 8 %}
+                <div class="mt-6 flex justify-center">
+                    <button type="button" id="comment-load-more-btn" onclick="loadMoreComments()" class="comment-load-btn hover:-translate-y-1">
+                        <i class="fa-solid fa-rotate spinner"></i>
+                        <span class="label">{{ t('news.article.load_more') }}</span>
+                        <i class="fa-solid fa-angle-down ml-1 opacity-50"></i>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <aside class="hidden xl:block space-y-4 sticky top-6 h-fit">
+            <div class="article-side-card p-4">
+                <div class="flex items-center justify-between gap-2 border-b border-white/5 pb-2 mb-3">
+                    <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--brand-primary)] drop-shadow-sm">{{ t('news.article.community_notice') }}</div>
+                    <i class="fa-solid fa-circle-info text-slate-500"></i>
+                </div>
+                <div class="space-y-2 text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                    <div class="rounded-xl bg-black/40 px-3 py-2.5 border border-white/5 shadow-inner">
+                        <div class="text-cyan-300 mb-1"><i class="fa-solid fa-reply mr-1"></i> {{ t('news.article.reply_mode') }}</div>
+                        Bir {{ t('news.article.comment_count') }}a yanit verirken mention otomatik eklenir ve zincir korunur.
+                    </div>
+                    <div class="rounded-xl bg-black/40 px-3 py-2.5 border border-white/5 shadow-inner">
+                        <div class="text-amber-300 mb-1"><i class="fa-solid fa-shield mr-1"></i> {{ t('news.article.moderation') }}</div>
+                        {{ t('news.article.moderation_help') }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-side-card p-4">
+                <div class="flex items-center justify-between gap-2 border-b border-white/5 pb-2 mb-3">
+                    <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--brand-primary)] drop-shadow-sm">{{ t('news.article.rules') }}</div>
+                    <i class="fa-solid fa-gavel text-slate-500"></i>
+                </div>
+                <div class="space-y-2 text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                    <div class="rounded-xl bg-black/40 px-3 py-2.5 border border-white/5 shadow-inner">
+                        <div class="text-amber-400 mb-1">Kural 1</div>
+                        Hakaret, kufur, asagilama ve hedef gosterme yasaktir. Mesaji dogrudan konuya bagli tut.
+                    </div>
+                    <div class="rounded-xl bg-black/40 px-3 py-2.5 border border-white/5 shadow-inner">
+                        <div class="text-cyan-400 mb-1">Kural 2</div>
+                        Tehdit, siddet cagrisi, suc ovme ve yasa disi eylem yonlendirmesi yapma.
+                    </div>
+                    <div class="rounded-xl bg-black/40 px-3 py-2.5 border border-white/5 shadow-inner">
+                        <div class="text-fuchsia-400 mb-1">Kural 3</div>
+                        Irk, millet, din, cinsiyet veya benzeri kimliklere yonelik nefret soylemi kullanma.
+                    </div>
+                    <div class="rounded-xl bg-black/40 px-3 py-2.5 border border-white/5 shadow-inner">
+                        <div class="text-amber-400 mb-1">Kural 4</div>
+                        Yalan itham, iftira ve dogrulanmamis suclama paylasma. Supheli iddiada baglam ver.
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div id="edit-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] hidden flex justify-center items-center p-4">
+    <div class="bg-[#0b101a] border border-white/10 rounded-[28px] w-full max-w-4xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.05)] overflow-hidden">
+        <div class="p-5 border-b border-white/5 flex justify-between items-center bg-black/40">
+            <h3 class="text-white font-black uppercase tracking-[0.15em] text-[13px] flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-[color:var(--brand-primary)]/20 border border-[color:var(--brand-primary)]/30 text-[color:var(--brand-primary)] flex items-center justify-center"><i class="fa-solid fa-pen-nib"></i></div> Makale Duzenleme
+            </h3>
+            <button onclick="closeEditModal()" class="text-slate-400 hover:text-white w-8 h-8 rounded-xl flex items-center justify-center transition-all border border-transparent hover:border-white/10 hover:bg-white/5"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="p-6 space-y-5">
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2 block ml-1">Makale Basligi</label>
+                <input type="text" id="edit-title" class="shout-input w-full px-4 py-3.5 text-[13px] font-black" value="{{ article.title }}">
+            </div>
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2 block ml-1">Makale Icerigi</label>
+                <textarea id="edit-text" class="shout-input w-full px-4 py-3.5 text-[13px] font-medium h-72 resize-none">{{ article.text }}</textarea>
+            </div>
+            <div class="pt-2 flex gap-3 justify-end">
+                <button onclick="closeEditModal()" class="theme-button inline-flex items-center justify-center rounded-full px-5 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-white">{{ t('news.article.cancel') }}</button>
+                <button onclick="saveArticleEdit({{ article.id }})" id="btn-save-edit" class="shout-submit inline-flex items-center justify-center gap-2 px-6 py-3 text-[11px]">
+                    <i class="fa-solid fa-rotate spinner"></i>
+                    <span class="label">{{ t('news.article.save_changes') }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.articleCommentState = {
+    parentId: 0,
+    mentionUid: 0,
+    pinned: false
+};
+window.commentMaxLength = {{ commentMaxLength }};
+window.commentSortKey = 'vip';
+window.commentInitialVisible = 8;
+window.commentLoadStep = 8;
+window.commentVisibleCount = 8;
+
+window.replyToComment = function(commentId, nick, uid) {
+    window.articleCommentState.parentId = parseInt(commentId, 10) || 0;
+    window.articleCommentState.mentionUid = parseInt(uid, 10) || 0;
+    $('#comment-parent-id').val(window.articleCommentState.parentId);
+    $('#comment-mention-uid').val(window.articleCommentState.mentionUid);
+    $('#reply-target-nick').text('@' + nick);
+    $('#reply-target-shell').removeClass('hidden').addClass('flex');
+    var textarea = $('#comment-msg');
+    var current = textarea.val().trim();
+    if (current.indexOf('@' + nick) !== 0) {
+        textarea.val('@' + nick + ' ' + (current ? current + ' ' : ''));
+    }
+    textarea.trigger('focus');
+    document.getElementById('comment-msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+window.clearReplyTarget = function() {
+    window.articleCommentState.parentId = 0;
+    window.articleCommentState.mentionUid = 0;
+    $('#comment-parent-id').val('0');
+    $('#comment-mention-uid').val('0');
+    $('#reply-target-shell').removeClass('flex').addClass('hidden');
+};
+
+window.togglePinnedComment = function() {
+    window.articleCommentState.pinned = !window.articleCommentState.pinned;
+    if(window.articleCommentState.pinned) {
+        $('#vip-comment-toggle').removeClass('border-amber-500/30 text-amber-500 hover:bg-amber-500/10').addClass('bg-amber-500/20 border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]');
+    } else {
+        $('#vip-comment-toggle').addClass('border-amber-500/30 text-amber-500 hover:bg-amber-500/10').removeClass('bg-amber-500/20 border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]');
+    }
+};
+
+window.copyArticleLink = function() {
+    var link = window.location.href;
+    var onSuccess = function() {
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'success', title: 'Baglanti kopyalandi',
+            showConfirmButton: false, timer: 1800, timerProgressBar: true,
+            background: '#0f172a', color: '#fff'
+        });
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(onSuccess).catch(function() {});
+        return;
+    }
+    var temp = $('<input>').val(link).appendTo('body').select();
+    document.execCommand('copy');
+    temp.remove();
+    onSuccess();
+};
+
+window.scrollToComments = function() {
+    var target = document.getElementById('comments-section');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.scrollToTopArea = function() {
+    var target = document.getElementById('article-page');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.updateCommentCharCount = function() {
+    var textarea = document.getElementById('comment-msg');
+    var counter = document.getElementById('comment-char-count');
+    if (!textarea || !counter) return;
+    var length = textarea.value.length;
+    counter.textContent = length;
+    if(length >= window.commentMaxLength - 20) {
+        counter.classList.add('text-rose-400');
+        counter.classList.remove('text-slate-300');
+    } else {
+        counter.classList.remove('text-rose-400');
+        counter.classList.add('text-slate-300');
+    }
+};
+
+window.refreshCommentVisibility = function() {
+    var container = document.getElementById('comment-list');
+    if (!container) return;
+    var roots = Array.prototype.slice.call(container.querySelectorAll('.comment-thread-root'));
+    roots.forEach(function(root, index) {
+        root.classList.toggle('comment-thread-hidden', index >= window.commentVisibleCount);
+    });
+    var loadMoreBtn = document.getElementById('comment-load-more-btn');
+    if (loadMoreBtn) {
+        var hiddenCount = Math.max(0, roots.length - window.commentVisibleCount);
+        if (hiddenCount <= 0) {
+            loadMoreBtn.classList.add('hidden');
+        } else {
+            loadMoreBtn.classList.remove('hidden');
+            loadMoreBtn.querySelector('.label').textContent = '+' + hiddenCount + ' {{ t('news.article.comment_count') }}u daha goster';
+        }
+    }
+};
+
+window.loadMoreComments = function() {
+    window.commentVisibleCount += window.commentLoadStep;
+    window.refreshCommentVisibility();
+};
+
+window.toggleReplies = function(buttonElement) {
+    var wrapper = buttonElement ? buttonElement.closest('.rounded-xl') : null;
+    var container = wrapper ? wrapper.querySelector('[data-replies-container]') : null;
+    if (!container) return;
+    var hiddenReplies = Array.prototype.slice.call(container.querySelectorAll('.reply-thread-hidden'));
+    var isOpening = !buttonElement.classList.contains('is-open');
+    hiddenReplies.forEach(function(reply) { reply.classList.toggle('hidden', !isOpening); });
+    buttonElement.classList.toggle('is-open', isOpening);
+    if (isOpening) {
+        buttonElement.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span class="label">{{ t('news.article.comment.collapse_replies') }}</span>';
+    } else {
+        buttonElement.innerHTML = '<i class="fa-solid fa-chevron-down"></i> <span class="label">+' + hiddenReplies.length + ' {{ t('news.article.comment.show_replies') }}</span>';
+    }
+};
+
+window.toggleReactionMenu = function(event, buttonElement) {
+    event.preventDefault();
+    event.stopPropagation();
+    var palette = $(buttonElement).closest('.comment-reaction-palette');
+    var isOpen = palette.hasClass('is-open');
+    $('.comment-reaction-palette').removeClass('is-open');
+    $('.comment-reaction-trigger').attr('aria-expanded', 'false');
+    if (!isOpen) {
+        palette.addClass('is-open');
+        $(buttonElement).attr('aria-expanded', 'true');
+    }
+};
+
+window.sendComment = function(articleId) {
+    var msg = $('#comment-msg').val().trim();
+    if (msg.length < 2) {
+        Swal.fire({ icon: 'warning', title: '{{ t(''news.article.warning'') }}', text: '{{ t(''news.article.short_message'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber' } });
+        return;
+    }
+    if (msg.length > window.commentMaxLength) {
+        Swal.fire({ icon: 'warning', title: '{{ t(''news.article.limit_exceeded'') }}', text: 'Yorum en fazla ' + window.commentMaxLength + ' karakter olabilir.', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber' } });
+        return;
+    }
+
+    var btn = $('#btn-send-comment');
+    btn.prop('disabled', true).addClass('is-loading');
+
+    $.ajax({
+        url: "{{ base_url() }}/api/article/comment",
+        type: 'POST',
+        data: {
+            articleId: articleId, message: msg, parentId: $('#comment-parent-id').val(),
+            mentionUid: $('#comment-mention-uid').val(), isPinned: window.articleCommentState.pinned ? 1 : 0
+        },
+        success: function(res) {
+            if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+            if (res && res.error) {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: res.message || '{{ t(''news.article.comment_send_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                btn.prop('disabled', false).removeClass('is-loading');
+                return;
+            }
+            location.reload();
+        },
+        error: function() {
+            Swal.fire({ icon: 'error', title: '{{ t(''news.article.connection_error'') }}', text: '{{ t(''news.article.connection_lost'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+            btn.prop('disabled', false).removeClass('is-loading');
+        }
+    });
+};
+
+window.editComment = function(commentId, currentMessage) {
+    Swal.fire({
+        title: '{{ t(''news.article.comment.edit_title'') }}',
+        html: '' +
+            '<div class="space-y-4 text-left">' +
+                '<div class="cyber-input-group">' +
+                    ''<label>{{ t(''news.article.comment.edit_label'') }}</label>'' +
+                    '<textarea id="sw-comment-edit" class="cyber-input" style="min-height:160px; resize:none;">' + $('<div>').text(currentMessage).html() + '</textarea>' +
+                '</div>' +
+                '<div class="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.14em]">' +
+                    '<span class="text-slate-500">{{ t('news.article.comment.edit_hint') }}</span>' +
+                    '<span id="sw-comment-edit-count" class="text-[color:var(--brand-primary)]">0 / ' + window.commentMaxLength + '</span>' +
+                '</div>' +
+            '</div>',
+        showCancelButton: true,
+        confirmButtonText: '{{ t(''news.article.comment.save'') }}',
+        cancelButtonText: '{{ t(''news.article.cancel'') }}',
+        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn', cancelButton: 'cyber-cancel-btn' },
+        buttonsStyling: false,
+        didOpen: function() {
+            var textarea = document.getElementById('sw-comment-edit');
+            var counter = document.getElementById('sw-comment-edit-count');
+            var syncCounter = function() {
+                if (!textarea || !counter) return;
+                counter.textContent = textarea.value.length + ' / ' + window.commentMaxLength;
+                counter.className = textarea.value.length > (window.commentMaxLength - 40) ? 'text-amber-400' : 'text-[color:var(--brand-primary)]';
+            };
+            if (textarea) {
+                textarea.setAttribute('maxlength', window.commentMaxLength);
+                textarea.focus();
+                textarea.addEventListener('input', syncCounter);
+                syncCounter();
+            }
+        },
+        preConfirm: function() {
+            var textarea = document.getElementById('sw-comment-edit');
+            var message = String(textarea ? textarea.value : '').trim();
+            if (message.length < 2) { Swal.showValidationMessage('{{ t(''news.article.comment.min'') }}'); return false; }
+            if (message.length > window.commentMaxLength) { Swal.showValidationMessage('Yorum en fazla ' + window.commentMaxLength + ' karakter olabilir.'); return false; }
+            return message;
+        }
+    }).then(function(result) {
+        if (!result.isConfirmed) return;
+        $.ajax({
+            url: "{{ base_url() }}/api/article/comment-update",
+            type: 'POST',
+            data: { id: commentId, message: result.value },
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: res.message || '{{ t(''news.article.comment_edit_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                    return;
+                }
+                location.reload();
+            },
+            error: function() {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.connection_error'') }}', text: '{{ t(''news.article.comment_edit_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+            }
+        });
+    });
+};
+
+window.togglePinComment = function(commentId, buttonElement) {
+    var btn = $(buttonElement);
+    if(btn.prop('disabled')) return;
+    var originalHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i>');
+
+    $.ajax({
+        url: "{{ base_url() }}/api/article/comment-pin",
+        type: 'POST',
+        data: { id: commentId },
+        success: function(res) {
+            if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+            if (res && res.error) {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: res.message || '{{ t(''news.article.comment_pin_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                btn.prop('disabled', false).html(originalHtml);
+                return;
+            }
+            location.reload();
+        },
+        error: function() {
+            Swal.fire({ icon: 'error', title: '{{ t(''news.article.connection_error'') }}', text: '{{ t(''news.article.comment_pin_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+            btn.prop('disabled', false).html(originalHtml);
+        }
+    });
+};
+
+window.deleteComment = function(commentId) {
+    Swal.fire({
+        title: '{{ t(''news.article.comment.delete_title'') }}',
+        html: '<div class="mb-5 opacity-80 text-white font-medium text-[13px]">Bu {{ t('news.article.comment_count') }} ve alt yanitlari kalici olarak silinecek. Onayliyor musun?</div>',
+        showCancelButton: true, confirmButtonText: '{{ t(''news.article.comment_delete_confirm_short'') }}', cancelButtonText: '{{ t(''news.article.cancel'') }}',
+        customClass: { popup: 'cyber-modal-popup cyber-modal-danger', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red', cancelButton: 'cyber-cancel-btn' },
+        buttonsStyling: false
+    }).then(function(result) {
+        if (!result.isConfirmed) return;
+        $.ajax({
+            url: "{{ base_url() }}/api/article/comment-delete",
+            type: 'POST',
+            data: { id: commentId },
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: res.message || '{{ t(''news.article.comment_delete_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                    return;
+                }
+                location.reload();
+            },
+            error: function() { Swal.fire({ icon: 'error', title: '{{ t(''news.article.connection_error'') }}', text: '{{ t(''news.article.comment_delete_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } }); }
+        });
+    });
+};
+
+window.voteComment = function(commentId, btnElement) {
+    var btn = $(btnElement);
+    if (btn.prop('disabled')) return;
+    var currentVotes = btn.data('votes');
+    btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin text-[color:var(--brand-primary)]"></i>');
+
+    $.ajax({
+        url: "{{ base_url() }}/api/article/comment-vote",
+        type: 'POST',
+        data: { id: commentId },
+        success: function(res) {
+            if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+            if (res && res.error) {
+                Swal.fire({ icon: 'info', title: '{{ t(''news.article.vote_info'') }}', text: res.message || '{{ t(''news.article.already_voted'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' } });
+                btn.prop('disabled', false).html('<i class="fa-solid fa-thumbs-up mr-1 text-[color:var(--brand-primary)] opacity-80"></i> <span class="label text-slate-300">{{ t('news.article.comment.like') }} <span class="ml-1 bg-black/50 px-1 py-0.5 rounded text-white">' + currentVotes + '</span></span>');
+                return;
+            }
+            location.reload();
+        },
+        error: function() {
+            Swal.fire({ icon: 'error', title: '{{ t(''news.article.connection_error'') }}', text: '{{ t(''news.article.comment_like_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+            btn.prop('disabled', false).html('<i class="fa-solid fa-thumbs-up mr-1 text-[color:var(--brand-primary)] opacity-80"></i> <span class="label text-slate-300">{{ t('news.article.comment.like') }} <span class="ml-1 bg-black/50 px-1 py-0.5 rounded text-white">' + currentVotes + '</span></span>');
+        }
+    });
+};
+
+window.reactToComment = function(commentId, reaction) {
+    $('.comment-reaction-palette').removeClass('is-open');
+    $('.comment-reaction-trigger').attr('aria-expanded', 'false');
+
+    $.ajax({
+        url: "{{ base_url() }}/api/article/comment-react",
+        type: 'POST',
+        data: { id: commentId, reaction: reaction },
+        success: function(res) {
+            if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+            if (res && res.error) {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: res.message || '{{ t(''news.article.reaction_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                return;
+            }
+            location.reload();
+        },
+        error: function() { Swal.fire({ icon: 'error', title: '{{ t(''news.article.connection_error'') }}', text: '{{ t(''news.article.reaction_send_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } }); }
+    });
+};
+
+window.applyCommentSort = function() {
+    var container = document.getElementById('comment-list');
+    if (!container) return;
+    var roots = Array.prototype.slice.call(container.querySelectorAll('.comment-thread-root'));
+    if (!roots.length) return;
+
+    roots.sort(function(a, b) {
+        var sortKey = window.commentSortKey || 'vip';
+        if (sortKey === 'latest') return parseInt(b.getAttribute('data-sort-latest') || '0', 10) - parseInt(a.getAttribute('data-sort-latest') || '0', 10);
+        if (sortKey === 'oldest') return parseInt(a.getAttribute('data-sort-oldest') || '0', 10) - parseInt(b.getAttribute('data-sort-oldest') || '0', 10);
+        if (sortKey === 'useful') {
+            var usefulDiff = parseInt(b.getAttribute('data-sort-votes') || '0', 10) - parseInt(a.getAttribute('data-sort-votes') || '0', 10);
+            if (usefulDiff !== 0) return usefulDiff;
+        }
+        var vipDiff = parseInt(b.getAttribute('data-sort-vip') || '0', 10) - parseInt(a.getAttribute('data-sort-vip') || '0', 10);
+        if (vipDiff !== 0) return vipDiff;
+        var voteDiff = parseInt(b.getAttribute('data-sort-votes') || '0', 10) - parseInt(a.getAttribute('data-sort-votes') || '0', 10);
+        if (voteDiff !== 0) return voteDiff;
+        return parseInt(b.getAttribute('data-sort-latest') || '0', 10) - parseInt(a.getAttribute('data-sort-latest') || '0', 10);
+    });
+
+    roots.forEach(function(root) { container.appendChild(root); });
+    window.refreshCommentVisibility();
+};
+
+window.sortComments = function(sortKey, btnElement) {
+    window.commentSortKey = sortKey;
+    $('.comment-sort-btn').removeClass('is-active');
+    $(btnElement).addClass('is-active');
+    window.applyCommentSort();
+};
+
+window.toggleSubscriptionFromArticle = function(authorUid) {
+    var btn = $('#btn-sub-art');
+    if (btn.prop('disabled')) return;
+    var originalHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i>');
+
+    $.ajax({
+        url: "{{ base_url() }}/api/newspaper/subscribe_by_author",
+        type: 'POST',
+        data: { uid: authorUid },
+        success: function(res) {
+            if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+            if (res && res.error) {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: res.message, customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                btn.prop('disabled', false).html(originalHtml);
+                return;
+            }
+            location.reload();
+        },
+        error: function() {
+            Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: '{{ t(''news.article.subscribe_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+            btn.prop('disabled', false).html(originalHtml);
+        }
+    });
+};
+
+$(function () {
+    $('#comment-msg').on('input', function() { window.updateCommentCharCount(); });
+    window.updateCommentCharCount();
+    window.applyCommentSort();
+    window.refreshCommentVisibility();
+
+    $(document).on('click', function(event) {
+        if (!$(event.target).closest('.comment-reaction-palette').length) {
+            $('.comment-reaction-palette').removeClass('is-open');
+            $('.comment-reaction-trigger').attr('aria-expanded', 'false');
+        }
+    });
+
+    $('#custom-vote-btn').on('click', function() {
+        var btn = $(this);
+        if (btn.prop('disabled')) return;
+        var originalHtml = btn.html();
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i>');
+
+        $.ajax({
+            url: "{{ base_url() }}/api/article/vote",
+            type: 'POST',
+            data: { id: btn.data('id') },
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+                if (res && res.error) {
+                    Swal.fire({ icon: 'info', title: '{{ t(''news.article.vote_info'') }}', text: res.message || '{{ t(''news.article.already_voted'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber' } });
+                    btn.prop('disabled', false).html(originalHtml);
+                    return;
+                }
+                location.reload();
+            },
+            error: function() {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.connection_error'') }}', text: '{{ t(''news.article.vote_failed'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    });
+});
+
+window.promoteArticle = function(articleId) {
+    Swal.fire({
+        title: '{{ t('news.article.promote') }}ma Protokolu',
+        customClass: { popup: 'cyber-modal-popup cyber-modal-promote', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber', cancelButton: 'cyber-cancel-btn' },
+        html: '<div class="mb-5 opacity-80 text-white font-medium text-[13px]">Bu makale <b>2 ALTIN</b> karsiliginda tum ulkede en tepede yayinlanacak. Onayliyor musunuz?</div>',
+        showCancelButton: true, confirmButtonText: '{{ t(''news.article.promote_confirm_short'') }}', cancelButtonText: '{{ t(''news.article.cancel'') }}', buttonsStyling: false, reverseButtons: true
+    }).then((res) => {
+        if (!res.isConfirmed) return;
+        $.post("{{ base_url() }}/api/article/promote", { id: articleId }, function(r) {
+            if (typeof r === 'string') { try { r = JSON.parse(r); } catch (e) {} }
+            if (r && r.error) {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: r.message, customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                return;
+            }
+            location.reload();
+        });
+    });
+};
+
+window.endorseArticle = function(articleId) {
+    Swal.fire({
+        title: 'Varlik Transferi',
+        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn', cancelButton: 'cyber-cancel-btn' },
+        html: '<div class="mb-5 opacity-80 text-white font-medium text-[12px]">Yazari desteklemek icin gonderecegin fonu sec.</div>' +
+            '<div class="space-y-4 text-left">' +
+                '<div class="cyber-input-group"><label>Transfer Miktari</label><input id="sw-amt" type="number" step="0.1" class="cyber-input" placeholder="0.00"></div>' +
+                '<div class="cyber-input-group"><label>Para Birimi</label><select id="sw-cur" class="cyber-input"><option value="local">{{ my.location.country.currency|default("CC") }} (Yerel Para)</option><option value="gold">ALTIN</option></select></div>' +
+            '</div>',
+        showCancelButton: true, confirmButtonText: '{{ t(''news.article.tip_confirm'') }}', cancelButtonText: '{{ t(''news.article.cancel'') }}', buttonsStyling: false, reverseButtons: true
+    }).then((res) => {
+        if (!res.isConfirmed) return;
+        var amt = $('#sw-amt').val();
+        var cur = $('#sw-cur').val();
+        if (!amt || parseFloat(amt) <= 0) return;
+
+        $.post("{{ base_url() }}/api/article/endorse", { id: articleId, amount: amt, currency: cur }, function(r) {
+            if (typeof r === 'string') { try { r = JSON.parse(r); } catch (e) {} }
+            if (r && r.error) {
+                Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: r.message, customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+                return;
+            }
+            Swal.fire({ icon: 'success', title: '{{ t(''news.article.success'') }}', text: '{{ t(''news.article.tip_success'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' }, timer: 1800, showConfirmButton: false }).then(() => location.reload());
+        });
+    });
+};
+
+window.openEditModal = function() { $('#edit-modal').removeClass('hidden'); $('body').css('overflow', 'hidden'); };
+window.closeEditModal = function() { $('#edit-modal').addClass('hidden'); $('body').css('overflow', 'auto'); };
+
+window.saveArticleEdit = function(articleId) {
+    var newTitle = $('#edit-title').val().trim();
+    var newText = $('#edit-text').val().trim();
+    if (newTitle.length < 4 || newText.length < 10) {
+        Swal.fire({ icon: 'warning', title: '{{ t(''news.article.warning'') }}', text: '{{ t(''news.article.short_message'') }}', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber' } });
+        return;
+    }
+    var btn = $('#btn-save-edit');
+    var originalHtml = btn.html();
+    btn.prop('disabled', true).addClass('is-loading');
+
+    $.post("{{ base_url() }}/api/article/update", { id: articleId, title: newTitle, text: newText }, function(res) {
+        if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+        if (res && res.error) {
+            Swal.fire({ icon: 'error', title: '{{ t(''news.article.error'') }}', text: res.message, customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' } });
+            btn.prop('disabled', false).removeClass('is-loading');
+            return;
+        }
+        location.reload();
+    });
+};
+
+window.deleteArticle = function(articleId) {
+    Swal.fire({
+        title: '{{ t(''news.article.delete_title'') }}',
+        customClass: { popup: 'cyber-modal-popup cyber-modal-danger', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red', cancelButton: 'cyber-cancel-btn' },
+        html: '<div class="mb-5 opacity-80 text-white font-medium text-[13px]">{{ t('news.article.delete_text') }}</div>',
+        showCancelButton: true, confirmButtonText: '{{ t(''news.article.comment_delete_confirm_short'') }}', cancelButtonText: '{{ t(''news.article.cancel'') }}', buttonsStyling: false, reverseButtons: true
+    }).then((res) => {
+        if (!res.isConfirmed) return;
+        $.post("{{ base_url() }}/api/article/delete", { id: articleId }, function() {
+            window.location.href = "{{ base_url() }}/news";
+        });
+    });
+};
+</script>
+{% endblock %}
+

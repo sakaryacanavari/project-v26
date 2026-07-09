@@ -1,0 +1,281 @@
+﻿{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* AltÄ±n ReklamlÄ± Partiler Ä°Ã§in Parlama Efekti (AkÄ±cÄ± V26.3) */
+    @keyframes shimmer {
+        0% { transform: translateX(-150%) skewX(-20deg); }
+        100% { transform: translateX(150%) skewX(-20deg); }
+    }
+    .animate-\\[shimmer_2s_infinite\\] {
+        animation: shimmer 3s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* --- V26.3 NEURO-GLASS PERFECTED CORE CSS --- */
+    .home-theme-surface .glass-panel {
+        background: linear-gradient(165deg, rgba(8, 12, 22, 0.85) 0%, rgba(2, 4, 10, 0.98) 100%) !important;
+        backdrop-filter: blur(50px);
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.15) !important; /* Daha keskin Ã¼st neon Ä±ÅŸÄ±ÄŸÄ± */
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 25px 50px -12px rgba(0, 0, 0, 0.95);
+    }
+    
+    .home-theme-surface .theme-divider { border-color: rgba(255, 255, 255, 0.05) !important; }
+
+    /* V26.3 Parti KartlarÄ± (Normal) */
+    .party-card-v26 {
+        background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.4) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .party-card-v26::before {
+        content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px;
+        background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-primary) 90%, white), transparent);
+        opacity: 0; transition: opacity 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 0 4px 4px 0;
+    }
+    .party-card-v26:hover {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 8%, rgba(255,255,255,0.05)) 0%, rgba(0,0,0,0.3) 100%);
+        border-color: color-mix(in srgb, var(--brand-primary) 30%, rgba(255, 255, 255, 0.15));
+        border-top-color: color-mix(in srgb, var(--brand-primary) 50%, rgba(255, 255, 255, 0.3));
+        box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 0 25px color-mix(in srgb, var(--brand-primary) 10%, transparent);
+        transform: translateY(-3px);
+    }
+    .party-card-v26:hover::before {
+        opacity: 1; box-shadow: 0 0 12px var(--brand-primary);
+    }
+
+    /* V26.3 Parti KartlarÄ± (Sponsorlu/Promoted) - Ultra LÃ¼ks */
+    .party-card-promoted-v26 {
+        background: linear-gradient(145deg, rgba(250,204,21,0.1) 0%, rgba(0,0,0,0.7) 100%);
+        border: 1px solid rgba(250, 204, 21, 0.3);
+        border-top: 1px solid rgba(250, 204, 21, 0.6);
+        border-radius: 18px;
+        transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        position: relative;
+        box-shadow: 0 8px 25px rgba(250, 204, 21, 0.1), inset 0 0 20px rgba(250, 204, 21, 0.05), inset 0 1px 0 rgba(255,255,255,0.1);
+        overflow: hidden;
+    }
+    .party-card-promoted-v26:hover {
+        background: linear-gradient(145deg, rgba(250,204,21,0.15) 0%, rgba(0,0,0,0.5) 100%);
+        border-color: rgba(250, 204, 21, 0.6);
+        border-top-color: rgba(250, 204, 21, 0.9);
+        box-shadow: 0 18px 40px rgba(250, 204, 21, 0.2), inset 0 0 40px rgba(250, 204, 21, 0.15);
+        transform: translateY(-4px) scale(1.02);
+    }
+
+    /* V26.3 Pasif Parti KartÄ± (Ghost) */
+    .party-card-ghost-v26 {
+        background: rgba(0,0,0,0.3);
+        border: 1px dashed rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        transition: all 0.35s ease;
+        opacity: 0.55;
+        filter: grayscale(90%);
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .party-card-ghost-v26:hover {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255, 255, 255, 0.25);
+        border-style: solid;
+        opacity: 0.95;
+        filter: grayscale(20%);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+        transform: translateY(-2px);
+    }
+</style>
+
+{% set defaultImg = path_for('partyCreationForm')|replace({'party/create': 'img/default_avatar.jpg'}) %}
+
+<div class="home-theme-surface space-y-5 max-w-[1400px] mx-auto animate-fade-in w-full overflow-hidden">
+    
+    <div class="glass-panel p-5 rounded-2xl relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[color:var(--brand-primary)] opacity-[0.15] blur-[70px] pointer-events-none"></div>
+        <i class="fa-solid fa-users absolute -right-2 -bottom-2 text-7xl text-white/[0.04] pointer-events-none rotate-12 drop-shadow-md"></i>
+
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-[14px] bg-[color:var(--brand-primary)]/15 border border-[color:var(--brand-primary)]/30 flex items-center justify-center text-[color:var(--brand-primary)] shadow-[0_0_20px_color-mix(in_srgb,var(--brand-primary)_30%,transparent),inset_0_2px_8px_rgba(0,0,0,0.6)]">
+                    <i class="fa-solid fa-landmark-dome text-xl drop-shadow-[0_0_8px_color-mix(in_srgb,var(--brand-primary)_80%,transparent)]"></i>
+                </div>
+                <div>
+                    <h1 class="text-[17px] font-black text-white uppercase tracking-[0.2em] leading-tight drop-shadow-md">{{ t('party.list.hero.title') }}</h1>
+                    <p class="text-[9px] text-[color:var(--brand-primary)] font-black uppercase tracking-widest mt-1.5 flex items-center gap-1.5 opacity-90 drop-shadow-[0_0_5px_color-mix(in_srgb,var(--brand-primary)_90%,transparent)]">
+                        <span class="w-1.5 h-1.5 bg-[color:var(--brand-primary)] rounded-full animate-pulse shadow-[0_0_8px_var(--brand-primary)]"></span> {{ t('party.list.hero.subtitle') }}
+                    </p>
+                </div>
+            </div>
+            
+            <a href="{{ path_for('partyCreationForm') }}" class="w-full md:w-auto bg-gradient-to-r from-[color:var(--brand-primary)] to-[color:var(--brand-primary)]/70 hover:brightness-110 text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.15em] transition-all shadow-[0_6px_20px_color-mix(in_srgb,var(--brand-primary)_40%,transparent)] hover:shadow-[0_8px_25px_color-mix(in_srgb,var(--brand-primary)_60%,transparent)] hover:-translate-y-1 active:scale-95 border-none flex items-center justify-center gap-2 relative overflow-hidden">
+                <div class="absolute inset-0 bg-white/20 opacity-0 hover:opacity-100 transition-opacity pointer-events-none"></div>
+                <i class="fa-solid fa-flag"></i> {{ t('party.list.hero.create') }}
+            </a>
+        </div>
+    </div>
+
+    {% if list|length > 0 %}
+        
+        {# Partileri Ãœye SayÄ±sÄ±na GÃ¶re AyÄ±rmak Ä°Ã§in Kontrol Ediyoruz #}
+        {% set has_active = false %}
+        {% set has_inactive = false %}
+        {% for party in list %}
+            {% if party.members_count > 0 %}
+                {% set has_active = true %}
+            {% else %}
+                {% set has_inactive = true %}
+            {% endif %}
+        {% endfor %}
+
+        {% if has_active %}
+        <div class="glass-panel p-5 rounded-2xl border-t-[3px] border-t-[color:var(--brand-primary)] mb-5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-[color:var(--brand-primary)]/10 to-transparent pointer-events-none"></div>
+
+            <h2 class="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2.5 mb-5 border-b border-white/10 pb-3 drop-shadow-sm">
+                <div class="w-6 h-6 rounded-md bg-[color:var(--brand-primary)]/20 border border-[color:var(--brand-primary)]/40 flex items-center justify-center text-[color:var(--brand-primary)] text-[10px] shadow-[0_0_10px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]"><i class="fa-solid fa-fire"></i></div> {{ t('party.list.active.title') }}
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+                
+                {# 1. DÃ–NGÃœ: Ã–NCE SADECE REKLAMLI (SPONSORLU) PARTÄ°LERÄ° DÄ°Z VE ALTIN RENGÄ°YLE PARLAT #}
+                {% for party in list %}
+                    {% set isPromoted = party.ad_until and party.ad_until > "now"|date("Y-m-d H:i:s") %}
+                    {% if party.members_count > 0 and isPromoted %}
+                        <a href="{{ path_for('party', {'id': party.id, 'slug': party.slug|default('parti')}) }}" class="party-card-promoted-v26 block group">
+                            
+                            {# Sponsorlu Etiketi (SaÄŸ Ãœst KÃ¶ÅŸeye YapÄ±ÅŸÄ±k V26.3) #}
+                            <div class="absolute top-0 right-0 bg-gradient-to-br from-yellow-400 to-yellow-600 text-black text-[8px] px-3 py-1 rounded-bl-xl font-black tracking-widest flex items-center gap-1.5 shadow-[0_4px_15px_rgba(234,179,8,0.5)] z-30 border-l border-b border-yellow-300/60">
+                                <i class="fa-solid fa-star animate-pulse text-[9px] drop-shadow-sm"></i> {{ t('party.list.promoted') }}
+                            </div>
+
+                            {# Shimmer (SaÄŸdan Sola Akan IÅŸÄ±k YansÄ±masÄ±) #}
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-200/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite] pointer-events-none z-10 rounded-[18px]"></div>
+                            
+                            {# Arkaplan Hafif SarÄ± Parlama #}
+                            <div class="absolute -inset-4 bg-gradient-to-r from-yellow-500/0 via-yellow-500/15 to-yellow-500/0 opacity-50 blur-[25px] group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0"></div>
+
+                            {# SaÄŸ Alttaki Dev Transparan Ä°kon #}
+                            <i class="fa-solid fa-bullhorn absolute -right-3 -bottom-3 text-6xl text-yellow-500/5 -rotate-12 pointer-events-none z-0"></i>
+
+                            <div class="flex items-center gap-3.5 p-4 relative z-20">
+                                <div class="w-12 h-12 rounded-[14px] overflow-hidden border-2 border-yellow-400/80 shrink-0 bg-black/90 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4),inset_0_2px_8px_rgba(0,0,0,0.8)] group-hover:border-yellow-300 group-hover:shadow-[0_0_20px_rgba(234,179,8,0.8),inset_0_0_10px_rgba(234,179,8,0.4)] transition-all relative">
+                                    <div class="absolute inset-0 bg-yellow-500/10 mix-blend-overlay z-20 pointer-events-none"></div>
+                                    <img src="{% if party.logo_url %}{{ party.logo_url }}{% else %}{{ base_url() }}/img/parties/{{ party.id }}.png{% endif %}" onerror="this.src='{{ defaultImg }}'" class="w-full h-full object-cover group-hover:scale-115 transition-transform duration-500 relative z-10" alt="{{ party.name }}">
+                                </div>
+                                
+                                <div class="flex-1 min-w-0 pr-1">
+                                    <h3 class="text-[13px] font-black text-yellow-400 uppercase tracking-wide truncate group-hover:text-yellow-300 transition-colors mb-1.5 drop-shadow-[0_0_8px_rgba(234,179,8,0.7)]">
+                                        {{ party.name }}
+                                    </h3>
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-black/80 border border-yellow-500/40 px-2.5 py-0.5 rounded-md text-[8px] font-black text-yellow-500/90 uppercase tracking-widest flex items-center gap-1.5 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)]">
+                                            <i class="fa-solid fa-users text-yellow-500/80 drop-shadow-sm"></i> {{ t('party.list.members') }}: <span class="text-white drop-shadow-sm">{{ party.members_count }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center bg-yellow-500/10 border border-yellow-500/30 text-yellow-500/80 group-hover:bg-yellow-500/25 group-hover:text-yellow-300 group-hover:border-yellow-400/60 shadow-[0_0_10px_rgba(234,179,8,0.2)] transition-all shrink-0">
+                                    <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-0.5 transition-transform drop-shadow-sm"></i>
+                                </div>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+                {# 2. DÃ–NGÃœ: ARDINDAN REKLAMSIZ NORMAL PARTÄ°LERÄ° DÄ°Z #}
+                {% for party in list %}
+                    {% set isPromoted = party.ad_until and party.ad_until > "now"|date("Y-m-d H:i:s") %}
+                    {% if party.members_count > 0 and not isPromoted %}
+                        <a href="{{ path_for('party', {'id': party.id, 'slug': party.slug|default('parti')}) }}" class="party-card-v26 block group">
+                            
+                            <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[color:var(--brand-primary)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-t-[18px] shadow-[0_0_12px_var(--brand-primary)] pointer-events-none z-20"></div>
+
+                            <div class="flex items-center gap-3.5 p-4 relative z-10">
+                                <div class="w-12 h-12 rounded-[14px] overflow-hidden border border-white/10 group-hover:border-[color:var(--brand-primary)]/60 transition-colors shrink-0 bg-black/90 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] group-hover:shadow-[0_0_15px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]">
+                                    <img src="{% if party.logo_url %}{{ party.logo_url }}{% else %}{{ base_url() }}/img/parties/{{ party.id }}.png{% endif %}" onerror="this.src='{{ defaultImg }}'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-110 duration-500" alt="{{ party.name }}">
+                                </div>
+                                
+                                <div class="flex-1 min-w-0 pr-1">
+                                    <h3 class="text-[12px] font-black text-slate-200 uppercase tracking-wide truncate group-hover:text-white transition-colors mb-1.5 drop-shadow-sm">
+                                        {{ party.name }}
+                                    </h3>
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-black/60 border border-white/5 px-2.5 py-0.5 rounded-md text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]">
+                                            <i class="fa-solid fa-users opacity-60"></i> {{ t('party.list.members') }}: <span class="text-slate-300">{{ party.members_count }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-slate-600 group-hover:text-[color:var(--brand-primary)] transition-colors shrink-0 drop-shadow-sm">
+                                    <i class="fa-solid fa-chevron-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+            </div>
+        </div>
+        {% endif %}
+
+        {% if has_inactive %}
+        <div class="glass-panel p-5 rounded-2xl border-t-[3px] border-t-slate-700/60 bg-black/50 shadow-inner">
+            <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2.5 mb-5 border-b border-white/5 pb-3 drop-shadow-sm">
+                <div class="w-6 h-6 rounded-md bg-slate-800/60 border border-slate-700/60 flex items-center justify-center text-slate-400 text-[10px] shadow-inner"><i class="fa-solid fa-ghost"></i></div> {{ t('party.list.inactive.title') }} <span class="text-[7px] text-slate-500 tracking-normal normal-case ml-1 font-bold">{{ t('party.list.inactive.subtitle') }}</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for party in list %}
+                    {% if party.members_count == 0 or not party.members_count %}
+                        <a href="{{ path_for('party', {'id': party.id, 'slug': party.slug|default('parti')}) }}" class="party-card-ghost-v26 block group p-3.5">
+                            
+                            <div class="flex items-center gap-3.5 relative z-10">
+                                <div class="w-10 h-10 rounded-[12px] overflow-hidden border border-slate-700/60 group-hover:border-slate-500 transition-colors shrink-0 bg-black/90 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.7)]">
+                                    <img src="{% if party.logo_url %}{{ party.logo_url }}{% else %}{{ base_url() }}/img/parties/{{ party.id }}.png{% endif %}" onerror="this.src='{{ defaultImg }}'" class="w-full h-full object-cover opacity-40 group-hover:opacity-90 transition-opacity group-hover:scale-110 duration-500" alt="{{ party.name }}">
+                                </div>
+                                
+                                <div class="flex-1 min-w-0 pr-1">
+                                    <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-wide truncate group-hover:text-slate-300 transition-colors mb-1.5 drop-shadow-sm">
+                                        {{ party.name }}
+                                    </h3>
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-black/70 border border-slate-800/60 px-2 py-0.5 rounded-md text-[8px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1 shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)]">
+                                            <i class="fa-solid fa-users opacity-40"></i> {{ t('party.list.members') }}: <span class="text-slate-500">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-slate-700 group-hover:text-slate-400 transition-colors shrink-0">
+                                    <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <div class="glass-panel p-6 rounded-2xl border-t-[3px] border-t-[color:var(--brand-primary)]">
+            <div class="py-16 text-center bg-black/40 rounded-xl border border-white/5 shadow-[inset_0_4px_25px_rgba(0,0,0,0.6)] flex flex-col items-center justify-center">
+                <div class="w-16 h-16 bg-[color:var(--brand-primary)]/10 rounded-[14px] flex items-center justify-center mb-5 border border-[color:var(--brand-primary)]/20 shadow-[inset_0_0_20px_color-mix(in_srgb,var(--brand-primary)_15%,transparent),0_0_15px_color-mix(in_srgb,var(--brand-primary)_10%,transparent)]">
+                    <i class="fa-solid fa-flag-flag text-2xl text-[color:var(--brand-primary)] opacity-80 drop-shadow-[0_0_10px_color-mix(in_srgb,var(--brand-primary)_60%,transparent)]"></i>
+                </div>
+                <div class="text-slate-200 text-[13px] font-black uppercase tracking-[0.2em] mb-2 drop-shadow-md">{{ t('party.list.empty.title') }}</div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-6">{{ t('party.list.empty.subtitle') }}</p>
+                <a href="{{ path_for('partyCreationForm') }}" class="bg-[color:var(--brand-primary)]/15 hover:bg-[color:var(--brand-primary)]/25 text-[color:var(--brand-primary)] hover:text-white px-7 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] border border-[color:var(--brand-primary)]/30 transition-all shadow-[0_0_15px_color-mix(in_srgb,var(--brand-primary)_15%,transparent)] hover:shadow-[0_0_25px_color-mix(in_srgb,var(--brand-primary)_40%,transparent)] inline-flex items-center justify-center gap-2 hover:-translate-y-0.5">
+                    <i class="fa-solid fa-flag"></i> {{ t('party.list.empty.cta') }}
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

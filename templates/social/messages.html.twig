@@ -1,0 +1,1830 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-3 animate-fade-in w-full overflow-hidden" id="v6-messages-center">
+
+    <style>
+/* --- v7.0 COMMUNICATION CENTER UI --- */
+        :root{
+            --accent: var(--brand-primary, #06b6d4);
+            --accent-glow: var(--brand-glow, rgba(6, 182, 212, 0.4));
+            --danger: #f43f5e;
+            --ok: #10b981;
+            --indigo: var(--brand-primary, #06b6d4);
+
+            --r: 14px;
+        }
+
+        html[data-theme] #v6-messages-center{
+            --accent: var(--brand-primary, #06b6d4);
+            --accent-glow: var(--brand-glow, rgba(6, 182, 212, 0.4));
+            --indigo: var(--brand-primary, #06b6d4);
+            --hover-bg: color-mix(in srgb, var(--accent) 13%, transparent);
+            --active-bg: color-mix(in srgb, var(--accent) 20%, transparent);
+        }
+
+        #v6-messages-center{
+            --bg0: rgb(3 7 18 / 0.96);
+            --bg1: rgb(15 23 42 / 0.86);
+            --panel: rgb(0 0 0 / 0.42);
+            --panel-soft: rgb(2 6 23 / 0.50);
+            --panel-strong: rgb(2 6 23 / 0.72);
+            --line: rgb(255 255 255 / 0.10);
+            --line2: rgb(255 255 255 / 0.08);
+            --bubble-me-bg: rgb(15 23 42 / 0.82);
+            --bubble-other-bg: rgb(3 7 18 / 0.76);
+            --input-bg: rgb(2 6 23 / 0.64);
+            --input-bg-focus: rgb(2 6 23 / 0.84);
+            --txt: rgb(248 250 252);
+            --txt-soft: rgb(203 213 225);
+            --muted: rgb(148 163 184);
+        }
+
+        html.theme-oled #v6-messages-center{
+            --bg0: rgb(0 0 0 / 0.98);
+            --bg1: rgb(5 5 5 / 0.92);
+            --panel: rgb(0 0 0 / 0.54);
+            --panel-soft: rgb(5 5 5 / 0.66);
+            --panel-strong: rgb(5 5 5 / 0.86);
+            --line: rgb(255 255 255 / 0.08);
+            --line2: rgb(255 255 255 / 0.06);
+            --bubble-me-bg: rgb(18 18 18 / 0.90);
+            --bubble-other-bg: rgb(7 7 7 / 0.84);
+            --input-bg: rgb(5 5 5 / 0.82);
+            --input-bg-focus: rgb(10 10 10 / 0.92);
+        }
+
+        html.theme-dim #v6-messages-center{
+            --bg0: rgb(15 23 42 / 0.96);
+            --bg1: rgb(30 41 59 / 0.88);
+            --panel: rgb(15 23 42 / 0.56);
+            --panel-soft: rgb(30 41 59 / 0.54);
+            --panel-strong: rgb(15 23 42 / 0.78);
+            --line: rgb(255 255 255 / 0.09);
+            --line2: rgb(255 255 255 / 0.07);
+            --bubble-me-bg: rgb(30 41 59 / 0.86);
+            --bubble-other-bg: rgb(15 23 42 / 0.82);
+            --input-bg: rgb(15 23 42 / 0.72);
+            --input-bg-focus: rgb(30 41 59 / 0.82);
+        }
+
+        html.theme-magma #v6-messages-center{
+            --bg0: rgb(20 5 5 / 0.94);
+            --bg1: rgb(40 10 10 / 0.84);
+            --panel: rgb(20 5 5 / 0.58);
+            --panel-soft: rgb(40 10 10 / 0.54);
+            --panel-strong: rgb(20 5 5 / 0.78);
+            --line: rgb(249 115 22 / 0.16);
+            --line2: rgb(249 115 22 / 0.10);
+            --bubble-me-bg: rgb(48 16 12 / 0.86);
+            --bubble-other-bg: rgb(20 5 5 / 0.80);
+            --input-bg: rgb(20 5 5 / 0.72);
+            --input-bg-focus: rgb(40 10 10 / 0.82);
+            --txt: rgb(255 254 221);
+            --txt-soft: rgb(245 222 179);
+            --muted: rgb(202 173 142);
+        }
+
+        html.theme-aurora #v6-messages-center{
+            --bg0: rgb(18 8 28 / 0.94);
+            --bg1: rgb(28 14 40 / 0.84);
+            --panel: rgb(18 8 28 / 0.58);
+            --panel-soft: rgb(28 14 40 / 0.54);
+            --panel-strong: rgb(18 8 28 / 0.78);
+            --line: rgb(236 72 153 / 0.14);
+            --line2: rgb(168 85 247 / 0.10);
+            --bubble-me-bg: rgb(36 18 52 / 0.86);
+            --bubble-other-bg: rgb(18 8 28 / 0.80);
+            --input-bg: rgb(18 8 28 / 0.72);
+            --input-bg-focus: rgb(28 14 40 / 0.82);
+            --txt: rgb(253 244 255);
+            --txt-soft: rgb(233 213 255);
+            --muted: rgb(196 181 253);
+        }
+
+        /* Container & Cyberpunk Hex Background */
+        #v6-messages-center{
+            max-width: 1480px;
+            margin-inline: auto;
+            padding-top: 10px;
+        }
+
+        #v6-messages-center .card{
+            background:
+                radial-gradient(780px 420px at 50% 0%, var(--line2), transparent 70%),
+                linear-gradient(180deg, var(--bg1), var(--bg0));
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 14px 34px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.045);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #v6-messages-center .card::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+            background-image:
+                linear-gradient(var(--line2) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line2) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.32;
+        }
+
+        /* Buttons / Inputs */
+        .btn{
+            position:relative; z-index: 10;
+            display:inline-flex; align-items:center; justify-content:center; gap:8px;
+            padding:8px 12px; border-radius: 10px;
+            border: 1px solid var(--line2); background: var(--panel-soft);
+            color: var(--muted); font-weight: 850; text-transform: uppercase; letter-spacing: .06em; font-size: 11px;
+            transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select:none; white-space:nowrap; overflow: hidden;
+        }
+        .btn::after { content: none; }
+        .btn:hover, .btn:focus-visible{ transform: none; background: var(--hover-bg); border-color: var(--line); color: var(--txt); outline: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
+        .btn:active{ transform: translateY(0); }
+        .btn:disabled{ opacity:.5; cursor:not-allowed; pointer-events:none; }
+
+        .btn-accent{ background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, transparent), color-mix(in srgb, var(--accent) 22%, rgb(2 6 23 / 0.72))); border-color: color-mix(in srgb, var(--accent) 62%, transparent); color: var(--txt); box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 18%, transparent); }
+        .btn-accent:hover, .btn-accent:focus-visible{ background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 40%, transparent), color-mix(in srgb, var(--accent) 28%, rgb(2 6 23 / 0.78))); box-shadow: 0 12px 26px color-mix(in srgb, var(--accent) 26%, transparent); }
+
+        .btn-danger{ background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.4); color: #ffe4e6; }
+        .btn-danger:hover{ background: rgba(244,63,94,0.25); border-color: var(--danger); box-shadow: 0 0 20px rgba(244,63,94,0.3); }
+
+        .btn-indigo{ background: var(--active-bg); border-color: color-mix(in srgb, var(--accent) 54%, transparent); color: var(--txt); }
+        .btn-indigo:hover{ background: color-mix(in srgb, var(--accent) 28%, transparent); border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+
+        .input{
+            width:100%; background: var(--input-bg); border: 1px solid var(--line);
+            color: var(--txt); padding: 9px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;
+            outline:none; transition: all .2s ease; position: relative; z-index: 10;
+        }
+        .input:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent); background: var(--input-bg-focus); }
+
+        .muted{ color: var(--muted); }
+        .mono{ font-family: 'Courier New', Courier, monospace; }
+
+        /* Layout */
+        .shell{
+            position:relative; z-index: 10; display:grid;
+            grid-template-columns: clamp(340px, 31%, 460px) minmax(0, 1fr);
+            height: clamp(620px, calc(100vh - 128px), 840px);
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .col{ min-width:0; min-height:0; position:relative; display: flex; flex-direction: column; overflow:hidden; }
+        .col-left{ border-right: 1px solid var(--line); background: linear-gradient(180deg, var(--panel-soft), var(--panel)); }
+        @media (max-width: 1100px){ .col-left{ border-right:none; } }
+
+        .topbar{
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            padding: 9px 12px; border-bottom: 1px solid var(--line); background: var(--panel-soft);
+            backdrop-filter: blur(10px); z-index: 20;
+        }
+        .chat > .topbar{
+            gap: 9px;
+            padding: 8px 10px;
+        }
+
+        .title{ font-weight: 900; color: var(--txt); letter-spacing:.03em; text-transform: none; font-size: 13px; text-shadow: 0 0 10px rgba(255,255,255,0.10); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .subtitle{ margin-top: 4px; font-size: 10px; font-weight: 750; letter-spacing:.04em; color: var(--txt-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+        .pill{
+            display:inline-flex; align-items:center; gap:6px; padding: 4px 10px; border-radius: 6px;
+            border: 1px solid var(--line); background: var(--panel); color: var(--txt);
+            font-size: 9px; font-weight: 900; letter-spacing:.15em; text-transform: uppercase;
+        }
+        .dot{ width: 6px; height: 6px; border-radius:50%; background: var(--muted); box-shadow: 0 0 8px var(--muted); animation: pulseDot 2s infinite; }
+        .dot.ok{ background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+        .dot.busy{ background: #eab308; box-shadow: 0 0 12px #eab308; }
+        .dot.bad{ background: var(--danger); box-shadow: 0 0 12px var(--danger); animation: none; }
+        @keyframes pulseDot { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Thread list */
+        .list{ flex: 1 1 auto; overflow-y:auto; min-height: 0; }
+        .list{ scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+        .list::-webkit-scrollbar{ width:6px; }
+        .list::-webkit-scrollbar-track{ background: transparent; }
+        .list::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 10px; border: 1px solid transparent; background-clip: padding-box; }
+        .list::-webkit-scrollbar-thumb:hover{ background: color-mix(in srgb, var(--accent) 52%, var(--line)); }
+
+        .thread{
+            padding: 10px 12px; display:flex; gap:10px; cursor:pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.04); background: transparent;
+            transition: all .2s ease; border-left: 3px solid transparent;
+        }
+        .thread:hover{ background: var(--hover-bg); padding-left: 15px; }
+        .thread.active{ background: var(--active-bg); border-left-color: var(--accent); }
+        .thread.hidden{ display:none !important; }
+
+        .av{
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--panel-strong), var(--panel));
+            border: 1px solid var(--line); display:flex; align-items:center; justify-content:center;
+            color: var(--accent); font-weight: 900; font-size: 15px; position:relative; flex: 0 0 auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.38);
+        }
+        .badge{
+            position:absolute; top:-5px; right:-5px; min-width: 20px; height: 20px; padding: 0 5px;
+            border-radius: 6px; background: var(--danger); border: 1px solid #9f1239;
+            color:#fff; font-size: 10px; font-weight: 900; display:flex; align-items:center; justify-content:center;
+            box-shadow: 0 0 15px rgba(244,63,94,0.5); animation: pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        .tname{ font-weight: 900; color: var(--txt); font-size: 12px; letter-spacing:.03em; text-transform: none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .time{ font-size: 7px; font-weight: 800; letter-spacing:.08em; color: var(--muted); opacity:.58; flex: 0 0 auto; }
+        .tlast{ margin-top: 3px; color: var(--txt-soft); font-size: 11px; line-height: 1.3; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 100%; }
+
+        /* Chat Area */
+        .chat{ display:flex; flex-direction:column; width: 100%; height: 100%; min-height: 0; position: relative; z-index: 10; overflow:hidden;}
+        .chat-peer-avatar{
+            width: 30px; height: 30px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--panel-strong), var(--panel));
+            border: 1px solid var(--line);
+            color: var(--accent);
+            display:flex; align-items:center; justify-content:center;
+            font-size: 12px; font-weight: 900;
+            flex: 0 0 auto;
+        }
+        .chat .topbar .icon-btn{ width: 30px; height: 30px; border-radius: 9px; }
+        
+        .chatbox{
+            flex: 1 1 auto; min-height: 0; width: 100%; overflow-y:auto; padding: 22px 24px;
+            background: radial-gradient(circle at center, var(--line2) 0%, transparent 70%);
+        }
+        .chatbox{ scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+        .chatbox::-webkit-scrollbar{ width:7px; }
+        .chatbox::-webkit-scrollbar-track{ background: transparent; }
+        .chatbox::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 10px; border: 1px solid transparent; background-clip: padding-box; }
+        .chatbox::-webkit-scrollbar-thumb:hover{ background: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+
+        /* Animated Bubbles */
+        .msg-row { display: flex; margin-bottom: 9px; animation: chatIn 0.25s ease-out forwards; transform-origin: bottom center;}
+        .msg-row.stacked{ margin-top: -3px; margin-bottom: 4px; }
+        .msg-row.time-break{ margin-top: 15px; }
+        @keyframes chatIn { from { opacity: 0; transform: translateY(15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .date-sep{
+            display:flex; align-items:center; justify-content:center; gap:10px;
+            margin: 2px 0 12px; color: var(--muted);
+            font-size: 10px; font-weight: 850; letter-spacing:.08em; text-transform: uppercase;
+        }
+        .date-sep::before, .date-sep::after{ content:""; height:1px; flex:1; max-width:120px; background: var(--line2); }
+        .jump-new{
+            position:absolute; right: 18px; bottom: 112px; z-index: 24;
+            border: 1px solid var(--line);
+            background: var(--panel-strong);
+            color: var(--txt);
+            border-radius: 999px;
+            padding: 7px 11px;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .03em;
+            box-shadow: 0 8px 22px rgba(0,0,0,.24);
+            transition: background .16s ease, border-color .16s ease, transform .16s ease;
+        }
+        .jump-new:hover, .jump-new:focus-visible{
+            border-color: var(--accent);
+            background: var(--active-bg);
+            transform: translateY(-1px);
+            outline: none;
+        }
+        .jump-new.hidden{ display:none !important; }
+
+        .bubble{
+            max-width: min(68%, 58ch); border-radius: 15px; padding: 9px 12px;
+            border: 1px solid var(--line2); background: var(--bubble-other-bg);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18); position: relative;
+        }
+        .bubble.me{
+            border-color: var(--line); background: var(--bubble-me-bg);
+            border-bottom-right-radius: 2px;
+        }
+        .msg-row.justify-start .bubble { border-bottom-left-radius: 2px; }
+        
+        .bubble.pending{ opacity: .6; filter: grayscale(1); }
+        .bubble.failed{ border-color: color-mix(in srgb, var(--danger) 44%, transparent); background: color-mix(in srgb, var(--danger) 8%, var(--bubble-me-bg)); filter: none; opacity: .92; }
+        .bubble .b{ color: var(--txt); font-size: 13px; font-weight: 600; white-space: pre-wrap; overflow-wrap:anywhere; word-break: break-word; line-height: 1.5;}
+        .bubble .t{ margin-top: 6px; color: var(--muted); font-size: 8px; font-weight: 850; letter-spacing:.05em; display:flex; align-items:center; justify-content: flex-end; gap:6px; opacity: 0.72;}
+        .bubble.me .t { color: var(--txt-soft); }
+        .reply-ref{
+            margin-bottom: 6px;
+            padding: 5px 8px;
+            border-left: 2px solid color-mix(in srgb, var(--accent) 62%, transparent);
+            border-radius: 9px;
+            background: color-mix(in srgb, var(--panel-soft) 72%, transparent);
+            color: var(--txt-soft);
+            max-width: 100%;
+        }
+        .reply-ref-name{
+            display:block;
+            color: var(--txt);
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.2;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .reply-ref-text{
+            display:-webkit-box;
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 750;
+            line-height: 1.28;
+            overflow:hidden;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow-wrap:anywhere;
+        }
+        .msg-actions{
+            position:absolute; top:-30px; right:7px;
+            display:none; align-items:center; gap:2px;
+            padding: 3px;
+            border:1px solid var(--line);
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--panel-strong) 94%, transparent);
+            box-shadow: 0 10px 20px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04);
+            backdrop-filter: blur(8px);
+            z-index: 3;
+        }
+        .msg-row.justify-start .msg-actions{ left:8px; right:auto; }
+        .msg-row:hover .msg-actions, .msg-row:focus-within .msg-actions{ display:flex; }
+        .msg-action{
+            width: 26px; height: 25px;
+            display:inline-flex; align-items:center; justify-content:center;
+            border:0; border-radius: 999px;
+            background: transparent;
+            color: var(--muted);
+            cursor:pointer;
+            font-size: 10.5px;
+            transition: background .14s ease, color .14s ease, transform .14s ease;
+        }
+        .msg-action:hover, .msg-action:focus-visible{ background: var(--hover-bg); color: var(--txt); outline:none; transform: translateY(-1px); }
+        .msg-action.danger:hover, .msg-action.danger:focus-visible{ background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+        .bubble.deleted{ opacity:.72; font-style: italic; }
+        .pin-strip{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding: 8px 14px;
+            border-bottom:1px solid var(--line);
+            background: color-mix(in srgb, var(--panel-soft) 86%, transparent);
+            overflow-x:auto;
+        }
+        .pin-strip::before{
+            content:"Sabit";
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            flex: 0 0 auto;
+        }
+        .pin-chip{
+            max-width: 280px;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            border:1px solid var(--line2);
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--panel) 88%, var(--panel-soft));
+            color: var(--txt-soft);
+            padding: 6px 11px;
+            font-size: 10px;
+            font-weight: 850;
+            cursor:pointer;
+            white-space:nowrap;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+        }
+        .pin-chip i{ color: var(--accent); opacity:.82; font-size: 10px; }
+        .pin-chip span{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+        .pin-chip:hover, .pin-chip:focus-visible{ background: var(--hover-bg); color: var(--txt); outline:none; border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
+        .chat-search-panel{
+            display:none;
+            gap:8px;
+            padding: 8px 14px;
+            border-bottom:1px solid var(--line);
+            background: var(--panel);
+        }
+        .chat-search-panel.open{ display:block; }
+        .chat-search-row{ display:flex; gap:8px; align-items:center; }
+        .chat-search-results{
+            display:none;
+            margin-top:7px;
+            max-height: 190px;
+            overflow-y:auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--line) transparent;
+            border:1px solid var(--line);
+            border-radius: 12px;
+            background: var(--panel-strong);
+            padding:5px;
+        }
+        .chat-search-results::-webkit-scrollbar{ width:6px; }
+        .chat-search-results::-webkit-scrollbar-track{ background: transparent; }
+        .chat-search-results::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 10px; }
+        .chat-search-results.open{ display:block; }
+        .search-result{
+            width:100%;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            border:0;
+            border-radius: 9px;
+            background: transparent;
+            color: var(--txt);
+            padding:7px 8px;
+            text-align:left;
+            cursor:pointer;
+        }
+        .search-result:hover, .search-result:focus-visible{ background: var(--hover-bg); outline:none; }
+        .search-result-main{ min-width:0; }
+        .search-result-text{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; font-weight:850; }
+        .search-result-time{ display:block; margin-top:2px; color:var(--muted); font-size:9px; font-weight:800; }
+        .search-empty{ padding:8px; color:var(--muted); font-size:11px; font-weight:800; }
+        .msg-row.focus-pulse .bubble{ box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 38%, transparent); }
+        .retry-send{
+            border: 0;
+            background: transparent;
+            color: var(--txt);
+            padding: 0;
+            font: inherit;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .06em;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .retry-send:hover, .retry-send:focus-visible{ color: var(--accent); outline: none; text-decoration: underline; }
+
+        /* Composer & Quick Replies */
+        .composer-wrap {
+            flex: 0 0 auto;
+            background: linear-gradient(180deg, var(--panel), var(--panel-strong));
+            border-top: 1px solid var(--line);
+            padding: 11px 17px 15px;
+            backdrop-filter: blur(8px);
+        }
+        .reply-preview{
+            display:none;
+            align-items:flex-start;
+            gap:9px;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border:1px solid var(--line);
+            border-left: 2px solid var(--accent);
+            border-radius: 12px;
+            background: var(--panel-soft);
+        }
+        .reply-preview.open{ display:flex; }
+        .reply-preview-main{ min-width:0; flex:1; }
+        .reply-preview-label{
+            color: var(--txt);
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.2;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .reply-preview-text{
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 750;
+            line-height: 1.3;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .reply-cancel{
+            width: 26px; height: 26px;
+            display:inline-flex; align-items:center; justify-content:center;
+            border:0; border-radius: 8px;
+            background: transparent;
+            color: var(--muted);
+            cursor:pointer;
+            flex:0 0 auto;
+        }
+        .reply-cancel:hover, .reply-cancel:focus-visible{ background: var(--hover-bg); color: var(--txt); outline:none; }
+
+        .quick-title {
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            opacity: .78;
+        }
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 9px;
+            overflow-x: visible;
+            padding-bottom: 0;
+            width: auto;
+        }
+        .qr-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 32px;
+            background: transparent;
+            border: 1px solid var(--line2);
+            color: var(--txt-soft);
+            font-size: 10.5px;
+            font-weight: 780;
+            padding: 7px 13px;
+            border-radius: 999px;
+            flex: 0 1 auto;
+            cursor: pointer;
+            text-transform: none;
+            white-space: normal;
+            max-width: 100%;
+            line-height: 1.3;
+            text-align: left;
+            transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+            letter-spacing: 0;
+        }
+        .qr-btn i { color: var(--accent); font-size: 11.5px; opacity: .78; }
+        .qr-btn:hover, .qr-btn:focus-visible {
+            background: var(--hover-bg);
+            border-color: var(--line);
+            color: var(--txt);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 10%, transparent);
+            transform: none;
+            outline: none;
+        }
+
+        .composer-row{
+            position:relative;
+            display:flex;
+            gap:9px;
+            align-items:center;
+            padding: 6px 7px 6px 14px;
+            border: 1px solid var(--line2);
+            border-radius: 18px;
+            background: var(--input-bg);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+            transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+        }
+        .composer-row:focus-within{
+            border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+            background: var(--input-bg-focus);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 14%, transparent), inset 0 1px 0 rgba(255,255,255,0.045);
+        }
+        .composer-row textarea{
+            min-height: 56px;
+            max-height: 140px;
+            resize:none;
+            overflow-y:auto;
+            border: 0;
+            border-radius: 13px;
+            background: transparent;
+            box-shadow: none;
+            font-size: 13px;
+            line-height: 1.42;
+            padding: 17px 14px 15px 0;
+            scrollbar-width: none;
+        }
+        .composer-row textarea::-webkit-resizer{ display:none; }
+        .composer-row textarea::-webkit-scrollbar{ width:0; height:0; }
+        .composer-row textarea:focus{ box-shadow: none; background: transparent; }
+        .composer-row textarea:disabled{ opacity: .68; cursor: not-allowed; }
+        .composer-row .icon-btn{
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            min-height: 44px;
+            padding: 0;
+            border-radius: 12px;
+            align-self:center;
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+        .composer-row .icon-btn i{
+            font-size: 14px;
+        }
+        .composer-row .btn-accent{
+            background: var(--panel-soft);
+            border-color: var(--line2);
+            color: var(--muted);
+            box-shadow: none;
+            transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+        }
+        .composer-row .btn-accent.is-ready{
+            background: color-mix(in srgb, var(--accent) 18%, var(--panel-strong));
+            border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+            color: var(--txt);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 12%, transparent);
+        }
+        .composer-row .btn-accent:disabled{
+            background: var(--panel-soft);
+            border-color: var(--line2);
+            color: var(--muted);
+            box-shadow: none;
+        }
+        .char-counter{
+            position:absolute; right: 60px; bottom: 7px;
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 850;
+            letter-spacing: .04em;
+            pointer-events:none;
+            opacity:.78;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--panel-soft) 70%, transparent);
+        }
+        .char-counter.warn{ color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, var(--panel-soft)); }
+
+        .dm-dialog-backdrop{
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            padding: 20px;
+            background: rgba(0,0,0,.56);
+            backdrop-filter: blur(6px);
+        }
+        .dm-dialog-backdrop.open{ display:flex; }
+        .dm-dialog{
+            width: min(100%, 430px);
+            border:1px solid var(--line);
+            border-radius: 16px;
+            background: var(--panel-strong);
+            box-shadow: 0 24px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+            padding: 16px;
+            color: var(--txt);
+        }
+        .dm-dialog-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 12px; }
+        .dm-dialog-title{ font-size: 14px; font-weight: 950; letter-spacing: .01em; }
+        .dm-dialog-desc{ margin-top: 4px; color: var(--muted); font-size: 11px; font-weight: 750; line-height: 1.45; }
+        .dm-dialog-close{
+            width: 30px; height: 30px;
+            display:inline-flex; align-items:center; justify-content:center;
+            border:1px solid var(--line2);
+            border-radius: 10px;
+            background: var(--panel-soft);
+            color: var(--muted);
+            cursor:pointer;
+        }
+        .dm-dialog-close:hover, .dm-dialog-close:focus-visible{ background: var(--hover-bg); color: var(--txt); outline:none; }
+        .dm-dialog-field{ width:100%; }
+        .dm-dialog-field textarea{
+            width:100%;
+            min-height: 112px;
+            max-height: 180px;
+            resize: vertical;
+            border:1px solid var(--line2);
+            border-radius: 13px;
+            background: var(--input-bg);
+            color: var(--txt);
+            padding: 11px 12px;
+            font-size: 13px;
+            font-weight: 750;
+            line-height: 1.45;
+            outline:none;
+        }
+        .dm-dialog-field textarea:focus{
+            border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 13%, transparent);
+        }
+        .dm-dialog-meta{ margin-top: 7px; color: var(--muted); font-size: 10px; font-weight: 850; text-align:right; }
+        .dm-dialog-meta.warn{ color: var(--danger); }
+        .dm-dialog-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top: 14px; }
+        .dm-dialog-btn{
+            min-height: 34px;
+            border:1px solid var(--line2);
+            border-radius: 11px;
+            background: var(--panel-soft);
+            color: var(--txt-soft);
+            padding: 0 13px;
+            font-size: 11px;
+            font-weight: 900;
+            cursor:pointer;
+        }
+        .dm-dialog-btn:hover, .dm-dialog-btn:focus-visible{ background: var(--hover-bg); color: var(--txt); outline:none; }
+        .dm-dialog-btn:disabled{ opacity:.62; cursor:not-allowed; }
+        .dm-dialog-btn.primary{ border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: color-mix(in srgb, var(--accent) 16%, var(--panel-soft)); color: var(--txt); }
+        .dm-dialog-btn.danger{ border-color: color-mix(in srgb, var(--danger) 42%, var(--line)); background: color-mix(in srgb, var(--danger) 13%, var(--panel-soft)); color: var(--txt); }
+
+        @media (max-width: 1100px){
+            #v6-messages-center.chat-open .col-left{ display:none; }
+            #v6-messages-center:not(.chat-open) .col-right{ display:none; }
+        }
+
+        .empty{ padding: 24px 16px; text-align:center; color: var(--muted); font-weight: 800; letter-spacing:.03em; text-transform: none; font-size: 12px; line-height: 1.5; }
+        .empty i { font-size: 22px; color: color-mix(in srgb, var(--accent) 34%, transparent); margin-bottom: 8px; display: block;}
+        .empty strong { display:block; color: var(--txt); font-size: 12px; text-transform: none; letter-spacing:.03em; margin-bottom: 3px; }
+        .empty span { display:block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+        .chatbox > .empty{
+            width: min(100%, 380px);
+            margin: auto;
+            padding: 28px 24px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--panel-soft);
+        }
+
+        .hero-card { padding: 12px 14px; overflow: visible !important; }
+        .hero-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--panel-soft); border: 1px solid var(--line); display:flex; align-items:center; justify-content:center; color: var(--accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+        .connect-panel { position:relative; z-index:10; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--panel); }
+        .connect-form { display:flex; flex-direction:column; gap: 8px; }
+        .connect-row { display:flex; gap:6px; align-items:center; }
+        .player-search-wrap { position: relative; }
+        .player-results {
+            position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 40;
+            max-height: 240px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; border: 1px solid var(--line);
+            border-radius: 12px; background: var(--bg0); box-shadow: 0 18px 32px rgba(0,0,0,0.38);
+            padding: 6px; display: none;
+        }
+        .player-results::-webkit-scrollbar{ width:6px; }
+        .player-results::-webkit-scrollbar-track{ background: transparent; }
+        .player-results::-webkit-scrollbar-thumb{ background: var(--line); border-radius:10px; }
+        .player-results.open { display: block; }
+        .player-result {
+            width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px; border: 0;
+            border-radius: 10px; background: transparent; color: var(--txt); text-align: left; cursor: pointer;
+        }
+        .player-result:hover, .player-result:focus-visible, .player-result.active {
+            background: var(--hover-bg); outline: none;
+        }
+        .player-result-avatar {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: var(--panel-soft); border: 1px solid var(--line); color: var(--accent);
+            font-size: 12px; font-weight: 900; flex: 0 0 auto;
+        }
+        .player-result-name { display:block; font-size: 12px; font-weight: 900; color: var(--txt); line-height: 1.15; }
+        .player-result-meta { display:block; margin-top: 2px; font-size: 10px; font-weight: 750; color: var(--muted); }
+        .player-result-action { margin-left: auto; color: var(--accent); opacity: .8; }
+        .player-result-note { padding: 10px; color: var(--muted); font-size: 11px; font-weight: 800; }
+        .id-shortcut {
+            border: 0; background: transparent; color: var(--accent); padding: 0; font-size: 10px; font-weight: 850;
+            text-align: left; cursor: pointer;
+        }
+        .id-shortcut:hover, .id-shortcut:focus-visible { color: var(--txt); outline: none; text-decoration: underline; }
+        .id-row { display:none; }
+        .id-row.open { display:flex; }
+        .command-label { color: var(--accent); font-size:9px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; display:flex; align-items:center; gap:6px; }
+        .field-label { margin-bottom: 4px; color: var(--muted); font-size:9px; font-weight:850; letter-spacing:.06em; text-transform:uppercase; }
+        .compact-tab { padding: 8px 11px; font-size: 10px; border-radius: 999px; overflow: visible; }
+        .icon-btn { width: 34px; height: 34px; padding: 0; border-radius: 10px; }
+        @media (min-width: 1500px){
+            .shell{ grid-template-columns: clamp(380px, 30%, 480px) minmax(0, 1fr); }
+        }
+        @media (max-width: 1180px){
+            .shell{ grid-template-columns: clamp(300px, 35%, 360px) minmax(0, 1fr); }
+        }
+        @media (max-width: 1100px){
+            .shell{ grid-template-columns: 1fr; height: clamp(560px, calc(100vh - 170px), 720px); min-height: 0; }
+        }
+        @media (max-width: 900px){
+            #v6-messages-center{ max-width: 100%; }
+            .shell{ height: clamp(500px, calc(100vh - 200px), 660px); min-height: 0; }
+            .topbar{ padding: 10px 12px; }
+            .chat{ width: 100%; }
+            .chatbox{ width: 100%; padding: 14px; }
+            .composer-wrap{ padding: 7px 11px 10px; }
+            .quick-title{ margin-bottom: 4px; }
+            .qr-btn{ min-height: 26px; padding: 4px 9px; }
+            .composer-row{ gap:5px; padding:4px 5px 4px 9px; border-radius: 15px; }
+            .composer-row textarea{ min-height: 39px; max-height: 110px; padding: 9px 9px 8px 0; }
+            .char-counter{ right: 50px; bottom: 6px; font-size: 8px; padding: 1px 5px; }
+            .composer-row .icon-btn{ width: 36px; min-width: 36px; height: 36px; min-height: 36px; border-radius: 11px; margin-bottom:0; }
+            .bubble{ max-width: 88%; }
+            .quick-replies{ flex-wrap: nowrap; overflow-x:auto; padding-bottom:3px; margin-bottom: 7px; }
+            .qr-btn{ flex: 0 0 auto; }
+            .hero-card{ padding: 10px 12px; }
+            .hero-icon{ width: 40px; height: 40px; }
+            .connect-panel{ padding: 8px 12px; }
+            .connect-form{ gap: 6px; }
+            .hero-card .relative{ gap:10px; }
+        }
+        @media (max-width: 900px){
+            #v6-messages-center{ padding-top: 6px; }
+        }
+        @media (prefers-reduced-motion: reduce){ .dot, .msg-row, .toast{ animation:none !important; } }
+
+        /* Toasts */
+        .toast-wrap{ position: fixed; right: 20px; bottom: 20px; z-index: 9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+        .toast{
+            min-width: 250px; border-radius: 8px; border-left: 3px solid transparent;
+            background: var(--bg0); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            padding: 12px 16px; color: var(--txt); font-size: 11px; font-weight: 800; display:flex; align-items:center; gap:12px;
+            animation: toastIn .3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .toast.ok { border-color: var(--ok); } .toast.ok i { color: var(--ok); }
+        .toast.bad { border-color: var(--danger); } .toast.bad i { color: var(--danger); }
+        .toast.info { border-color: var(--accent); } .toast.info i { color: var(--accent); }
+        @keyframes toastIn{ from{ opacity: 0; transform: translateX(50px);} to{ opacity: 1; transform: translateX(0);} }
+    </style>
+
+    {% set BASE_TWIG = base_url() %}
+    {% set myUid = myUid|default(app.user.uid|default(0)) %}
+
+    <div class="card hero-card">
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4 min-w-0">
+                <div class="hero-icon shrink-0">
+                    <i class="fa-solid fa-comments text-2xl"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="title" style="font-size: 14px;">{{ t('messages.title') }}</div>
+                    <div class="subtitle">{{ t('messages.subtitle') }}</div>
+                </div>
+            </div>
+            <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
+                <a class="btn btn-indigo compact-tab" href="{{ BASE_TWIG }}/messages"><i class="fa-solid fa-envelope"></i> {{ t('messages.menu.inbox') }}</a>
+                <a class="btn compact-tab" href="{{ BASE_TWIG }}/notifications"><i class="fa-solid fa-bell"></i> {{ t('messages.menu.notifications') }}</a>
+                <a class="btn compact-tab" href="{{ BASE_TWIG }}/social"><i class="fa-solid fa-users"></i> {{ t('messages.menu.social') }}</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="shell">
+
+            <div class="col col-left">
+                <div class="topbar">
+                    <div class="min-w-0">
+                        <div class="title text-[11px]"><i class="fa-solid fa-comments mr-2"></i> {{ t('messages.channels') }}</div>
+                        <div class="subtitle" id="threadCount"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-refresh" class="btn icon-btn" type="button" title="{{ t('messages.refresh') }}" aria-label="{{ t('messages.refresh') }}">
+                            <i class="fa-solid fa-rotate text-cyan-400"></i>
+                        </button>
+                        <button id="btn-archive" class="btn btn-danger icon-btn" type="button" title="{{ t('messages.clear') }}" aria-label="{{ t('messages.clear') }}">
+                            <i class="fa-solid fa-eraser"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="connect-panel">
+                    <form class="connect-form" id="dmForm">
+                        <div class="command-label"><i class="fa-solid fa-comment-medical"></i> {{ t('messages.connect') }}</div>
+                        <div class="player-search-wrap">
+                            <input id="playerSearch" type="search" autocomplete="off" placeholder="{{ t('messages.player_search_placeholder') }}" class="input" aria-label="{{ t('messages.player_search_label') }}" aria-controls="playerResults" aria-expanded="false" role="combobox">
+                            <div id="playerResults" class="player-results" role="listbox" aria-label="{{ t('messages.player_search_results') }}"></div>
+                        </div>
+                        <button id="toggleIdSearch" class="id-shortcut" type="button" aria-expanded="false">{{ t('messages.search_by_id') }}</button>
+                        <div class="connect-row id-row" id="idSearchRow">
+                            <input id="dmUid" type="number" min="1" step="1" placeholder="{{ t('messages.target_placeholder') }}" class="input flex-1">
+                            <button id="dmGo" class="btn btn-accent icon-btn shrink-0" type="submit" title="{{ t('messages.redirect') }}" aria-label="{{ t('messages.redirect') }}">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        <input id="threadSearch" class="input !py-2" placeholder="{{ t('messages.search_placeholder') }}" aria-label="{{ t('messages.search_label') }}" />
+                    </form>
+                </div>
+
+                {% if threads is empty %}
+                    <div class="empty"><i class="fa-solid fa-comment-dots"></i><strong>{{ t('messages.no_signal') }}</strong><span>{{ t('messages.no_signal_hint') }}</span></div>
+                {% else %}
+                    <div class="list" id="threadList">
+                        {% for t in threads %}
+                            <div class="thread js-open-chat"
+                                 data-uid="{{ t.other_uid }}"
+                                 data-name="{{ t.other_name|e('html_attr') }}"
+                                 data-last="{{ t.last_body|e('html_attr') }}">
+                                <div class="av">
+                                    {{ t.other_name|slice(0,1)|upper }}
+                                    {% if t.unread > 0 %}
+                                        <span class="badge">{{ t.unread }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="tname">{{ t.other_name }}</div>
+                                        <div class="time">{{ t.last_at|date('H:i') }}</div>
+                                    </div>
+                                    <div class="tlast">{{ t.last_body }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col col-right">
+                <div class="chat">
+                    <div class="topbar">
+                        <div class="min-w-0 flex items-center gap-2">
+                            <div class="chat-peer-avatar" id="chatAvatar"><i class="fa-solid fa-comments"></i></div>
+                            <div class="min-w-0">
+                            <div class="flex items-center gap-1 min-w-0">
+                                <div class="title" id="chatTitle" style="font-size: 13px;">{{ t('messages.waiting') }}</div>
+                                <div class="pill" id="livePill" style="display:none;">
+                                    <span class="dot ok" id="liveDot"></span>
+                                    <span id="liveText"></span>
+                                </div>
+                            </div>
+                            <div class="subtitle mt-1" id="chatSub">{{ t('messages.target_not_selected') }}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button id="btn-chat-search" type="button" class="btn icon-btn" disabled title="Sohbette ara" aria-label="Sohbette ara">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                            <a id="btn-profile" href="#" class="btn icon-btn hidden" title="Profili ac" aria-label="Profili ac">
+                                <i class="fa-solid fa-user"></i>
+                            </a>
+                            <button id="btn-back" type="button" class="btn icon-btn hidden" title="Listeye don" aria-label="Listeye don">
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                            <button id="btn-clear-active" type="button" class="btn icon-btn" disabled title="Sohbeti kapat" aria-label="Sohbeti kapat">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pinStrip" class="pin-strip hidden" aria-label="Sabit mesajlar"></div>
+                    <div id="chatSearchPanel" class="chat-search-panel">
+                        <div class="chat-search-row">
+                            <input id="chatSearchInput" class="input" type="search" placeholder="Bu sohbette ara..." aria-label="Bu sohbette ara" autocomplete="off">
+                            <button id="chatSearchClose" type="button" class="btn icon-btn" title="Aramayi kapat" aria-label="Aramayi kapat">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <div id="chatSearchResults" class="chat-search-results" role="listbox"></div>
+                    </div>
+
+                    <div id="chat-box" class="chatbox">
+                        <div class="empty"><i class="fa-solid fa-comments"></i><strong>{{ t('messages.network_ready') }}</strong><span>{{ t('messages.network_ready_hint') }}</span></div>
+                    </div>
+                    <button id="jumpNew" type="button" class="jump-new hidden">Yeni mesajlar</button>
+
+                    <div class="composer-wrap">
+                        <div class="quick-title">{{ t('messages.quick.title') }}</div>
+                        <div class="quick-replies hide-scrollbar">
+                            <button class="qr-btn" type="button"><i class="fa-solid fa-crosshairs"></i> {{ t('messages.quick.attack') }}</button>
+                            <button class="qr-btn" type="button"><i class="fa-solid fa-shield-halved"></i> {{ t('messages.quick.defend') }}</button>
+                            <button class="qr-btn" type="button"><i class="fa-solid fa-boxes-stacked"></i> {{ t('messages.quick.food') }}</button>
+                            <button class="qr-btn" type="button"><i class="fa-solid fa-handshake"></i> {{ t('messages.quick.alliance') }}</button>
+                        </div>
+
+                        <div id="replyPreview" class="reply-preview" aria-live="polite">
+                            <div class="reply-preview-main">
+                                <div id="replyPreviewName" class="reply-preview-label"></div>
+                                <div id="replyPreviewText" class="reply-preview-text"></div>
+                            </div>
+                            <button id="replyCancel" type="button" class="reply-cancel" title="Yaniti iptal et" aria-label="Yaniti iptal et">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="composer-row">
+                            <textarea id="chat-text" class="input" maxlength="240" placeholder="{{ t('messages.input_placeholder') }}" disabled></textarea>
+                            <span id="charCounter" class="char-counter">0/240</span>
+                            <button id="chat-send" type="button" class="btn btn-accent icon-btn shrink-0" disabled title="{{ t('messages.send') }}" aria-label="{{ t('messages.send') }}">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="toast-wrap" id="toastWrap"></div>
+    <div class="dm-dialog-backdrop" id="dmDialog" aria-hidden="true">
+        <div class="dm-dialog" role="dialog" aria-modal="true" aria-labelledby="dmDialogTitle">
+            <div class="dm-dialog-head">
+                <div>
+                    <div class="dm-dialog-title" id="dmDialogTitle"></div>
+                    <div class="dm-dialog-desc" id="dmDialogDesc"></div>
+                </div>
+                <button type="button" class="dm-dialog-close" id="dmDialogClose" title="Kapat" aria-label="Kapat">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="dm-dialog-field" id="dmDialogField">
+                <textarea id="dmDialogText" maxlength="240"></textarea>
+                <div class="dm-dialog-meta" id="dmDialogCounter">0/240</div>
+            </div>
+            <div class="dm-dialog-actions">
+                <button type="button" class="dm-dialog-btn" id="dmDialogCancel">Iptal</button>
+                <button type="button" class="dm-dialog-btn primary" id="dmDialogConfirm">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    $(function(){
+        // Kök dizin tespiti
+        function computeBase(){
+            const twigBase = "{{ BASE_TWIG }}";
+            if(twigBase && twigBase !== "/") return twigBase.replace(/\/+$/,'');
+            if(window.location.pathname.indexOf('/htdocs/') === 0) return '/htdocs';
+            if(window.location.pathname === '/htdocs') return '/htdocs';
+            return '';
+        }
+
+        const BASE = computeBase();
+        const MY_UID = {{ myUid }};
+        const ROOT = $('#v6-messages-center');
+        const STORAGE_KEY = 'dm_v6_last_open_uid';
+        const REPLY_STORE_KEY = 'dm_v6_reply_refs';
+
+        let ACTIVE_UID = 0;
+        let ACTIVE_NAME = '';
+        let REPLY_TARGET = null;
+        let SINCE_ID = 0;
+        let POLL_T = null;
+        let POLL_INFLIGHT = false;
+        let SENDING = false;
+        let FETCH_XHR = null;
+        let PLAYER_XHR = null;
+        let PLAYER_TIMER = null;
+        let PLAYER_RESULTS = [];
+        let PLAYER_ACTIVE = -1;
+        let CHAT_SEARCH_TIMER = null;
+        let DIALOG_STATE = null;
+        let LAST_RENDER_DATE = '';
+        let LAST_SENT_BODY = '';
+        let LAST_SENT_AT = 0;
+        const RENDERED_IDS = new Set();
+
+        let POLL_BASE = 2500;
+        let POLL_BOOST = 900;
+        let POLL_BACKOFF = 1;
+        let PAGE_VISIBLE = true;
+
+        // Yardımcı Fonksiyonlar
+        function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+        function csrf(){ return $('meta[name="csrf-token"]').attr('content') || ''; }
+        function nowIso(){ const d = new Date(); const p = (n)=> String(n).padStart(2,'0'); return p(d.getHours()) + ':' + p(d.getMinutes()); }
+        function snippet(s, max){
+            const clean = String(s || '').replace(/\s+/g, ' ').trim();
+            return clean.length > max ? clean.substring(0, max).trim() + '...' : clean;
+        }
+        function getReplyStore(){
+            try { return JSON.parse(localStorage.getItem(REPLY_STORE_KEY) || '{}') || {}; } catch(e) { return {}; }
+        }
+        function setReplyStore(id, ref){
+            if(!id || !ref) return;
+            const store = getReplyStore();
+            store[String(id)] = { name: snippet(ref.name, 40), text: snippet(ref.text, 120) };
+            try { localStorage.setItem(REPLY_STORE_KEY, JSON.stringify(store)); } catch(e) {}
+        }
+        function replyRefHtml(ref){
+            if(!ref || !ref.text) return '';
+            return `<div class="reply-ref"><span class="reply-ref-name">${esc(ref.name || 'Yanıt')}</span><span class="reply-ref-text">${esc(ref.text)}</span></div>`;
+        }
+        function renderPins(pins){
+            const list = Array.isArray(pins) ? pins : [];
+            if(!list.length){
+                $('#pinStrip').addClass('hidden').empty();
+                return;
+            }
+            const html = list.map(p => {
+                const mid = parseInt(p.id || 0, 10);
+                return `<button type="button" class="pin-chip" data-mid="${mid}" title="Sabit mesaja git"><i class="fa-solid fa-thumbtack"></i><span>${esc(snippet(p.body || '', 70))}</span></button>`;
+            }).join('');
+            $('#pinStrip').removeClass('hidden').html(html);
+        }
+        function focusMessage(mid){
+            const id = parseInt(mid || 0, 10);
+            if(!id) return;
+            const $row = $(`#chat-box .msg-row[data-mid="${id}"]`);
+            if(!$row.length){
+                toast('info', 'Bu mesaj su an ekranda degil.');
+                return;
+            }
+            const node = $row.get(0);
+            node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            $row.addClass('focus-pulse');
+            setTimeout(() => $row.removeClass('focus-pulse'), 1200);
+        }
+        function renderChatSearchResults(results, state){
+            const $box = $('#chatSearchResults');
+            if(state === 'loading'){
+                $box.addClass('open').html('<div class="search-empty"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Araniyor...</div>');
+                return;
+            }
+            const list = Array.isArray(results) ? results : [];
+            if(!list.length){
+                $box.addClass('open').html('<div class="search-empty">Eslesen mesaj bulunamadi.</div>');
+                return;
+            }
+            const html = list.map(m => {
+                const mid = parseInt(m.id || 0, 10);
+                const time = esc(m.created_at ? String(m.created_at).replace(' ', ' · ').substring(0, 18) : '');
+                return `<button type="button" class="search-result" data-mid="${mid}" role="option">
+                    <span class="search-result-main">
+                        <span class="search-result-text">${esc(snippet(m.body || '', 90))}</span>
+                        <span class="search-result-time">${time}</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-down"></i>
+                </button>`;
+            }).join('');
+            $box.addClass('open').html(html);
+        }
+        function closeDmDialog(){
+            DIALOG_STATE = null;
+            $('#dmDialog').removeClass('open').attr('aria-hidden', 'true');
+            $('#dmDialogText').val('');
+            $('#dmDialogField').show();
+            $('#dmDialogConfirm').removeClass('danger').addClass('primary').text('Kaydet');
+        }
+        function openEditDialog(mid, current){
+            DIALOG_STATE = { type: 'edit', mid: parseInt(mid || 0, 10) };
+            $('#dmDialogTitle').text('Mesaji duzenle');
+            $('#dmDialogDesc').text('Metni guncelle ve kaydet. Mesaj limiti 240 karakter.');
+            $('#dmDialogField').show();
+            $('#dmDialogText').val(current || '').trigger('input');
+            $('#dmDialogConfirm').removeClass('danger').addClass('primary').text('Kaydet');
+            $('#dmDialog').addClass('open').attr('aria-hidden', 'false');
+            setTimeout(() => $('#dmDialogText').focus(), 30);
+        }
+        function openDeleteDialog(mid){
+            DIALOG_STATE = { type: 'delete', mid: parseInt(mid || 0, 10) };
+            $('#dmDialogTitle').text('Mesaji sil');
+            $('#dmDialogDesc').text('Bu mesaj silindi olarak isaretlenecek. Bu islem sohbet kaydini tamamen kaldirmaz.');
+            $('#dmDialogField').hide();
+            $('#dmDialogConfirm').removeClass('primary').addClass('danger').text('Sil');
+            $('#dmDialog').addClass('open').attr('aria-hidden', 'false');
+            setTimeout(() => $('#dmDialogConfirm').focus(), 30);
+        }
+        function submitEdit(mid, body){
+            if(!mid || !body || body.length > 240) {
+                toast('info', 'Mesaj 1-240 karakter olmali.');
+                return;
+            }
+            $('#dmDialogConfirm').prop('disabled', true).text('Kaydediliyor...');
+            $.post(BASE + '/api/messages/edit', { message_id: mid, body: body, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error){ toast('bad', (r && r.message) || 'Mesaj duzenlenemedi.'); return; }
+                    const $row = $(`#chat-box .msg-row[data-mid="${mid}"]`);
+                    $row.find('.b').text(r.body || body);
+                    $row.find('.copy-msg, .reply-msg, .edit-msg').attr('data-body', r.body || body).data('body', r.body || body);
+                    if(!$row.find('.t').text().includes('duzenlendi')) {
+                        $row.find('.t').append(' · duzenlendi');
+                    }
+                    closeDmDialog();
+                    toast('ok', 'Mesaj duzenlendi.');
+                    refreshThreads();
+                })
+                .fail(() => toast('bad', 'Mesaj duzenlenemedi.'))
+                .always(() => $('#dmDialogConfirm').prop('disabled', false).text('Kaydet'));
+        }
+        function submitDelete(mid){
+            if(!mid) return;
+            $('#dmDialogConfirm').prop('disabled', true).text('Siliniyor...');
+            $.post(BASE + '/api/messages/delete', { message_id: mid, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error){ toast('bad', (r && r.message) || 'Mesaj silinemedi.'); return; }
+                    const $row = $(`#chat-box .msg-row[data-mid="${mid}"]`);
+                    $row.find('.bubble').addClass('deleted');
+                    $row.find('.msg-actions, .reply-ref').remove();
+                    $row.find('.b').text(r.body || 'Mesaj silindi');
+                    renderPins([]);
+                    if(ACTIVE_UID) {
+                        $.post(BASE + '/api/messages/fetch', { other_uid: ACTIVE_UID, since_id: 0, csrf_token: csrf() }).done(res => renderPins((res && res.pins) || []));
+                    }
+                    closeDmDialog();
+                    toast('ok', 'Mesaj silindi.');
+                    refreshThreads();
+                })
+                .fail(() => toast('bad', 'Mesaj silinemedi.'))
+                .always(() => $('#dmDialogConfirm').prop('disabled', false).text('Sil'));
+        }
+        function setReplyTarget(ref){
+            REPLY_TARGET = ref && ref.text ? { name: snippet(ref.name || 'Yanıt', 40), text: snippet(ref.text, 120) } : null;
+            $('#replyPreview').toggleClass('open', !!REPLY_TARGET);
+            $('#replyPreviewName').text(REPLY_TARGET ? REPLY_TARGET.name : '');
+            $('#replyPreviewText').text(REPLY_TARGET ? REPLY_TARGET.text : '');
+        }
+        function dayKey(value){
+            const d = value ? new Date(String(value).replace(' ', 'T')) : new Date();
+            if(Number.isNaN(d.getTime())) return '';
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function dayLabel(key){
+            const today = dayKey();
+            const y = new Date();
+            y.setDate(y.getDate() - 1);
+            const yesterday = dayKey(y.toISOString());
+            if(key === today) return 'Bugün';
+            if(key === yesterday) return 'Dün';
+            return key.split('-').reverse().join('.');
+        }
+        
+        function toast(type, msg){
+            const $w = $('#toastWrap');
+            const ico = type === 'ok' ? 'fa-check' : (type === 'bad' ? 'fa-xmark' : 'fa-info');
+            const $t = $(`<div class="toast ${type}"><i class="fa-solid ${ico}"></i> <span>${esc(msg)}</span></div>`);
+            $w.append($t);
+            setTimeout(()=> $t.fadeOut(300, ()=> $t.remove()), 2500);
+        }
+
+        function openPlayerResults(){
+            $('#playerResults').addClass('open');
+            $('#playerSearch').attr('aria-expanded', 'true');
+        }
+
+        function closePlayerResults(){
+            $('#playerResults').removeClass('open').empty();
+            $('#playerSearch').attr('aria-expanded', 'false');
+            PLAYER_ACTIVE = -1;
+        }
+
+        function renderPlayerResults(users, state){
+            const $box = $('#playerResults');
+            PLAYER_RESULTS = users || [];
+            PLAYER_ACTIVE = -1;
+
+            if(state === 'loading'){
+                $box.html('<div class="player-result-note"><i class="fa-solid fa-spinner animate-spin mr-2"></i>{{ t('messages.searching') }}</div>');
+                openPlayerResults();
+                return;
+            }
+
+            if(state === 'hint'){
+                $box.html('<div class="player-result-note">{{ t('messages.search_min_chars') }}</div>');
+                openPlayerResults();
+                return;
+            }
+
+            if(!PLAYER_RESULTS.length){
+                $box.html('<div class="player-result-note">{{ t('messages.no_player_results') }}</div>');
+                openPlayerResults();
+                return;
+            }
+
+            const html = PLAYER_RESULTS.map((u, idx) => {
+                const name = esc(u.name || '{{ t('messages.chat_with')|e('js') }}');
+                const meta = esc(u.meta || '');
+                const initial = esc((u.name || '?').trim().charAt(0).toUpperCase() || '?');
+                return `<button type="button" class="player-result" role="option" data-index="${idx}" data-uid="${parseInt(u.uid, 10) || 0}" data-name="${name}" aria-selected="false">
+                    <span class="player-result-avatar">${initial}</span>
+                    <span class="min-w-0">
+                        <span class="player-result-name">${name}</span>
+                        ${meta ? `<span class="player-result-meta">${meta}</span>` : ''}
+                    </span>
+                    <i class="fa-solid fa-message player-result-action"></i>
+                </button>`;
+            }).join('');
+
+            $box.html(html);
+            openPlayerResults();
+        }
+
+        function setPlayerActive(index){
+            const $items = $('#playerResults .player-result');
+            if(!$items.length) return;
+            PLAYER_ACTIVE = Math.max(0, Math.min(index, $items.length - 1));
+            $items.removeClass('active').attr('aria-selected', 'false');
+            const $active = $items.eq(PLAYER_ACTIVE).addClass('active').attr('aria-selected', 'true');
+            const box = document.getElementById('playerResults');
+            const active = $active.get(0);
+            if(box && active) {
+                const b = box.getBoundingClientRect();
+                const a = active.getBoundingClientRect();
+                if(a.bottom > b.bottom) box.scrollTop += a.bottom - b.bottom;
+                if(a.top < b.top) box.scrollTop -= b.top - a.top;
+            }
+        }
+
+        function openPlayer(uid, name){
+            uid = parseInt(uid || 0, 10) || 0;
+            if(!uid || uid === MY_UID) return;
+            closePlayerResults();
+            $('#playerSearch').val('');
+            $('#dmUid').val(uid);
+            showChat(uid, name || '');
+        }
+
+        function searchPlayers(q){
+            if(PLAYER_XHR && PLAYER_XHR.abort) { try{ PLAYER_XHR.abort(); }catch(e){} }
+            renderPlayerResults([], 'loading');
+            PLAYER_XHR = $.post(BASE + '/api/messages/search-users', { q: q, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error) { renderPlayerResults([], 'empty'); return; }
+                    renderPlayerResults(r.users || [], 'results');
+                })
+                .fail(() => renderPlayerResults([], 'empty'));
+        }
+
+        function isMobile(){ return window.matchMedia && window.matchMedia('(max-width: 1100px)').matches; }
+
+        function setLive(state, label){
+            if(!ACTIVE_UID || !state || !label){ $('#livePill').hide(); $('#liveText').text(''); return; }
+            $('#livePill').show();
+            const $dot = $('#liveDot');
+            $dot.removeClass('ok busy bad').addClass(state === 'ok' ? 'ok' : (state === 'busy' ? 'busy' : 'bad'));
+            $('#liveText').text(label.toString().toUpperCase());
+        }
+
+        function stopPoll(){ if(POLL_T){ clearTimeout(POLL_T); POLL_T = null; } POLL_INFLIGHT = false; }
+        function schedulePoll(delay){
+            stopPoll();
+            POLL_T = setTimeout(pollOnce, Math.min(12000, Math.floor(Math.max(POLL_BOOST, delay || POLL_BASE) * POLL_BACKOFF)));
+        }
+
+        function scrollChat(force){
+            const el = document.getElementById('chat-box');
+            if(!el) return;
+            const nearBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 180;
+            if(force || nearBottom) {
+                el.scrollTop = el.scrollHeight;
+                $('#jumpNew').addClass('hidden');
+            } else {
+                $('#jumpNew').removeClass('hidden');
+            }
+        }
+
+        function canSend(){ return !!ACTIVE_UID && !SENDING && ($('#chat-text').val() || '').trim().length > 0; }
+        function updateSendBtn(){
+            const text = ($('#chat-text').val() || '');
+            const len = text.length;
+            $('#charCounter').text(len + '/240').toggleClass('warn', len > 220);
+            const ready = canSend() && len <= 240;
+            $('#chat-send')
+                .prop('disabled', !ready)
+                .toggleClass('is-ready', ready && !SENDING)
+                .html(SENDING ? '<i class="fa-solid fa-circle-notch animate-spin"></i>' : '<i class="fa-solid fa-paper-plane"></i>');
+        }
+
+        function setActiveRow(uid){
+            $('.js-open-chat').removeClass('active');
+            if(uid) $(`.js-open-chat[data-uid="${uid}"]`).addClass('active');
+        }
+
+        function openChatMode(){
+            if(isMobile()){ ROOT.addClass('chat-open'); $('#btn-back').removeClass('hidden'); }
+            else{ $('#btn-back').addClass('hidden'); }
+        }
+        function closeChatMode(){ ROOT.removeClass('chat-open'); $('#btn-back').addClass('hidden'); }
+
+        function setHeader(name, uid){
+            if(!uid){
+                $('#chatAvatar').html('<i class="fa-solid fa-comments"></i>');
+                $('#chatTitle').text('{{ t('messages.waiting') }}');
+                $('#chatSub').removeClass('hidden').text('{{ t('messages.target_not_selected') }}');
+                $('#btn-profile').addClass('hidden').attr('href', '#');
+                setLive(null); return;
+            }
+            const rawName = (name || '').toString().trim();
+            const displayName = rawName && !/^(Operator|Oyuncu)\s*#\d+$/i.test(rawName) ? rawName : '{{ t('messages.chat_with')|e('js') }}';
+            $('#chatAvatar').text((displayName.trim().charAt(0) || '?').toUpperCase());
+            $('#chatTitle').text(displayName);
+            $('#chatSub').addClass('hidden').text('');
+            $('#btn-profile').removeClass('hidden').attr('href', BASE + '/citizen/' + uid);
+            setLive(null);
+        }
+
+        function renderMessages(msgs, append){
+            let prevFrom = null;
+            let prevAt = null;
+            let html = '';
+            if(!append) LAST_RENDER_DATE = '';
+            msgs.forEach(m => {
+                const mid = parseInt(m.id || 0, 10);
+                if(append && mid && RENDERED_IDS.has(mid)) return;
+                if(mid) RENDERED_IDS.add(mid);
+                if(mid > SINCE_ID) SINCE_ID = mid;
+                const isMe = parseInt(m.from_uid || 0, 10) === MY_UID;
+                const currentDate = dayKey(m.created_at);
+                if(currentDate && currentDate !== LAST_RENDER_DATE) {
+                    html += `<div class="date-sep">${dayLabel(currentDate)}</div>`;
+                    LAST_RENDER_DATE = currentDate;
+                    prevFrom = null;
+                    prevAt = null;
+                }
+                const currentAt = Date.parse((m.created_at || '').replace(' ', 'T'));
+                const sameSender = prevFrom !== null && prevFrom === isMe;
+                const closeBlock = sameSender && prevAt && currentAt && Math.abs(currentAt - prevAt) < 10 * 60 * 1000;
+                const rowClass = `${isMe ? 'justify-end' : 'justify-start'} ${closeBlock ? 'stacked' : 'time-break'}`.trim();
+                const replyRef = mid ? getReplyStore()[String(mid)] : null;
+                const author = isMe ? 'Sen' : (ACTIVE_NAME || '{{ t('messages.chat_with')|e('js') }}');
+                const isDeleted = !!m.deleted_at;
+                const bodyText = isDeleted ? 'Mesaj silindi' : (m.body || '');
+                const edited = m.edited_at ? ' · duzenlendi' : '';
+                const actions = isDeleted ? '' : `
+                    <div class="msg-actions">
+                        <button class="msg-action copy-msg" type="button" title="Kopyala" aria-label="Kopyala" data-body="${esc(bodyText)}"><i class="fa-solid fa-copy"></i></button>
+                        <button class="msg-action reply-msg" type="button" title="Yanitla" aria-label="Yanitla" data-author="${esc(author)}" data-body="${esc(bodyText)}"><i class="fa-solid fa-reply"></i></button>
+                        <button class="msg-action pin-msg" type="button" title="Sabitle / kaldir" aria-label="Sabitle / kaldir" data-mid="${mid}"><i class="fa-solid fa-thumbtack"></i></button>
+                        ${isMe ? `<button class="msg-action edit-msg" type="button" title="Duzenle" aria-label="Duzenle" data-mid="${mid}" data-body="${esc(bodyText)}"><i class="fa-solid fa-pen"></i></button>` : ''}
+                        ${isMe ? `<button class="msg-action danger delete-msg" type="button" title="Sil" aria-label="Sil" data-mid="${mid}"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>`;
+                html += `
+                    <div class="msg-row ${rowClass}" data-mid="${mid}">
+                        <div class="bubble ${isMe ? 'me' : ''} ${isDeleted ? 'deleted' : ''}">
+                            ${actions}
+                            ${!isDeleted ? replyRefHtml(replyRef) : ''}
+                            <div class="b">${esc(bodyText)}</div>
+                            <div class="t">${isMe && !isDeleted ? '<i class="fa-solid fa-check-double"></i>' : ''} ${esc(m.created_at ? m.created_at.split(' ')[1].substring(0,5) : '')}${edited}</div>
+                        </div>
+                    </div>
+                `;
+                prevFrom = isMe;
+                prevAt = currentAt || prevAt;
+            });
+            if(append){
+                if(html) { $('#chat-box').append(html); scrollChat(false); }
+            }
+            else{ $('#chat-box').html(html || '<div class="empty"><i class="fa-solid fa-folder-open"></i><strong>{{ t('messages.no_records') }}</strong><span>{{ t('messages.no_records_hint') }}</span></div>'); scrollChat(true); }
+        }
+
+        function resetChatUI(){
+            stopPoll();
+            if(FETCH_XHR && FETCH_XHR.abort) { try{ FETCH_XHR.abort(); }catch(e){} }
+            ACTIVE_UID = 0; SINCE_ID = 0; POLL_BACKOFF = 1;
+            RENDERED_IDS.clear();
+            setActiveRow(0); setHeader('', 0);
+            setReplyTarget(null);
+            renderPins([]);
+            $('#chatSearchPanel').removeClass('open');
+            $('#chatSearchInput').val('');
+            $('#chatSearchResults').removeClass('open').empty();
+            $('#btn-clear-active, #chat-send, #btn-chat-search').prop('disabled', true);
+            $('#chat-text').val('').prop('disabled', true);
+            updateSendBtn();
+            $('#jumpNew').addClass('hidden');
+            $('#chat-box').html('<div class="empty"><i class="fa-solid fa-comments"></i><strong>{{ t('messages.network_ready') }}</strong><span>{{ t('messages.network_ready_hint') }}</span></div>');
+            try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+            closeChatMode();
+        }
+
+        function showChat(uid, name){
+            uid = parseInt(uid || 0, 10) || 0;
+            if(!uid) return;
+            if(uid === MY_UID) {
+                toast('info', '{{ t('messages.self_chat_blocked')|e('js') }}');
+                return;
+            }
+            if(ACTIVE_UID === uid) {
+                setActiveRow(ACTIVE_UID);
+                openChatMode();
+                $('#chat-text').prop('disabled', false).focus();
+                return;
+            }
+            resetChatUI(); // Clear old states safely
+            ACTIVE_UID = uid;
+
+            ACTIVE_NAME = name || '{{ t('messages.chat_with')|e('js') }}';
+            setActiveRow(ACTIVE_UID); setHeader(ACTIVE_NAME, ACTIVE_UID);
+            $('#btn-clear-active').prop('disabled', false);
+            $('#btn-chat-search').prop('disabled', false);
+            $('#chat-text').prop('disabled', false).focus();
+            try{ localStorage.setItem(STORAGE_KEY, String(ACTIVE_UID)); }catch(e){}
+            
+            openChatMode();
+            $('#chat-box').html('<div class="empty"><i class="fa-solid fa-spinner animate-spin"></i><strong>{{ t('messages.loading') }}</strong></div>');
+            setLive(null);
+
+            FETCH_XHR = $.post(BASE + '/api/messages/fetch', { other_uid: ACTIVE_UID, since_id: 0, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error) { $('#chat-box').html('<div class="empty text-red-500">{{ t('messages.denied') }}</div>'); setLive(null); return; }
+                    renderMessages(r.messages || [], false); renderPins(r.pins || []); setLive(null); schedulePoll(1100);
+                }).fail(() => { $('#chat-box').html('<div class="empty text-red-500">{{ t('messages.network_error') }}</div>'); setLive(null); });
+        }
+
+        function pollOnce(){
+            if(!ACTIVE_UID || !PAGE_VISIBLE || POLL_INFLIGHT) { schedulePoll(POLL_BASE); return; }
+            POLL_INFLIGHT = true;
+            $.post(BASE + '/api/messages/fetch', { other_uid: ACTIVE_UID, since_id: SINCE_ID, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error){ POLL_BACKOFF = Math.min(4, POLL_BACKOFF + 0.5); return; }
+                    POLL_BACKOFF = 1;
+                    renderPins(r.pins || []);
+                    if(r.messages && r.messages.length) { renderMessages(r.messages, true); refreshThreads(); }
+                }).fail(()=> POLL_BACKOFF = Math.min(4, POLL_BACKOFF + 0.5))
+                .always(() => { POLL_INFLIGHT = false; if(ACTIVE_UID) schedulePoll(POLL_BASE); });
+        }
+
+        function markSendFailed(pid, body){
+            const $row = $(`#chat-box [data-pid="${pid}"]`);
+            $row.find('.bubble').removeClass('pending').addClass('failed');
+            $row.find('.t').html(`<span>{{ t('messages.send_failed') }}</span><button class="retry-send" type="button" data-body="${esc(body)}">{{ t('messages.retry') }}</button>`);
+        }
+
+        function refreshThreads(){
+            $.post(BASE + '/api/messages/threads', { limit: 30, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error || !Array.isArray(r.threads)) return;
+                    const html = r.threads.map(t => {
+                        const uid = parseInt(t.other_uid || 0, 10);
+                        const name = esc(t.other_name || '{{ t('messages.chat_with')|e('js') }}');
+                        const last = esc(t.last_body || '');
+                        const at = esc(t.last_at ? String(t.last_at).split(' ')[1].substring(0,5) : '');
+                        const unread = parseInt(t.unread || 0, 10);
+                        return `<div class="thread js-open-chat ${uid === ACTIVE_UID ? 'active' : ''}" data-uid="${uid}" data-name="${name}" data-last="${last}">
+                            <div class="av">${name.charAt(0).toUpperCase()}${unread > 0 ? `<span class="badge">${unread}</span>` : ''}</div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="tname">${name}</div>
+                                    <div class="time">${at}</div>
+                                </div>
+                                <div class="tlast">${last}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    $('#threadList').html(html);
+                });
+        }
+
+        function sendChat(retryBody){
+            const hasRetryBody = typeof retryBody === 'string';
+            if(hasRetryBody ? (!ACTIVE_UID || SENDING) : !canSend()) return;
+            const body = (hasRetryBody ? retryBody : $('#chat-text').val()).trim();
+            if(!body) return;
+            const now = Date.now();
+            if(!hasRetryBody && LAST_SENT_BODY === body && (now - LAST_SENT_AT) < 60000) {
+                toast('info', 'Aynı mesajı art arda gönderemezsin.');
+                return;
+            }
+            if(!hasRetryBody && (now - LAST_SENT_AT) < 3000) {
+                toast('info', 'Biraz yavaş gönder.');
+                return;
+            }
+            const replyRef = REPLY_TARGET ? { name: REPLY_TARGET.name, text: REPLY_TARGET.text } : null;
+            SENDING = true; updateSendBtn();
+            
+            // Pending UI
+            const pid = 'p_' + Date.now();
+            $('#chat-box').append(`<div class="msg-row justify-end" data-pid="${pid}"><div class="bubble me pending">${replyRefHtml(replyRef)}<div class="b">${esc(body)}</div><div class="t"><i class="fa-solid fa-circle-notch animate-spin"></i></div></div></div>`);
+            if(!hasRetryBody) $('#chat-text').val('');
+            if(replyRef) setReplyTarget(null);
+            scrollChat(true);
+
+            $.post(BASE + '/api/messages/send', { to_uid: ACTIVE_UID, body: body, csrf_token: csrf() })
+                .done(r => {
+                    const $row = $(`#chat-box [data-pid="${pid}"]`);
+                    if(!r || r.error){ markSendFailed(pid, body); toast('bad', '{{ t('messages.send_failed') }}'); return; }
+                    const sentId = parseInt(r.id || 0, 10);
+                    if(sentId > SINCE_ID) SINCE_ID = sentId;
+                    if(sentId && RENDERED_IDS.has(sentId)) { $row.remove(); return; }
+                    if(sentId) {
+                        RENDERED_IDS.add(sentId);
+                        $row.attr('data-mid', sentId);
+                        setReplyStore(sentId, replyRef);
+                        $row.find('.bubble').prepend(`<div class="msg-actions">
+                            <button class="msg-action copy-msg" type="button" title="Kopyala" aria-label="Kopyala" data-body="${esc(body)}"><i class="fa-solid fa-copy"></i></button>
+                            <button class="msg-action reply-msg" type="button" title="Yanitla" aria-label="Yanitla" data-author="Sen" data-body="${esc(body)}"><i class="fa-solid fa-reply"></i></button>
+                            <button class="msg-action pin-msg" type="button" title="Sabitle / kaldir" aria-label="Sabitle / kaldir" data-mid="${sentId}"><i class="fa-solid fa-thumbtack"></i></button>
+                            <button class="msg-action edit-msg" type="button" title="Duzenle" aria-label="Duzenle" data-mid="${sentId}" data-body="${esc(body)}"><i class="fa-solid fa-pen"></i></button>
+                            <button class="msg-action danger delete-msg" type="button" title="Sil" aria-label="Sil" data-mid="${sentId}"><i class="fa-solid fa-trash"></i></button>
+                        </div>`);
+                    }
+                    LAST_SENT_BODY = body;
+                    LAST_SENT_AT = Date.now();
+                    $row.find('.bubble').removeClass('pending');
+                    $row.find('.t').html('<i class="fa-solid fa-check-double"></i> ' + nowIso());
+                    refreshThreads();
+                }).fail(() => { markSendFailed(pid, body); toast('bad', '{{ t('messages.send_failed') }}'); })
+                .always(() => { SENDING = false; updateSendBtn(); schedulePoll(900); });
+        }
+
+        // Event Listeners
+        $('#playerSearch').on('input', function(){
+            const q = $(this).val().trim();
+            clearTimeout(PLAYER_TIMER);
+            if(q.length === 0) { closePlayerResults(); return; }
+            if(q.length < 2) { renderPlayerResults([], 'hint'); return; }
+            PLAYER_TIMER = setTimeout(() => searchPlayers(q), 260);
+        }).on('keydown', function(e){
+            const $items = $('#playerResults .player-result');
+            if(e.key === 'Escape') {
+                closePlayerResults();
+                return;
+            }
+            if(!$items.length) return;
+            if(e.key === 'ArrowDown') {
+                e.preventDefault();
+                setPlayerActive(PLAYER_ACTIVE + 1);
+            } else if(e.key === 'ArrowUp') {
+                e.preventDefault();
+                setPlayerActive(PLAYER_ACTIVE <= 0 ? $items.length - 1 : PLAYER_ACTIVE - 1);
+            } else if(e.key === 'Enter') {
+                if(PLAYER_ACTIVE >= 0) {
+                    e.preventDefault();
+                    const $active = $items.eq(PLAYER_ACTIVE);
+                    openPlayer($active.data('uid'), $active.data('name'));
+                }
+            }
+        }).on('focus', function(){
+            const q = $(this).val().trim();
+            if(q.length >= 2 && $('#playerResults').children().length) openPlayerResults();
+        });
+
+        $(document).on('click', '.player-result', function(){
+            openPlayer($(this).data('uid'), $(this).data('name'));
+        });
+
+        $(document).on('mousedown', function(e){
+            if(!$(e.target).closest('.player-search-wrap').length) closePlayerResults();
+        });
+
+        $('#toggleIdSearch').on('click', function(){
+            const open = !$('#idSearchRow').hasClass('open');
+            $('#idSearchRow').toggleClass('open', open);
+            $(this).attr('aria-expanded', open ? 'true' : 'false');
+            if(open) $('#dmUid').focus();
+        });
+
+        $('#threadSearch').on('input', function(){
+            const q = $(this).val().toLowerCase().trim();
+            $('#threadList .js-open-chat').each(function(){
+                const ok = !q || String($(this).data('name')).toLowerCase().includes(q) || String($(this).data('uid')).includes(q);
+                $(this).toggleClass('hidden', !ok);
+            });
+        });
+
+        $('#dmForm').on('submit', function(e){
+            e.preventDefault();
+            const uid = parseInt($('#dmUid').val() || '0', 10);
+            if(uid === MY_UID) { toast('info', '{{ t('messages.self_chat_blocked')|e('js') }}'); return; }
+            if(uid > 0) window.location.assign(BASE + '/messages?open=' + uid);
+        });
+
+        $(document).on('click', '.js-open-chat', function(){ showChat($(this).data('uid'), $(this).data('name')); });
+        $('#chat-send').on('click', function(e){
+            e.preventDefault();
+            sendChat();
+        });
+        $('#chat-box').on('click', '.retry-send', function(){
+            const body = $(this).data('body') || '';
+            $(this).closest('.msg-row').remove();
+            sendChat(body);
+        });
+        $('#chat-box').on('click', '.copy-msg', function(){
+            const body = $(this).data('body') || '';
+            if(navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(body).then(() => toast('ok', 'Mesaj kopyalandı.'));
+            } else {
+                toast('info', body);
+            }
+        });
+        $('#chat-box').on('click', '.reply-msg', function(){
+            const body = String($(this).data('body') || '').replace(/\s+/g, ' ').trim();
+            setReplyTarget({
+                name: $(this).data('author') || '{{ t('messages.chat_with')|e('js') }}',
+                text: body
+            });
+            $('#chat-text').focus();
+            updateSendBtn();
+        });
+        $('#chat-box').on('click', '.edit-msg', function(){
+            const $btn = $(this);
+            const mid = parseInt($btn.data('mid') || 0, 10);
+            const current = String($btn.data('body') || '');
+            openEditDialog(mid, current);
+            return;
+            const next = null;
+            if(next === null) return;
+            const body = next.trim();
+            if(!mid || !body || body.length > 240) {
+                toast('info', 'Mesaj 1-240 karakter olmali.');
+                return;
+            }
+            $.post(BASE + '/api/messages/edit', { message_id: mid, body: body, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error){ toast('bad', (r && r.message) || 'Mesaj duzenlenemedi.'); return; }
+                    const $row = $(`#chat-box .msg-row[data-mid="${mid}"]`);
+                    $row.find('.b').text(r.body || body);
+                    $row.find('.copy-msg, .reply-msg, .edit-msg').attr('data-body', r.body || body).data('body', r.body || body);
+                    if(!$row.find('.t').text().includes('duzenlendi')) {
+                        $row.find('.t').append(' · duzenlendi');
+                    }
+                    toast('ok', 'Mesaj duzenlendi.');
+                    refreshThreads();
+                })
+                .fail(() => toast('bad', 'Mesaj duzenlenemedi.'));
+        });
+        $('#chat-box').on('click', '.delete-msg', function(){
+            const mid = parseInt($(this).data('mid') || 0, 10);
+            openDeleteDialog(mid);
+            return;
+            if(!mid) return;
+            $.post(BASE + '/api/messages/delete', { message_id: mid, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error){ toast('bad', (r && r.message) || 'Mesaj silinemedi.'); return; }
+                    const $row = $(`#chat-box .msg-row[data-mid="${mid}"]`);
+                    $row.find('.bubble').addClass('deleted');
+                    $row.find('.msg-actions, .reply-ref').remove();
+                    $row.find('.b').text(r.body || 'Mesaj silindi');
+                    renderPins([]);
+                    if(ACTIVE_UID) {
+                        $.post(BASE + '/api/messages/fetch', { other_uid: ACTIVE_UID, since_id: 0, csrf_token: csrf() }).done(res => renderPins((res && res.pins) || []));
+                    }
+                    toast('ok', 'Mesaj silindi.');
+                    refreshThreads();
+                })
+                .fail(() => toast('bad', 'Mesaj silinemedi.'));
+        });
+        $('#chat-box').on('click', '.pin-msg', function(){
+            const mid = parseInt($(this).data('mid') || 0, 10);
+            if(!mid) return;
+            $.post(BASE + '/api/messages/pin-toggle', { message_id: mid, csrf_token: csrf() })
+                .done(r => {
+                    if(!r || r.error){ toast('bad', (r && r.message) || 'Mesaj sabitlenemedi.'); return; }
+                    renderPins(r.pins || []);
+                    toast('ok', r.pinned ? 'Mesaj sabitlendi.' : 'Sabit mesaj kaldirildi.');
+                })
+                .fail(() => toast('bad', 'Mesaj sabitlenemedi.'));
+        });
+        $('#pinStrip').on('click', '.pin-chip', function(){ focusMessage($(this).data('mid')); });
+        $('#btn-chat-search').on('click', function(){
+            if(!ACTIVE_UID) return;
+            $('#chatSearchPanel').toggleClass('open');
+            if($('#chatSearchPanel').hasClass('open')) $('#chatSearchInput').focus();
+        });
+        $('#chatSearchClose').on('click', function(){
+            $('#chatSearchPanel').removeClass('open');
+            $('#chatSearchInput').val('');
+            $('#chatSearchResults').removeClass('open').empty();
+        });
+        $('#chatSearchInput').on('input', function(){
+            const q = $(this).val().trim();
+            clearTimeout(CHAT_SEARCH_TIMER);
+            if(q.length < 2){
+                $('#chatSearchResults').removeClass('open').empty();
+                return;
+            }
+            renderChatSearchResults([], 'loading');
+            CHAT_SEARCH_TIMER = setTimeout(() => {
+                $.post(BASE + '/api/messages/search', { other_uid: ACTIVE_UID, q: q, csrf_token: csrf() })
+                    .done(r => renderChatSearchResults((r && r.results) || [], 'results'))
+                    .fail(() => renderChatSearchResults([], 'results'));
+            }, 220);
+        }).on('keydown', function(e){
+            if(e.key === 'Escape') $('#chatSearchClose').trigger('click');
+        });
+        $('#chatSearchResults').on('click', '.search-result', function(){ focusMessage($(this).data('mid')); });
+        $('#dmDialogText').on('input', function(){
+            const len = ($(this).val() || '').length;
+            $('#dmDialogCounter').text(len + '/240').toggleClass('warn', len > 220);
+        });
+        $('#dmDialogCancel, #dmDialogClose').on('click', closeDmDialog);
+        $('#dmDialog').on('mousedown', function(e){
+            if(e.target === this) closeDmDialog();
+        });
+        $('#dmDialogConfirm').on('click', function(){
+            if(!DIALOG_STATE) return;
+            if(DIALOG_STATE.type === 'edit') {
+                submitEdit(DIALOG_STATE.mid, ($('#dmDialogText').val() || '').trim());
+            } else if(DIALOG_STATE.type === 'delete') {
+                submitDelete(DIALOG_STATE.mid);
+            }
+        });
+        $(document).on('keydown', function(e){
+            if(e.key === 'Escape' && $('#dmDialog').hasClass('open')) closeDmDialog();
+        });
+        $('#replyCancel').on('click', function(){ setReplyTarget(null); $('#chat-text').focus(); });
+        $('#chat-box').on('scroll', function(){
+            const el = this;
+            if((el.scrollHeight - el.scrollTop - el.clientHeight) < 120) $('#jumpNew').addClass('hidden');
+        });
+        $('#jumpNew').on('click', function(){ scrollChat(true); });
+        $('#chat-text').on('input', updateSendBtn).on('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } });
+        
+        // Quick Replies
+        $('.qr-btn').on('click', function(){
+            const txt = $(this).text().trim();
+            $('#chat-text').val(txt); updateSendBtn(); $('#chat-text').focus();
+        });
+
+        $('#btn-clear-active').on('click', resetChatUI);
+        $('#btn-back').on('click', closeChatMode);
+        $('#btn-refresh').on('click', () => location.reload());
+
+        $('#btn-archive').on('click', function(){
+            if(!ACTIVE_UID) { toast('info', '{{ t('messages.no_selection') }}'); return; }
+            $(this).prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i>');
+            $.post(BASE + '/api/messages/archive-bulk', { other_uids: [ACTIVE_UID], csrf_token: csrf() })
+                .always(() => location.reload());
+        });
+
+        document.addEventListener('visibilitychange', () => { PAGE_VISIBLE = !document.hidden; if(PAGE_VISIBLE && ACTIVE_UID) schedulePoll(900); });
+
+        // Init
+        (function init(){
+            const open = parseInt(new URLSearchParams(window.location.search).get('open') || '0', 10);
+            if(open > 0) { showChat(open, ''); return; }
+            let last = 0; try{ last = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0; }catch(e){}
+            if(last > 0 && $(`.js-open-chat[data-uid="${last}"]`).length) showChat(last, $(`.js-open-chat[data-uid="${last}"]`).data('name'));
+            else resetChatUI();
+            window.addEventListener('resize', () => { if(!isMobile()){ ROOT.removeClass('chat-open'); $('#btn-back').addClass('hidden'); }else if(ACTIVE_UID) openChatMode(); });
+        })();
+    });
+    </script>
+</div>
+{% endblock %}
+
+
+

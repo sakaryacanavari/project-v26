@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('tr') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token|default('') }}">
+    <base href="{{ base_url() }}/">
+    <title>S-REPUBLIK | V7.0 OMNI-COMMAND</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    {% include 'common/omni-themes.html.twig' %}
+
+    <style>
+        * { font-style: normal !important; box-sizing: border-box; outline: none; }
+
+        body {
+            background-color: var(--bg-deep, #020617);
+            background-image: 
+                radial-gradient(ellipse at 10% 20%, rgba(0, 242, 254, 0.15), transparent 40%),
+                radial-gradient(ellipse at 90% 80%, rgba(251, 194, 235, 0.15), transparent 40%),
+                radial-gradient(ellipse at 50% 50%, rgba(10, 15, 20, 0.9), var(--bg-deep, #020617));
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            padding-bottom: 8px;
+            transition: background-color 0.4s ease;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Cpath d="M30 30h30v30H30zM0 0h30v30H0z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+            z-index: -1;
+        }
+
+        .glass-panel {
+            background: rgba(10, 15, 20, 0.35);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 32px 64px -12px rgba(0,0,0,0.8);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            transition: all 0.4s ease;
+        }
+
+        .main-container { width: 100%; max-width: 1550px; margin: 0 auto; display: flex; padding: 24px 24px 8px; gap: 24px; }
+        @media (min-width: 1920px) { .main-container { max-width: 1840px; } }
+        .hud-stack.gx-hud-compact { width: 17rem; gap: 10px; }
+        .hud-stack.gx-hud-compact .hud-panel { padding: 11px !important; border-radius: 14px; }
+        .hud-stack.gx-hud-compact .avatar-box { width: 64px; height: 64px; border-radius: 18px; }
+        .hud-stack.gx-hud-compact .avatar-box img { border-radius: 16px; }
+        .hud-stack.gx-hud-compact .hud-stat-card { padding: 8px !important; min-width: 0; }
+        .hud-stack.gx-hud-compact .hud-kicker { font-size: 8px; }
+        .hud-stack.gx-hud-compact .hud-value { font-size: 13px; }
+        .hud-stack.gx-hud-compact .hud-row { gap: 8px; }
+        .hud-stack.gx-hud-compact .hud-chip { padding: 5px 8px; font-size: 9px; }
+        .hud-stack.gx-hud-compact .hud-icon { width: 28px; height: 28px; flex: 0 0 28px; }
+        .hud-stack.gx-hud-compact .hud-stat-card span,
+        .hud-stack.gx-hud-compact .hud-row > span,
+        .hud-stack.gx-hud-compact .hud-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .hud-stack.gx-hud-compact .hud-stat-card .hud-row > span:first-child { flex: 1 1 auto; }
+
+        .nav-item { position: relative; height: 100%; display: flex; align-items: center; }
+        .top-nav-link {
+            padding: 0 18px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 100%;
+            cursor: pointer;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--brand-primary);
+            transform: scaleX(0);
+            transition: 0.3s ease;
+            box-shadow: 0 -2px 10px var(--brand-glow);
+        }
+        .nav-item:hover::after { transform: scaleX(1); }
+        .nav-item:hover .top-nav-link {
+            color: #fff;
+            background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+        }
+
+        .dropdown-v6 {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 240px;
+            background: rgba(10, 15, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent);
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            padding: 12px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .nav-item:hover .dropdown-v6 { opacity: 1; visibility: visible; transform: translateY(0); }
+
+        .drop-link {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .drop-link:hover {
+            background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 15%, transparent) 0%, transparent 100%);
+            color: #fff;
+            padding-left: 22px;
+            border-left: 2px solid var(--brand-primary);
+        }
+
+        .avatar-box {
+            width: 96px;
+            height: 96px;
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 4px;
+            background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.3) 100%);
+            box-shadow: inset 0 2px 15px rgba(255,255,255,0.05), 0 15px 30px -5px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .avatar-box:hover {
+            transform: translateY(-4px);
+            box-shadow: inset 0 2px 15px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.6), 0 0 20px color-mix(in srgb, var(--brand-primary) 30%, transparent);
+            border-color: rgba(255,255,255,0.3);
+        }
+        .avatar-box img { width: 100%; height: 100%; border-radius: 22px; object-fit: cover; }
+        .avatar-box + .text-center > .text-lg {
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .glass-inset {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.4) 100%);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            box-shadow: inset 0 2px 20px rgba(0,0,0,0.5), 0 4px 15px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .glass-inset:hover {
+            border-color: rgba(255,255,255,0.2);
+            border-top-color: rgba(255,255,255,0.3);
+            background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.5) 100%);
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.05), 0 8px 25px rgba(0,0,0,0.5);
+            transform: translateY(-2px);
+        }
+
+        .bar-container { height: 6px; border-radius: 99px; background: rgba(0,0,0,0.5); overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        .bar-xp { background: linear-gradient(90deg, #3b82f6, #93c5fd); height: 100%; box-shadow: 0 0 10px rgba(59,130,246,0.8); }
+        .bar-energy { background: linear-gradient(90deg, #f59e0b, #fde68a); height: 100%; box-shadow: 0 0 10px rgba(245,158,11,0.8); }
+        .status-dot { width: 8px; height: 8px; border-radius: 99px; background: #10b981; box-shadow: 0 0 12px rgba(16,185,129,0.9); border: 1px solid rgba(255,255,255,0.3); }
+        .hud-stack {
+            position: sticky;
+            top: 96px;
+            max-height: calc(100vh - 140px);
+            gap: 10px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 3px;
+            padding-bottom: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: color-mix(in srgb, var(--brand-primary) 45%, transparent) transparent;
+        }
+        .hud-stack::-webkit-scrollbar { width: 5px; }
+        .hud-stack::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--brand-primary) 35%, transparent);
+        }
+        .hud-panel {
+            position: relative;
+            flex: 0 0 auto;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--brand-primary) 12%, transparent), transparent 42%),
+                linear-gradient(180deg, rgba(255,255,255,0.052), rgba(0,0,0,0.26)),
+                rgba(10, 15, 24, 0.48);
+            border-color: rgba(255,255,255,0.085);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 18px 42px -24px rgba(0,0,0,0.9);
+        }
+        .hud-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            height: 1px;
+            background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 65%, transparent), transparent 72%);
+            opacity: 0.75;
+        }
+        .hud-panel > * { position: relative; z-index: 1; }
+        .hud-kicker { font-size: 9px; font-weight: 950; letter-spacing: .16em; text-transform: uppercase; color: #64748b; }
+        .hud-value { font-family: 'JetBrains Mono', monospace; font-weight: 950; color: #fff; }
+        .hud-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-width: 0;
+        }
+        .hud-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 24px;
+            padding: 0 9px;
+            border-radius: 999px;
+            background: rgba(0,0,0,.28);
+            border: 1px solid rgba(255,255,255,.08);
+            color: #cbd5e1;
+            font-size: 9px;
+            font-weight: 950;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .hud-stat-card {
+            min-width: 0;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.065);
+            background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.2));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .hud-avatar {
+            width: 74px;
+            height: 74px;
+            border-radius: 20px;
+        }
+        .hud-progress {
+            height: 6px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(0,0,0,.58);
+            border: 1px solid rgba(255,255,255,.08);
+            box-shadow: inset 0 1px 4px rgba(0,0,0,.55);
+        }
+        .hud-progress > span {
+            display: block;
+            height: 100%;
+            width: var(--hud-progress, 0%);
+            border-radius: inherit;
+            background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 60%, white), var(--brand-primary));
+            box-shadow: 0 0 12px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+        }
+        .hud-progress.energy > span { background: linear-gradient(90deg, #f59e0b, #fde68a); box-shadow: 0 0 12px rgba(245,158,11,.45); }
+        .hud-progress.daily > span { background: linear-gradient(90deg, #22c55e, #a7f3d0); box-shadow: 0 0 12px rgba(34,197,94,.35); }
+        .hud-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.3);
+            border: 1px solid rgba(255,255,255,.08);
+            color: var(--brand-primary);
+            flex: 0 0 auto;
+        }
+
+        .ticker-v6 {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: none;
+        }
+        @keyframes ticker-scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .ticker-content { white-space: nowrap; animation: ticker-scroll 40s linear infinite; display: flex; gap: 60px; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+
+        .omni-ico {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(15, 23, 42, .72), rgba(2, 6, 23, .72));
+            border: 1px solid rgba(148, 163, 184, .14);
+            color: #e5e7eb;
+            transition: .18s ease;
+            user-select: none;
+        }
+        .omni-ico:hover, .omni-ico:focus-visible {
+            transform: translateY(-1px);
+            border-color: rgba(34, 211, 238, .34);
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(8, 145, 178, .18);
+            outline: none;
+        }
+        .omni-logout {
+            color: #fca5a5;
+            border-color: rgba(248, 113, 113, .24);
+            background: linear-gradient(180deg, rgba(69, 10, 10, .24), rgba(15, 23, 42, .76));
+        }
+        .omni-logout:hover, .omni-logout:focus-visible {
+            border-color: rgba(248, 113, 113, .48);
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(220, 38, 38, .16);
+        }
+        .omni-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #ffdd7a, #d68a00);
+            color: #2b1600;
+            font-weight: 900;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            border: 1px solid rgba(0,0,0,.35);
+            box-shadow: 0 0 14px rgba(255,221,122,.22);
+        }
+        .omni-drop {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 16px);
+            width: min(420px, calc(100vw - 24px));
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(10, 15, 28, 0.98) 0%, rgba(3, 7, 18, 0.99) 100%);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(148,163,184,0.14);
+            display: none;
+            z-index: 10000;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 26px 58px -18px rgba(0,0,0,0.85);
+            transform-origin: top right;
+            animation: omniPop .2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        @keyframes omniPop { from { opacity:0; transform: translateY(10px) scale(.95); } to { opacity:1; transform: translateY(0) scale(1); } }
+
+        .omni-top {
+            padding: 14px 14px 12px;
+            background: rgba(15, 23, 42, .72);
+            border-bottom: 1px solid rgba(148,163,184,.12);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .omni-top .ttl {
+            font-weight: 950;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            font-size: 10px;
+            color: #dbeafe;
+            white-space: nowrap;
+        }
+        .omni-top .right { display: flex; align-items: center; gap: 8px; }
+
+        .omni-mini {
+            height: 32px;
+            min-width: 32px;
+            padding: 0 10px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2,6,23,.46);
+            border: 1px solid rgba(148,163,184,.14);
+            color: #cbd5e1;
+            font-weight: 950;
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            transition: .16s ease;
+            user-select: none;
+        }
+        .omni-mini:hover, .omni-mini:focus-visible {
+            color: #fff;
+            border-color: color-mix(in srgb, var(--brand-primary) 34%, rgba(255,255,255,.10));
+            background: color-mix(in srgb, var(--brand-primary) 10%, rgba(2,6,23,.64));
+            outline: none;
+        }
+
+        .omni-tabs {
+            padding: 10px 14px;
+            display: flex;
+            gap: 8px;
+            background: rgba(2,6,23,.5);
+            border-bottom: 1px solid rgba(148,163,184,.10);
+        }
+        .omni-tab {
+            flex: 1;
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid rgba(148,163,184,.08);
+            background: rgba(15,23,42,.34);
+            color: #7f8ea3;
+            font-weight: 950;
+            font-size: 10px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .omni-tab:hover, .omni-tab:focus-visible {
+            color: #e5e7eb;
+            border-color: rgba(148,163,184,.20);
+            background: rgba(15,23,42,.62);
+            outline: none;
+        }
+        .omni-tab.active {
+            color: #fff;
+            border-color: color-mix(in srgb, var(--brand-primary) 36%, rgba(255,255,255,.08));
+            background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 16%, rgba(15,23,42,.85)), rgba(2,6,23,.78));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 8px 18px color-mix(in srgb, var(--brand-primary) 10%, transparent);
+        }
+
+        .omni-pane { display: none; }
+        .omni-pane.active { display: block; }
+
+        .omni-list { max-height: min(360px, calc(100vh - 230px)); overflow: auto; padding: 8px; }
+        .omni-list::-webkit-scrollbar { width: 10px; }
+        .omni-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,.10);
+            border: 2px solid rgba(0,0,0,.25);
+            border-radius: 999px;
+        }
+
+        .omni-item {
+            position: relative;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 11px 12px;
+            border: 1px solid rgba(148,163,184,.08);
+            border-radius: 13px;
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: .14s ease;
+            background: rgba(15,23,42,.28);
+            margin-bottom: 7px;
+            min-width: 0;
+        }
+        .omni-item:last-child { margin-bottom: 0; }
+        .omni-item:hover, .omni-item:focus-visible {
+            background: color-mix(in srgb, var(--brand-primary) 8%, rgba(15,23,42,.46));
+            border-color: color-mix(in srgb, var(--brand-primary) 18%, rgba(148,163,184,.12));
+            transform: translateY(-1px);
+            outline: none;
+        }
+        .omni-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            bottom: 12px;
+            width: 3px;
+            border-radius: 0 999px 999px 0;
+            background: var(--brand-primary);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 32%, transparent);
+        }
+
+        .omni-i {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: rgba(2,6,23,.48);
+            border: 1px solid rgba(148,163,184,.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cbd5e1;
+            flex: 0 0 auto;
+        }
+        .omni-i.unread {
+            color: var(--brand-primary);
+            border-color: color-mix(in srgb, var(--brand-primary) 34%, transparent);
+            box-shadow: 0 0 12px color-mix(in srgb, var(--brand-primary) 14%, transparent);
+        }
+
+        .omni-c { min-width: 0; flex: 1 1 auto; }
+        .omni-title {
+            font-weight: 950;
+            font-size: 12.5px;
+            color: #f8fafc;
+            line-height: 1.18rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+        .omni-sub {
+            margin-top: 4px;
+            font-weight: 650;
+            font-size: 11px;
+            color: #a8b3c3;
+            line-height: 1.25rem;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+            overflow-wrap: anywhere;
+        }
+        .omni-meta {
+            margin-top: 6px;
+            font-weight: 900;
+            font-size: 10px;
+            letter-spacing: .10em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        .omni-pill {
+            margin-left: auto;
+            font-weight: 950;
+            font-size: 9px;
+            border-radius: 999px;
+            padding: 2px 7px;
+            white-space: nowrap;
+            background: color-mix(in srgb, var(--brand-primary) 16%, rgba(2,6,23,.7));
+            color: #dffdf2;
+            border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent);
+        }
+        .omni-empty {
+            justify-content: center;
+            text-align: center;
+            padding: 18px 14px;
+        }
+        .omni-empty .omni-title { justify-content: center; }
+        .omni-empty .omni-sub { -webkit-line-clamp: 1; }
+        .omni-refreshing i {
+            animation: spin .65s linear infinite;
+        }
+
+        .omni-foot {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 10px 14px;
+            background: rgba(2,6,23,.62);
+            border-top: 1px solid rgba(148,163,184,.10);
+        }
+
+        .omni-skel { padding: 8px; }
+        .sk {
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.10), rgba(255,255,255,.06));
+            background-size: 240% 100%;
+            animation: sk 1.6s infinite;
+            margin: 10px 4px;
+            margin-bottom: 10px;
+        }
+        .sk.w70 { width:70%; }
+        .sk.w55 { width:55%; }
+        .sk.w85 { width:85%; }
+        @keyframes sk { 0% { background-position: 0% 0; } 100% { background-position: 220% 0; } }
+        @media (max-width: 520px) {
+            .omni-drop {
+                position: fixed;
+                left: 12px;
+                right: 12px;
+                top: 68px;
+                width: auto;
+                transform-origin: top right;
+            }
+            .omni-top, .omni-tabs, .omni-foot { padding-left: 12px; padding-right: 12px; }
+            .omni-list { max-height: calc(100vh - 220px); }
+            .omni-ico { width: 40px; height: 40px; }
+        }
+
+        .animate-spin-slow {
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<header class="border-b border-white/5 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-[9999] h-16 shadow-2xl">
+    <div class="max-w-[1840px] mx-auto px-8 flex justify-between items-center h-full w-full">
+        <div class="flex items-center h-full">
+            <a href="{{ path_for('home') }}" class="brand-v17 group text-2xl font-black text-white tracking-tighter mr-10 flex items-center gap-3 transition-transform hover:scale-[1.02]">
+                <div class="w-11 h-11 relative flex items-center justify-center shrink-0 perspective-1000">
+                    <svg width="100%" height="100%" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="transition-transform duration-[1.5s] ease-in-out">
+                        <!-- Outer Glowing Elements -->
+                        <circle cx="32" cy="32" r="28" stroke="color-mix(in srgb, var(--brand-primary) 60%, transparent)" stroke-width="1.5" stroke-dasharray="14 4 30 4" class="opacity-60 transition-colors group-hover:stroke-[color:var(--brand-primary)] animate-[spin_20s_linear_infinite]" />
+                        <circle cx="32" cy="32" r="24" stroke="color-mix(in srgb, var(--brand-primary) 20%, transparent)" stroke-width="1" />
+                        
+                        <!-- Inner Sharp 'V' -->
+                        <path d="M 12 18 L 32 50 L 52 18 L 44 18 L 32 38 L 20 18 Z" fill="var(--brand-primary)" class="drop-shadow-[0_0_8px_color-mix(in_srgb,var(--brand-primary)_80%,transparent)] group-hover:drop-shadow-[0_0_15px_var(--brand-primary)] transition-all"/>
+                        <path d="M 22 18 L 32 36 L 42 18 L 34 18 L 32 24 L 30 18 Z" fill="url(#brand-grad-v)"/>
+                        
+                        <defs>
+                            <linearGradient id="brand-grad-v" x1="32" y1="18" x2="32" y2="36" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#ffffff"/>
+                                <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <!-- HUD dots -->
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_1px,transparent_1px)] bg-[length:4px_4px] opacity-10 mix-blend-overlay rounded-full"></div>
+                </div>
+                <div class="flex flex-col">
+                    <span class="leading-none text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-slate-300 transition-colors">Project</span>
+                    <span class="leading-none text-[22px] font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 group-hover:from-[color:var(--brand-primary)] group-hover:to-white transition-all drop-shadow-sm">V26</span>
+                </div>
+            </a>
+
+            <nav class="hidden lg:flex items-center h-full">
+
+                <div class="nav-item">
+                    <a href="{{ path_for('home') }}" class="top-nav-link">
+                        <i class="fa-solid fa-desktop opacity-50"></i>
+                        {{ t('base.nav.terminal') }}
+                    </a>
+                </div>
+
+                <div class="nav-item group">
+                    <span class="top-nav-link">
+                        <i class="fa-solid fa-map-location-dot opacity-50"></i>
+                        {{ t('base.nav.locations') }}
+                        <i class="fa-solid fa-chevron-down text-[8px] ml-1 opacity-50"></i>
+                    </span>
+                    <div class="dropdown-v6">
+                        <a href="{{ path_for('myCompanies') }}" class="drop-link">
+                            <i class="fa-solid fa-industry w-4 text-indigo-400"></i> {{ t('base.dropdown.companies') }}
+                        </a>
+                        <a href="{{ path_for('gyms') }}" class="drop-link">
+                            <i class="fa-solid fa-shield-halved w-4 text-indigo-400"></i> {{ t('base.dropdown.training') }}
+                        </a>
+                        <a href="{{ path_for('storage') }}" class="drop-link">
+                            <i class="fa-solid fa-box-archive w-4 text-indigo-400"></i> {{ t('base.dropdown.storage') }}
+                        </a>
+
+                        <div class="border-t border-indigo-500/20 my-1 mx-2"></div>
+
+                        <a href="{{ path_for('settings') }}" class="drop-link">
+                            <i class="fa-solid fa-sliders w-4 text-emerald-400"></i> {{ t('base.dropdown.settings') }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-item group">
+                    <span class="top-nav-link">
+                        <i class="fa-solid fa-store opacity-50"></i>
+                        {{ t('base.nav.market') }}
+                        <i class="fa-solid fa-chevron-down text-[8px] ml-1 opacity-50"></i>
+                    </span>
+                    <div class="dropdown-v6">
+                        <a href="{{ path_for('marketplace') }}" class="drop-link">
+                            <i class="fa-solid fa-cart-shopping w-4 text-indigo-400"></i> {{ t('base.dropdown.marketplace') }}
+                        </a>
+                        <a href="{{ path_for('workOffers') }}" class="drop-link">
+                            <i class="fa-solid fa-briefcase w-4 text-indigo-400"></i> {{ t('base.dropdown.work') }}
+                        </a>
+                        
+                        <a href="{{ path_for('blackmarket')|default('/blackmarket') }}" class="drop-link hover:!text-amber-400 hover:bg-amber-900/10 transition-colors">
+                            <i class="fa-solid fa-user-ninja w-4 text-amber-500"></i> {{ t('base.dropdown.blackmarket') }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-item group">
+                    <span class="top-nav-link">
+                        <i class="fa-solid fa-users-viewfinder opacity-50"></i>
+                        {{ t('base.nav.community') }}
+                        <i class="fa-solid fa-chevron-down text-[8px] ml-1 opacity-50"></i>
+                    </span>
+
+                    <div class="dropdown-v6">
+                        <a href="{{ path_for('newspaperList') }}" class="drop-link">
+                            <i class="fa-solid fa-newspaper w-4 text-fuchsia-400"></i> {{ t('base.dropdown.media') }}
+                        </a>
+                        <a href="{{ path_for('createNewspaper') }}" class="drop-link">
+                            <i class="fa-solid fa-pen-nib w-4 text-fuchsia-400"></i> {{ t('base.dropdown.newspaper') }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-item group">
+                    <span class="top-nav-link">
+                        <i class="fa-solid fa-landmark-dome opacity-50"></i>
+                        {{ t('base.nav.country') }}
+                        <i class="fa-solid fa-chevron-down text-[8px] ml-1 opacity-50"></i>
+                    </span>
+
+                    <div class="dropdown-v6">
+                        <a href="{{ path_for('worldMap') }}" class="drop-link">
+                            <i class="fa-solid fa-earth-americas w-4 text-emerald-400"></i> {{ t('base.dropdown.worldmap') }}
+                        </a>
+                        <a href="{{ path_for('wars') }}" class="drop-link">
+                            <i class="fa-solid fa-crosshairs w-4 text-indigo-400"></i> {{ t('base.dropdown.wars') }}
+                        </a>
+                        <a href="{{ path_for('congressHome') }}" class="drop-link">
+                            <i class="fa-solid fa-building-columns w-4 text-indigo-400"></i> {{ t('base.dropdown.congress') }}
+                        </a>
+                        <a href="{{ path_for('electionsHome') }}" class="drop-link">
+                            <i class="fa-solid fa-check-to-slot w-4 text-indigo-400"></i> {{ t('base.dropdown.elections') }}
+                        </a>
+                        <a href="{{ path_for('partyList') }}" class="drop-link">
+                            <i class="fa-solid fa-users w-4 text-indigo-400"></i> {{ t('base.dropdown.parties') }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ path_for('box') }}" class="top-nav-link text-cyan-300 hover:text-white">
+                        <i class="fa-solid fa-box-open opacity-50"></i>
+                        {{ t('base.nav.cashbox') }}
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ path_for('bugReport') }}" class="top-nav-link text-cyan-400 hover:text-cyan-300">
+                        <i class="fa-solid fa-satellite-dish opacity-50"></i>
+                        {{ t('base.nav.bug') }}
+                    </a>
+                </div>
+
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div id="omni-comms" class="relative">
+                <a class="omni-ico" href="{{ path_for('messages') }}" title="DM" aria-label="DM">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span id="badge-dm" class="omni-badge"></span>
+                </a>
+
+                <button id="btn-bell" class="omni-ico ml-2" type="button" title="{{ t('base.dropdown.notifications') }}" aria-label="{{ t('base.dropdown.notifications') }}" aria-expanded="false" aria-controls="omni-drop">
+                    <i class="fa-solid fa-bell"></i>
+                    <span id="badge-notify" class="omni-badge"></span>
+                </button>
+
+                <a class="omni-ico omni-logout ml-2" href="{{ path_for('logout') }}" title="{{ t('base.sidebar.disconnect') }}" aria-label="{{ t('base.sidebar.disconnect') }}">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+
+                <div id="omni-drop" class="omni-drop" role="dialog" aria-label="OMNI CENTER">
+                    <div class="omni-top">
+                        <div class="ttl">OMNI CENTER</div>
+                        <div class="right">
+                            <a class="omni-mini" href="{{ path_for('notifications') }}">{{ t('base.dropdown.notifications') }}</a>
+                            <a class="omni-mini" href="{{ path_for('messages') }}">DM</a>
+                        </div>
+                    </div>
+
+                    <div class="omni-tabs">
+                        <button type="button" class="omni-tab active" data-tab="notifs" aria-pressed="true">
+                            <i class="fa-solid fa-bell"></i> {{ t('base.dropdown.notifications') }}
+                        </button>
+                        <button type="button" class="omni-tab" data-tab="dms" aria-pressed="false">
+                            <i class="fa-solid fa-envelope"></i> DM
+                        </button>
+                    </div>
+
+                    <div class="omni-pane active" data-pane="notifs">
+                        <div id="drop-notifs" class="omni-list">
+                            <div class="omni-skel">
+                                <div class="sk w70"></div>
+                                <div class="sk w85"></div>
+                                <div class="sk w55"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="omni-pane" data-pane="dms">
+                        <div id="drop-dms" class="omni-list">
+                            <div class="omni-skel">
+                                <div class="sk w70"></div>
+                                <div class="sk w85"></div>
+                                <div class="sk w55"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="omni-foot">
+                        <button id="omni-refresh" type="button" class="omni-mini" title="Bildirimleri yenile" aria-label="Bildirimleri yenile">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                        <button id="omni-close" type="button" class="omni-mini" title="Kapat" aria-label="Kapat">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="header-clock" class="text-xs font-black text-slate-500 mono-font tracking-widest">{{ "now"|date("H:i:s") }}</div>
+        </div>
+    </div>
+</header>
+
+<div class="flex-1 flex main-container p-8 gap-8 w-full">
+    {% if not noDualColumn %}
+    <aside class="w-72 xl:w-80 hidden lg:flex flex-col shrink-0 hud-stack gx-hud-{{ gameExperienceSettings.left_hud|default('detailed') }}">
+
+        {% set hud = sidebarHud|default({}) %}
+        {% set hudUser = hud.user|default({}) %}
+        {% set hudDaily = hud.daily|default({}) %}
+        {% set hudJob = hud.job|default({}) %}
+        {% set hudLocation = hud.location|default({}) %}
+        {% set hudInventory = hud.inventory|default({}) %}
+        {% set hudMoney = hud.money|default({}) %}
+
+        <div class="glass-panel hud-panel p-4 group">
+            <a href="{{ path_for('settings') }}" class="absolute top-4 right-4 hud-chip hover:text-white" title="{{ t('base.sidebar.system_settings') }}">
+                <i class="fa-solid fa-gear"></i>
+            </a>
+
+            <div class="flex items-center gap-3">
+                <div class="avatar-box hud-avatar relative overflow-hidden transition-colors" style="border-color: var(--brand-primary); box-shadow: 0 0 14px var(--brand-glow);">
+                    {% if hudUser.avatar|default('') %}
+                        <img src="{{ hudUser.avatar }}" alt="{{ hudUser.nick|default(t('base.sidebar.citizen')) }}" class="group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async">
+                    {% else %}
+                        <img src="img/default_avatar.jpg" alt="{{ hudUser.nick|default(t('base.sidebar.citizen')) }}" class="group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async">
+                    {% endif %}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="hud-kicker">{{ t('base.sidebar.operator') }}</div>
+                    <div class="mt-1 truncate text-[15px] font-black text-white">{{ hudUser.nick|default(t('base.sidebar.citizen')) }}</div>
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                        <span class="hud-chip"><span class="status-dot"></span> Lv {{ hudUser.level|default(1) }}</span>
+                        <span class="hud-chip">XP {{ hudUser.xp|default(0) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 space-y-2.5">
+                <div>
+                    <div class="hud-row text-[9px] font-black uppercase tracking-widest text-slate-500">
+                        <span>{{ t('base.sidebar.energy') }}</span>
+                        <span>{{ hudUser.energy|default(0) }} / 100</span>
+                    </div>
+                    <div class="hud-progress energy mt-1.5" style="--hud-progress: {{ hudUser.energyPercent|default(0) }}%"><span></span></div>
+                </div>
+                <div>
+                    <div class="hud-row text-[9px] font-black uppercase tracking-widest text-slate-500">
+                        <span>{{ t('base.sidebar.economic_xp') }}</span>
+                        <span>{{ hudUser.economicXp|default(0) }} / {{ hudUser.economicRequiredXp|default(1) }}</span>
+                    </div>
+                    <div class="hud-progress mt-1.5" style="--hud-progress: {{ hudUser.economicPercent|default(0) }}%"><span></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel hud-panel p-3.5">
+            <div class="hud-row">
+                <div>
+                    <div class="hud-kicker">{{ t('base.sidebar.daily_reward') }}</div>
+                    <div class="mt-1 text-[12px] font-black uppercase text-white">{{ hudDaily.completed|default(0) }} / {{ hudDaily.total|default(2) }}</div>
+                </div>
+                <div class="hud-chip">{{ hudDaily.percent|default(0) }}%</div>
+            </div>
+            <div class="hud-progress daily mt-2.5" style="--hud-progress: {{ hudDaily.percent|default(0) }}%"><span></span></div>
+            <div class="mt-2.5 grid grid-cols-2 gap-2">
+                <div class="hud-stat-card p-2.5">
+                    <div class="hud-row">
+                        <span class="hud-icon"><i class="fa-solid fa-dumbbell"></i></span>
+                        <span class="text-[9px] font-black uppercase {{ hudDaily.trained|default(false) ? 'text-emerald-300' : 'text-slate-500' }}">{{ hudDaily.trained|default(false) ? 'Tamam' : t('base.sidebar.pending') }}</span>
+                    </div>
+                </div>
+                <div class="hud-stat-card p-2.5">
+                    <div class="hud-row">
+                        <span class="hud-icon"><i class="fa-solid fa-briefcase"></i></span>
+                        <span class="text-[9px] font-black uppercase {{ hudDaily.worked|default(false) ? 'text-emerald-300' : 'text-slate-500' }}">{{ hudDaily.worked|default(false) ? 'Tamam' : t('base.sidebar.pending') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel hud-panel p-3.5">
+            <div class="grid grid-cols-2 gap-2">
+                <div class="hud-stat-card p-2.5">
+                    <div class="hud-kicker">{{ t('base.sidebar.power') }}</div>
+                    <div class="hud-value mt-1 text-[15px]">{{ hudUser.strength|default(0)|number_format(2) }}</div>
+                </div>
+                <div class="hud-stat-card p-2.5">
+                    <div class="hud-kicker">Eko Skill</div>
+                    <div class="hud-value mt-1 text-[15px]">{{ hudUser.economicSkill|default(1) }}</div>
+                </div>
+                <div class="hud-stat-card col-span-2 p-2.5">
+                    <div class="hud-row">
+                        <span class="text-[10px] font-black uppercase text-slate-300"><i class="fa-solid fa-utensils mr-2 text-yellow-400"></i>{{ t('base.sidebar.bread') }}</span>
+                        <span class="hud-value">{{ hudInventory.bread|default(0) }}</span>
+                    </div>
+                </div>
+                <div class="hud-stat-card col-span-2 p-2.5">
+                    <div class="hud-row">
+                        <span class="text-[10px] font-black uppercase text-slate-300"><i class="fa-solid fa-gun mr-2 text-rose-400"></i>{{ t('base.sidebar.weapon') }}</span>
+                        <span class="hud-value">{{ hudInventory.weapons|default(0) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel hud-panel p-3.5">
+            <div class="hud-row">
+                <div class="min-w-0">
+                    <div class="hud-kicker">{{ t('base.sidebar.location') }}</div>
+                    <div class="mt-1 truncate text-[12px] font-black uppercase text-white">{{ hudLocation.country|default('') ?: '-' }}</div>
+                    <div class="mt-1 truncate text-[10px] font-bold uppercase text-slate-400">{{ t('base.sidebar.region') }}: {{ hudLocation.region|default('') ?: '-' }}</div>
+                </div>
+                {% if hudLocation.countryId|default(0) %}
+                    <img src="img/flags/{{ hudLocation.countryId }}.png" class="h-8 w-12 rounded-md border border-white/10 object-cover shadow-lg" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
+                {% else %}
+                    <span class="hud-icon"><i class="fa-solid fa-location-dot"></i></span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="glass-panel hud-panel p-3.5">
+            <div class="hud-kicker">{{ t('base.sidebar.work_status') }}</div>
+            <div class="mt-2.5 flex items-start gap-3">
+                <span class="hud-icon"><i class="fa-solid fa-briefcase"></i></span>
+                <div class="min-w-0 flex-1">
+                    <div class="truncate text-[12px] font-black uppercase text-white">{{ hudJob.title|default(t('base.sidebar.active_contract_missing')) }}</div>
+                    <div class="mt-1 truncate text-[10px] font-bold uppercase text-slate-400">{{ hudJob.company|default(t('base.sidebar.company_info_missing')) }}</div>
+                    {% if hudJob.hasJob|default(false) %}
+                        <div class="mt-2 text-[10px] font-black uppercase tracking-widest {{ hudJob.workedToday|default(false) ? 'text-emerald-300' : 'text-amber-300' }}">
+                            {{ hudJob.status }}{% if hudJob.salary|default(0) > 0 %} · {{ hudJob.salary|number_format(2) }} {{ hudJob.currency }}{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-500">{{ hudJob.status|default(t('base.sidebar.no_active_job')) }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel hud-panel p-3.5 space-y-2.5">
+            <div class="hud-row">
+                <span class="text-[10px] font-black uppercase text-slate-300"><i class="fa-solid fa-coins mr-2 text-yellow-400"></i>Gold</span>
+                <span class="hud-value">{{ hudMoney.gold|default(0)|number_format(2) }}</span>
+            </div>
+            <div class="hud-row border-t border-white/5 pt-2.5">
+                <span class="text-[10px] font-black uppercase text-slate-300">
+                    {% if hudLocation.countryId|default(0) %}<img src="img/flags/{{ hudLocation.countryId }}.png" class="mr-2 inline h-4 w-6 rounded-sm object-cover" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">{% endif %}
+                    {{ hudMoney.localCurrency|default('') ?: 'LOCAL' }}
+                </span>
+                <span class="hud-value">{{ hudMoney.local|default(0)|number_format(2) }}</span>
+            </div>
+        </div>
+
+        <a href="{{ path_for('logout') }}" class="glass-panel hud-panel border-red-900/40 bg-red-950/20 p-3.5 text-center text-[10px] font-black uppercase text-red-400 transition-all hover:bg-red-600 hover:text-white">{{ t('base.sidebar.disconnect') }}</a>
+    </aside>
+    {% endif %}
+
+    <main class="flex-1 min-w-0 w-full">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<div class="ticker-v6">
+    <div class="ticker-content">
+        {% set tickerHud = sidebarHud|default({}) %}
+        {% set tickerUser = tickerHud.user|default({}) %}
+        {% set tickerMoney = tickerHud.money|default({}) %}
+        {% set tickerInventory = tickerHud.inventory|default({}) %}
+        {% set tickerLocation = tickerHud.location|default({}) %}
+        <span class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-coins text-yellow-500"></i> GOLD <span class="text-white ml-1">{{ tickerMoney.gold|default(0)|number_format(2) }}</span></span>
+        <span class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-building-columns text-cyan-400"></i> {{ tickerMoney.localCurrency|default('LOCAL') }} <span class="text-white ml-1">{{ tickerMoney.local|default(0)|number_format(2) }}</span></span>
+        <span class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-utensils text-indigo-400"></i> {{ t('base.sidebar.bread') }} <span class="text-white ml-1">{{ tickerInventory.bread|default(0) }}</span></span>
+        <span class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-gun text-red-500"></i> {{ t('base.sidebar.weapon') }} <span class="text-white ml-1">{{ tickerInventory.weapons|default(0) }}</span></span>
+        <span class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-location-dot text-emerald-400"></i> {{ tickerLocation.country|default('-') }} <span class="text-white ml-1">{{ tickerLocation.region|default('') }}</span></span>
+        <span class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-bolt text-amber-400"></i> {{ t('base.sidebar.energy') }} <span class="text-white ml-1">{{ tickerUser.energy|default(0) }}/100</span></span>
+        <span class="text-[10px] font-black uppercase tracking-[0.2em]" style="color: var(--brand-primary);">{{ t('base.ticker.online') }}</span>
+    </div>
+</div>
+
+<script>
+    window.CSRF_TOKEN = "{{ csrf_token|default('')|e('js') }}";
+
+    if (window.jQuery && window.CSRF_TOKEN) {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-Token': window.CSRF_TOKEN
+            }
+        });
+    }
+
+    function updateClock() {
+        const time = new Date().toLocaleTimeString('tr-TR', { hour12: false });
+        const liveClock = document.getElementById('live-clock');
+        const headerClock = document.getElementById('header-clock');
+
+        if (liveClock) {
+            liveClock.textContent = time;
+        }
+
+        if (headerClock) {
+            headerClock.textContent = time;
+        }
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.CSRF_TOKEN) {
+            return;
+        }
+
+        var forms = document.querySelectorAll('form[method="post"], form[method="POST"]');
+        for (var i = 0; i < forms.length; i++) {
+            if (forms[i].querySelector('input[name="csrf_token"]')) {
+                continue;
+            }
+
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'csrf_token';
+            input.value = window.CSRF_TOKEN;
+            forms[i].appendChild(input);
+        }
+    });
+</script>
+
+<script>
+$(function(){
+    const BASE = "{{ base_url() }}".replace(/\/+$/, '');
+    const NOTIF_ALL = "{{ path_for('notifications') }}";
+    const MSG_ALL = "{{ path_for('messages') }}";
+
+    function setBadge($el, n){
+        n = parseInt(n || 0, 10);
+        if(n > 0){
+            $el.text(n > 99 ? '99+' : n);
+            $el.css('display', 'inline-flex');
+        } else {
+            $el.hide();
+        }
+    }
+
+    function escapeText(s){
+        return String(s || '').replace(/[&<>"']/g, function(c){
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]);
+        });
+    }
+
+    function skel(){
+        return (
+            '<div class="omni-skel">' +
+                '<div class="sk w70"></div>' +
+                '<div class="sk w85"></div>' +
+                '<div class="sk w55"></div>' +
+            '</div>'
+        );
+    }
+
+    function notifIcon(type){
+        type = String(type || '').toLowerCase();
+        if(!type) return 'fa-solid fa-bolt';
+        if(type.indexOf('war') !== -1 || type.indexOf('battle') !== -1 || type.indexOf('country_critical') !== -1) return 'fa-solid fa-crosshairs';
+        if(type.indexOf('party') !== -1 || type.indexOf('clan') !== -1 || type.indexOf('coalition') !== -1) return 'fa-solid fa-users';
+        if(type.indexOf('message') !== -1 || type.indexOf('reply') !== -1 || type.indexOf('mention') !== -1) return 'fa-solid fa-message';
+        if(type.indexOf('system') !== -1 || type.indexOf('decree') !== -1 || type.indexOf('announcement') !== -1 || type.indexOf('restriction') !== -1) return 'fa-solid fa-bullhorn';
+        return 'fa-solid fa-bolt';
+    }
+
+    function openDrop(){
+        $('#omni-drop').show();
+        $('#btn-bell').attr('aria-expanded', 'true');
+        refreshDropdown();
+    }
+
+    function closeDrop(){
+        $('#omni-drop').hide();
+        $('#btn-bell').attr('aria-expanded', 'false');
+    }
+
+    function isOpen(){
+        return $('#omni-drop').is(':visible');
+    }
+
+    function setTab(tab){
+        $('.omni-tab').removeClass('active').attr('aria-pressed', 'false');
+        $('.omni-tab[data-tab="'+tab+'"]').addClass('active').attr('aria-pressed', 'true');
+        $('.omni-pane').removeClass('active');
+        $('.omni-pane[data-pane="'+tab+'"]').addClass('active');
+    }
+
+    function renderNotifs(items){
+        var $root = $('#drop-notifs').empty();
+
+        if(!items || !items.length){
+            $root.append(
+                '<a class="omni-item omni-empty" href="'+NOTIF_ALL+'">' +
+                    '<div class="omni-i"><i class="fa-regular fa-bell-slash"></i></div>' +
+                    '<div class="omni-c">' +
+                        '<div class="omni-title">Şu an yeni bildirim yok</div>' +
+                        '<div class="omni-sub">OMNI hattı temiz.</div>' +
+                    '</div>' +
+                '</a>'
+            );
+            return;
+        }
+
+        for(var i=0;i<items.length;i++){
+            var n = items[i] || {};
+            var url = n.url ? n.url : NOTIF_ALL;
+            var title = escapeText(n.title || '{{ t('base.dropdown.notifications')|e('js') }}');
+            var body = escapeText(n.body || '');
+            var meta = escapeText(n.created_at || '');
+            var notifId = parseInt(n.id || 0, 10);
+            var unread = parseInt(n.is_read || 0, 10) === 0;
+            var iconClass = unread ? 'omni-i unread' : 'omni-i';
+            var itemClass = unread ? 'omni-item omni-notif-item unread' : 'omni-item omni-notif-item';
+            var icon = notifIcon(n.type || '');
+
+            $root.append(
+                '<a class="'+itemClass+'" href="'+url+'" data-id="'+notifId+'">' +
+                    '<div class="'+iconClass+'"><i class="'+icon+'"></i></div>' +
+                    '<div class="omni-c">' +
+                        '<div class="omni-title">'+title+(unread?'<span class="omni-pill">YENİ</span>':'')+'</div>' +
+                        (body ? '<div class="omni-sub">'+body+'</div>' : '') +
+                        '<div class="omni-meta">'+meta+'</div>' +
+                    '</div>' +
+                '</a>'
+            );
+        }
+    }
+
+    function renderDMs(threads){
+        var $root = $('#drop-dms').empty();
+
+        if(!threads || !threads.length){
+            $root.append(
+                '<a class="omni-item omni-empty" href="'+MSG_ALL+'">' +
+                    '<div class="omni-i"><i class="fa-regular fa-envelope"></i></div>' +
+                    '<div class="omni-c">' +
+                        '<div class="omni-title">DM yok</div>' +
+                        '<div class="omni-sub">Aktif konuşma bulunamadı.</div>' +
+                    '</div>' +
+                '</a>'
+            );
+            return;
+        }
+
+        for(var i=0;i<threads.length;i++){
+            var t = threads[i] || {};
+            var otherUid = parseInt(t.other_uid || 0, 10);
+            var name = escapeText(t.other_name || ('User #' + otherUid));
+            var snippet = escapeText(t.last_body || '');
+            var meta = escapeText(t.last_at || '');
+            var unread = parseInt(t.unread || 0, 10);
+
+            var href = BASE + '/messages/' + otherUid;
+            var pill = unread > 0 ? '<span class="omni-pill">'+(unread>99?'99+':unread)+'</span>' : '';
+            var iconClass = unread > 0 ? 'omni-i unread' : 'omni-i';
+            var itemClass = unread > 0 ? 'omni-item unread' : 'omni-item';
+
+            $root.append(
+                '<a class="'+itemClass+'" href="'+href+'">' +
+                    '<div class="'+iconClass+'"><i class="fa-solid fa-user"></i></div>' +
+                    '<div class="omni-c">' +
+                        '<div class="omni-title">'+name+pill+'</div>' +
+                        (snippet ? '<div class="omni-sub">'+snippet+'</div>' : '') +
+                        '<div class="omni-meta">'+meta+'</div>' +
+                    '</div>' +
+                '</a>'
+            );
+        }
+    }
+
+    function pollBadges(){
+        $.post(BASE + '/api/notifications/unread-count', {})
+            .done(function(res){
+                if(typeof res === 'string'){
+                    try { res = JSON.parse(res); } catch(e){ res = {}; }
+                }
+
+                var badges = res && res.badges ? res.badges : {};
+                setBadge($('#badge-notify'), badges.notifications || 0);
+                setBadge($('#badge-dm'), badges.messages || 0);
+            })
+            .fail(function(){
+                setBadge($('#badge-notify'), 0);
+                setBadge($('#badge-dm'), 0);
+            });
+    }
+
+    function refreshDropdown(){
+        if(!isOpen()) return;
+
+        $('#omni-refresh').addClass('omni-refreshing').prop('disabled', true);
+        $('#drop-notifs').html(skel());
+        $('#drop-dms').html(skel());
+
+        $.when(
+            $.post(BASE + '/api/notifications/list', { limit: 6 }),
+            $.post(BASE + '/api/messages/threads', { limit: 6 })
+        ).done(function(notifRes, dmRes){
+            var notifPayload = notifRes && notifRes[0] ? notifRes[0] : {};
+            var dmPayload = dmRes && dmRes[0] ? dmRes[0] : {};
+
+            if(typeof notifPayload === 'string'){
+                try { notifPayload = JSON.parse(notifPayload); } catch(e){ notifPayload = {}; }
+            }
+
+            if(typeof dmPayload === 'string'){
+                try { dmPayload = JSON.parse(dmPayload); } catch(e){ dmPayload = {}; }
+            }
+
+            renderNotifs(notifPayload && notifPayload.items ? notifPayload.items : []);
+            renderDMs(dmPayload && dmPayload.threads ? dmPayload.threads : []);
+
+            if(notifPayload && notifPayload.items && notifPayload.items.length){
+                var unreadCount = 0;
+                for(var i=0;i<notifPayload.items.length;i++){
+                    if(parseInt(notifPayload.items[i].is_read || 0, 10) === 0){
+                        unreadCount++;
+                    }
+                }
+
+                if(unreadCount > 0){
+                    $.post(BASE + '/api/notifications/mark-all-read', {})
+                        .always(function(){
+                            pollBadges();
+                        });
+                } else {
+                    pollBadges();
+                }
+            } else {
+                pollBadges();
+            }
+        }).fail(function(){
+            renderNotifs([]);
+            renderDMs([]);
+        }).always(function(){
+            $('#omni-refresh').removeClass('omni-refreshing').prop('disabled', false);
+        });
+    }
+
+    $('#btn-bell').on('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(isOpen()) closeDrop();
+        else openDrop();
+    });
+
+    $(document).on('click', function(e){
+        if(!$(e.target).closest('#omni-comms').length) closeDrop();
+    });
+
+    $(document).on('keydown', function(e){
+        if(e.key === 'Escape') closeDrop();
+    });
+
+    $(document).on('click', '.omni-tab', function(){
+        setTab($(this).data('tab'));
+    });
+
+    $(document).on('click', '.omni-notif-item', function(){
+        var id = parseInt($(this).attr('data-id') || '0', 10);
+        if(id > 0){
+            $.post(BASE + '/api/notifications/mark-read', { id: id })
+                .always(function(){
+                    pollBadges();
+                });
+        }
+    });
+
+    $('#omni-refresh').on('click', function(){
+        refreshDropdown();
+        pollBadges();
+    });
+
+    $('#omni-close').on('click', function(){
+        closeDrop();
+    });
+
+    pollBadges();
+    setInterval(pollBadges, 15000);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,579 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    /* --- KARARGAH TEMELİ --- */
+    .war-room-bg { 
+        background: linear-gradient(to bottom, #0f172a, #020617); 
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e293b' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        min-height: 100vh;
+        transition: all 0.5s ease;
+    }
+    
+    /* --- İHA KAMERA MODU --- */
+    .uav-mode {
+        filter: sepia(1) hue-rotate(80deg) saturate(1.5) brightness(0.8) contrast(1.2) !important;
+        position: relative;
+    }
+    .uav-mode::before {
+        content: " ";
+        position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 9999; background-size: 100% 4px, 3px 100%; pointer-events: none;
+    }
+    .uav-mode::after {
+        content: "RECORDING UAV_S14...";
+        position: fixed; top: 20px; left: 20px; color: #00ff00; font-family: monospace; font-size: 12px; z-index: 10000; animation: blink 1s infinite;
+    }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+    .holo-panel {
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); border-radius: 12px; overflow: hidden; margin-bottom: 30px;
+    }
+    .inner-panel {
+        background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px; padding: 20px;
+    }
+
+    /* --- DOMİNASYON BARI --- */
+    .dom-bar-container { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+    .side-avatar {
+        width: 56px; height: 56px; background: rgba(0,0,0,0.8); border: 2px solid rgba(255,255,255,0.1);
+        border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        font-size: 24px; color: #fff; box-shadow: 0 0 15px rgba(0,0,0,0.8); flex-shrink: 0;
+    }
+    .atk-avatar { border-color: #ef4444; color: #ef4444; text-shadow: 0 0 10px #ef4444; }
+    .def-avatar { border-color: #3b82f6; color: #3b82f6; text-shadow: 0 0 10px #3b82f6; }
+
+    .dom-bar-bg {
+        flex-grow: 1; height: 38px; background: #020617; border: 2px solid #1e293b;
+        border-radius: 6px; display: flex; position: relative; overflow: hidden; box-shadow: inset 0 5px 15px rgba(0,0,0,0.8);
+    }
+    .bar-fill {
+        height: 100%; display: flex; align-items: center; font-family: 'Courier New', monospace;
+        font-size: 18px; font-weight: 900; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); transition: width 0.5s ease;
+    }
+    .bar-def { background: linear-gradient(90deg, #1e3a8a, #3b82f6); padding-left: 15px; box-shadow: inset 0 2px 5px rgba(255,255,255,0.2); }
+    .bar-atk { background: linear-gradient(270deg, #7f1d1d, #ef4444); justify-content: flex-end; padding-right: 15px; box-shadow: inset 0 2px 5px rgba(255,255,255,0.2); }
+
+    /* --- SAVAŞ İVMESİ GÖSTERGESİ --- */
+    .momentum-container { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; position: relative; z-index: 5; }
+    .momentum-badge {
+        background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(255,255,255,0.1);
+        padding: 4px 15px; border-radius: 50px; font-size: 9px; font-weight: 900;
+        text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .momentum-badge.def-adv { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+    .momentum-badge.atk-adv { color: #f87171; border-color: rgba(248, 113, 113, 0.3); box-shadow: 0 0 10px rgba(248, 113, 113, 0.2); }
+    .momentum-badge.tied { color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
+
+    /* --- DEV KÜRELER VE SAYAÇ --- */
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.8); box-shadow: inset -3px -3px 6px rgba(0,0,0,0.8), inset 2px 2px 6px rgba(255,255,255,0.3); }
+    .dot.blue { background: radial-gradient(circle at 30% 30%, #3b82f6, #1e3a8a); border-color: #1d4ed8; box-shadow: 0 0 15px rgba(59,130,246,0.6); }
+    .dot.red { background: radial-gradient(circle at 30% 30%, #ef4444, #7f1d1d); border-color: #b91c1c; box-shadow: 0 0 15px rgba(239,68,68,0.6); }
+    .dot.empty { background: radial-gradient(circle at 30% 30%, #334155, #0f172a); }
+    
+    .live-timer { font-family: Arial, sans-serif; font-size: 38px; font-weight: bold; color: #fff; letter-spacing: 2px; line-height: 1; }
+    .live-timer.ending { color: #ef4444 !important; }
+
+    /* --- ALTYAPI ROZETLERİ --- */
+    .infra-badges { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }
+    .infra-badge { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 6px; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.2); }
+    .infra-hospital { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+    .infra-defense { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+
+    /* --- SEYAHAT ENGELİ --- */
+    .travel-overlay { position: absolute; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(4px); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; gap: 10px; }
+    .btn-travel { background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fbbf24; color: #000; font-weight: 900; font-size: 12px; padding: 8px 20px; border-radius: 4px; text-transform: uppercase; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); cursor: pointer; transition: all 0.2s; }
+    .btn-travel:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); }
+
+    /* --- ATEŞ BUTONLARI --- */
+    .action-btn {
+        flex: 1; padding: 10px 15px; border-radius: 6px; font-size: 11px; font-weight: 900;
+        text-transform: uppercase; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; 
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        background: rgba(15, 23, 42, 0.6);
+    }
+    .action-btn i { font-size: 14px; opacity: 0.8; }
+    .action-btn.def { border-bottom: 2px solid #3b82f6; }
+    .action-btn.def:hover { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #fff; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); transform: translateY(-2px); }
+    .action-btn.atk { border-bottom: 2px solid #ef4444; }
+    .action-btn.atk:hover { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #fff; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); transform: translateY(-2px); }
+
+    /* --- v3.0 ENVANTER PANELİ --- */
+    .inventory-wrapper {
+        display: grid; grid-template-columns: repeat(1, 1fr); gap: 20px; padding: 20px;
+        background: #020617; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    @media (min-width: 1024px) { .inventory-wrapper { grid-template-columns: repeat(3, 1fr); } }
+    
+    .inv-block-v3 {
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(2, 6, 23, 0.8));
+        border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+    }
+    .inv-header-v3 {
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 15px;
+    }
+    .inv-title-v3 { font-size: 11px; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
+    .inv-limit-v3 { font-size: 10px; color: #64748b; font-weight: bold; }
+    .inv-limit-v3 span { color: #fff; }
+    
+    .inv-grid-v3 { display: flex; gap: 8px; justify-content: center; }
+    
+    .inv-item-v3 {
+        width: 55px; height: 65px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; user-select: none;
+    }
+    .inv-item-v3 .icon { font-size: 20px; margin-bottom: 6px; }
+    .inv-item-v3 .name-txt { font-size: 10px; font-weight: 900; }
+    
+    .inv-item-v3.has-stock { color: #e2e8f0; cursor: pointer; }
+    .inv-item-v3.has-stock:hover { background: rgba(30, 41, 59, 0.8); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+    .inv-item-v3.empty-stock { color: #475569; opacity: 0.4; cursor: not-allowed; }
+    
+    .inv-item-v3.weapon-slot.active {
+        background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; color: #fcd34d;
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.3), inset 0 0 10px rgba(245, 158, 11, 0.2);
+        transform: scale(1.05); z-index: 10;
+    }
+    
+    .qty-badge {
+        position: absolute; top: -6px; right: -6px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2);
+        font-size: 9px; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #cbd5e1;
+    }
+    .inv-item-v3.active .qty-badge { background: #f59e0b; color: #000; border-color: #fcd34d; }
+
+    .use-btn-v3 {
+        width: 100%; padding: 10px; margin-top: 25px; 
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+        color: #94a3b8; font-size: 10px; font-weight: 900; text-transform: uppercase;
+        transition: all 0.2s; cursor: pointer; letter-spacing: 1px;
+    }
+    .use-btn-v3:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* --- v10.0 KAHRAMAN KÜNYELERİ --- */
+    .heroes-v10-container {
+        position: relative; display: grid; grid-template-columns: 1fr; gap: 30px; padding: 30px;
+        background: radial-gradient(circle at top center, rgba(15,23,42,0.8), #000); border-top: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    @media (min-width: 768px) { .heroes-v10-container { grid-template-columns: 1fr 1fr; } }
+    
+    .v10-col-title { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; color: #f8fafc; }
+    .v10-col-title i { font-size: 18px; }
+    .v10-col-title.def i { color: #38bdf8; text-shadow: 0 0 10px #38bdf8; }
+    .v10-col-title.atk i { color: #f87171; text-shadow: 0 0 10px #f87171; }
+
+    .v10-card { position: relative; display: flex; align-items: center; gap: 15px; padding: 15px; margin-bottom: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; overflow: visible; transition: all 0.3s ease; }
+    .v10-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #334155; transition: all 0.3s ease; border-radius: 8px 0 0 8px; }
+    .v10-card.def::before { background: rgba(56, 189, 248, 0.5); }
+    .v10-card.atk::before { background: rgba(248, 113, 113, 0.5); }
+
+    .v10-card:hover { transform: translateX(8px); background: rgba(30, 41, 59, 0.8); border-color: rgba(255,255,255,0.1); }
+    .v10-card.def:hover { box-shadow: -5px 0 20px rgba(56, 189, 248, 0.2); }
+    .v10-card.atk:hover { box-shadow: -5px 0 20px rgba(248, 113, 113, 0.2); }
+
+    .v10-card.rank-1 { background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.8)); border-color: rgba(245, 158, 11, 0.3); margin-top: 8px; margin-bottom: 20px; }
+    .v10-card.rank-1::before { background: #f59e0b; box-shadow: 0 0 15px #f59e0b; width: 6px; }
+
+    .v10-avatar-wrapper { position: relative; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #020617; border: 2px solid rgba(255,255,255,0.1); z-index: 2; color: #94a3b8; }
+    .v10-card.rank-1 .v10-avatar-wrapper { border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+    .v10-card.rank-1 .v10-avatar-wrapper::after { content: ''; position: absolute; inset: -5px; border: 1px dashed #f59e0b; border-radius: 50%; animation: spin-slow 8s linear infinite; opacity: 0.6; }
+    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+
+    .v10-info { flex-grow: 1; display: flex; flex-direction: column; gap: 8px; }
+    .v10-top-row { display: flex; justify-content: space-between; align-items: center; }
+    .v10-name { font-size: 14px; font-weight: 900; color: #e2e8f0; letter-spacing: 1px; text-transform: uppercase; }
+    .v10-card.rank-1 .v10-name { color: #fbbf24; font-size: 15px; }
+    
+    .v10-dmg-text { font-family: 'Courier New', monospace; font-size: 15px; font-weight: 900; }
+    .v10-card.def .v10-dmg-text { color: #7dd3fc; }
+    .v10-card.atk .v10-dmg-text { color: #fca5a5; }
+    .v10-card.rank-1 .v10-dmg-text { color: #fff; text-shadow: 0 0 8px currentColor; }
+
+    .v10-bar-container { height: 6px; background: rgba(0,0,0,0.8); border-radius: 3px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+    .v10-bar-fill { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+    .v10-bar-fill::after { content: ""; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-image: linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent); background-size: 10px 10px; animation: move-stripes 2s linear infinite; }
+    @keyframes move-stripes { 0% { background-position: 0 0; } 100% { background-position: 20px 0; } }
+
+    .v10-card.def .v10-bar-fill { background: #0ea5e9; box-shadow: 0 0 10px #0ea5e9; }
+    .v10-card.atk .v10-bar-fill { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+    .v10-card.rank-1 .v10-bar-fill { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+
+    .v10-rank-badge { position: absolute; right: 15px; top: -10px; background: #0f172a; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; font-size: 10px; font-weight: 900; color: #94a3b8; letter-spacing: 1px; z-index: 5; }
+    .v10-card.rank-1 .v10-rank-badge { background: #f59e0b; color: #000; border-color: #fcd34d; font-size: 11px; top: -12px; }
+</style>
+
+<div id="war-main-terminal" class="war-room-bg animate-fade-in w-full pb-16 px-2 md:px-6 pt-6">
+
+    {# --- BAŞLIK & İHA BUTONU --- #}
+    <div class="holo-panel p-4 flex items-center justify-between mb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-slate-900/80 rounded flex items-center justify-center border border-slate-700">
+                <i class="fa-solid fa-satellite-dish text-lg text-slate-300 animate-pulse"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-black text-white uppercase tracking-widest leading-none">{{ t('wars.title') }}</h1>
+                <p class="text-[10px] text-red-400 font-mono tracking-widest mt-1 uppercase">{{ t('wars.status_active') }}</p>
+            </div>
+        </div>
+        <button onclick="toggleUAV()" class="bg-slate-800 hover:bg-emerald-900 border border-slate-600 p-2 px-4 rounded text-[10px] font-black text-white uppercase tracking-widest transition-all">
+            <i class="fa-solid fa-eye mr-2"></i> {{ t('wars.uav_camera') }}
+        </button>
+    </div>
+
+    {% if wars|length > 0 %}
+        <div class="grid grid-cols-1 gap-8">
+            {% for war in wars %}
+                
+                {% set defRounds = war.def_rounds|default(0) %}
+                {% set atkRounds = war.atk_rounds|default(0) %}
+                {% set currentRound = defRounds + atkRounds + 1 %}
+
+                {# GERÇEK ZAMANLI VERİTABANI BAĞLANTISI #}
+                {% set playerInRegion = war.player_in_region %} 
+                
+                {% set hospitalQ = war.hospital_q|default(5) %}
+                {% set defenseQ = war.defense_q|default(3) %}
+
+                {# Silah eşleştirme #}
+                {% set wMap = {1:0, 3:0, 5:0} %}
+                {% for wp in myWeapons %}
+                    {% set wMap = wMap|merge({(wp.quality): wp.quantity}) %}
+                {% endfor %}
+
+                <div class="holo-panel">
+                    
+                    {# ÜST BİLGİ & ALTYAPI #}
+                    <div class="text-center py-4 bg-black/60 border-b border-white/5">
+                        <div class="font-black text-2xl text-white uppercase tracking-widest drop-shadow-md">{{ war.region_name }}</div>
+                        <div class="infra-badges">
+                            {% if hospitalQ > 0 %}<div class="infra-badge infra-hospital"><i class="fa-solid fa-hospital"></i> Q{{ hospitalQ }} {{ t('wars.hospital') }}</div>{% endif %}
+                            {% if defenseQ > 0 %}<div class="infra-badge infra-defense"><i class="fa-solid fa-shield-halved"></i> Q{{ defenseQ }} {{ t('wars.defense_system') }}</div>{% endif %}
+                            <div class="infra-badge" style="background: rgba(245,158,11,0.1); color:#f59e0b; border-color:#f59e0b;">{{ t('wars.round') }} {{ currentRound }}</div>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        {# ÜLKE İSİMLERİ, KÜRELER VE SAYAÇ #}
+                        <div class="flex justify-between items-center mb-4 px-2">
+                            <div class="flex flex-col items-start w-1/3">
+                                <h3 class="text-2xl font-black text-blue-400 uppercase tracking-widest drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">{{ war.defender_name }}</h3>
+                                <div class="dots mt-2" title="Savunan: {{ defRounds }}">
+                                    {% for i in 1..5 %}<div class="dot {{ i <= defRounds ? 'blue' : 'empty' }}"></div>{% endfor %}
+                                </div>
+                            </div>
+                            <div class="w-1/3 flex justify-center items-center">
+                                <div class="live-timer" data-ends-at="{{ war.ends_at_timestamp }}">00:00</div>
+                            </div>
+                            <div class="flex flex-col items-end w-1/3">
+                                <h3 class="text-2xl font-black text-red-400 uppercase tracking-widest drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]">{{ war.attacker_name }}</h3>
+                                <div class="dots mt-2" title="Saldıran: {{ atkRounds }}">
+                                    {% for i in 1..5 %}<div class="dot {{ i <= atkRounds ? 'red' : 'empty' }}"></div>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# E-SIM STİLİ DOMİNASYON BARI #}
+                        <div class="dom-bar-container">
+                            <div class="side-avatar def-avatar" title="{{ war.defender_name }}"><i class="fa-solid fa-shield"></i></div>
+                            <div class="dom-bar-bg">
+                                <div class="bar-fill bar-def" style="width: {{ war.def_percent }}%">{{ war.def_percent }} %</div>
+                                <div class="bar-fill bar-atk" style="width: {{ war.atk_percent }}%">{{ war.atk_percent }} %</div>
+                            </div>
+                            <div class="side-avatar atk-avatar" title="{{ war.attacker_name }}"><i class="fa-solid fa-crosshairs"></i></div>
+                        </div>
+
+                        {# SAVAŞ İVMESİ GÖSTERGESİ (MOMENTUM TRACKER) #}
+                        <div class="momentum-container">
+                            {% if war.atk_percent > war.def_percent %}
+                                <div class="momentum-badge atk-adv">
+                                    <i class="fa-solid fa-angles-right animate-pulse"></i>
+                                    {{ t('wars.momentum.attack') }}
+                                    <i class="fa-solid fa-angles-right animate-pulse"></i>
+                                </div>
+                            {% elseif war.def_percent > war.atk_percent %}
+                                <div class="momentum-badge def-adv">
+                                    <i class="fa-solid fa-angles-left animate-pulse"></i>
+                                    {{ t('wars.momentum.defense') }}
+                                    <i class="fa-solid fa-angles-left animate-pulse"></i>
+                                </div>
+                            {% else %}
+                                <div class="momentum-badge tied">
+                                    <i class="fa-solid fa-arrows-left-right"></i>
+                                    {{ t('wars.momentum.locked') }}
+                                    <i class="fa-solid fa-arrows-left-right"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {# HASAR ÖZETİ #}
+                        <div class="flex justify-between items-center border-t border-white/5 pt-4 mt-2">
+                            <div class="text-left">
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ t('wars.total_defender_damage') }}</div>
+                                <div class="text-xl font-mono font-black text-blue-400 drop-shadow-md">{{ war.defender_damage|number_format }}</div>
+                            </div>
+                            <div class="text-center text-[10px] text-slate-500 font-black uppercase tracking-widest bg-black/50 px-3 py-1 rounded border border-white/5">
+                                {{ t('wars.choose_side') }}
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ t('wars.total_attacker_damage') }}</div>
+                                <div class="text-xl font-mono font-black text-red-400 drop-shadow-md">{{ war.attacker_damage|number_format }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# --- ORTA BÖLÜM: SAVAŞ BUTONLARI --- #}
+                    <div class="bg-black/30 border-t border-white/5 p-6 md:p-8 relative">
+                        
+                        {# SEYAHAT ENGELİ (GERÇEK VERİTABANINA BAĞLANDI) #}
+                        {% if not playerInRegion %}
+                        <div class="travel-overlay">
+                            <i class="fa-solid fa-plane-departure text-3xl text-amber-500 mb-2"></i>
+                            <div class="text-white font-black uppercase tracking-widest text-sm">{{ t('wars.not_in_front') }}</div>
+                            <div class="text-slate-400 text-xs mb-3">{{ t('wars.travel_required') }}</div>
+                            <button onclick="travelToRegion({{ war.region_id }})" class="btn-travel">{{ t('wars.travel_button') }}</button>
+                        </div>
+                        {% endif %}
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="inner-panel">
+                                <div class="text-center font-black text-blue-500 uppercase tracking-widest mb-4 text-xs opacity-70">{{ t('wars.defense_line') }}</div>
+                                <div class="flex gap-4">
+                                    <button onclick="fight({{ war.id }}, 'defender', 1)" class="action-btn def"><i class="fa-solid fa-crosshairs"></i> {{ t('wars.fire_once') }}</button>
+                                    <button onclick="fight({{ war.id }}, 'defender', 5)" class="action-btn def"><i class="fa-solid fa-bomb"></i> {{ t('wars.fire_burst') }}</button>
+                                </div>
+                            </div>
+                            <div class="inner-panel">
+                                <div class="text-center font-black text-red-500 uppercase tracking-widest mb-4 text-xs opacity-70">{{ t('wars.attack_line') }}</div>
+                                <div class="flex gap-4">
+                                    <button onclick="fight({{ war.id }}, 'attacker', 1)" class="action-btn atk"><i class="fa-solid fa-crosshairs"></i> {{ t('wars.fire_once') }}</button>
+                                    <button onclick="fight({{ war.id }}, 'attacker', 5)" class="action-btn atk"><i class="fa-solid fa-bomb"></i> {{ t('wars.fire_burst') }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# --- ALT BÖLÜM: ENVANTER PANELİ --- #}
+                    <div class="inventory-wrapper">
+                        {# ENERJİ TAKVİYESİ #}
+                        <div class="inv-block-v3">
+                            <div class="inv-header-v3">
+                                <span class="inv-title-v3 text-amber-500">{{ t('wars.energy_boost') }}</span>
+                                <span class="inv-limit-v3">{{ t('wars.energy_limit') }}: <span>{{ myEnergy }}</span></span>
+                            </div>
+                            <div class="inv-grid-v3">
+                                {% for i in [1, 3, 5] %}
+                                    <div class="inv-item-v3 empty-stock">
+                                        <i class="fa-solid fa-bread-slice icon"></i>
+                                        <div class="name-txt">Q{{ i }}</div>
+                                        <div class="qty-badge">0</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="use-btn-v3">{{ t('wars.consume_bread') }}</button>
+                        </div>
+
+                        {# HEDİYE TAKVİYESİ #}
+                        <div class="inv-block-v3">
+                            <div class="inv-header-v3">
+                                <span class="inv-title-v3 text-emerald-500">{{ t('wars.gift_boost') }}</span>
+                                <span class="inv-limit-v3">{{ t('wars.gift_limit') }}: <span>0</span></span>
+                            </div>
+                            <div class="inv-grid-v3">
+                                {% for i in [1, 3, 5] %}
+                                    <div class="inv-item-v3 empty-stock">
+                                        <i class="fa-solid fa-gift icon"></i>
+                                        <div class="name-txt">Q{{ i }}</div>
+                                        <div class="qty-badge">0</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="use-btn-v3">{{ t('wars.use_gift') }}</button>
+                        </div>
+
+                        {# MÜHİMMAT SEÇİMİ #}
+                        <div class="inv-block-v3">
+                            <div class="inv-header-v3">
+                                <span class="inv-title-v3 text-cyan-500">{{ t('wars.ammo_select') }}</span>
+                                <span class="inv-limit-v3">{{ t('wars.contribution') }}: <span class="text-emerald-400 font-mono text-xs">{{ war.my_damage|number_format }}</span></span>
+                            </div>
+                            <div class="inv-grid-v3 weapon-selector" data-war-id="{{ war.id }}">
+                                <div class="inv-item-v3 weapon-slot has-stock active" data-val="0" title="{{ t('wars.fist') }}">
+                                    <span class="icon text-xl">👊</span>
+                                    <div class="name-txt">{{ t('wars.fist') }}</div>
+                                    <div class="qty-badge">∞</div>
+                                </div>
+                                {% for i in [1, 3, 5] %}
+                                    {% set qty = wMap[i]|default(0) %}
+                                    <div class="inv-item-v3 weapon-slot {% if qty > 0 %}has-stock{% else %}empty-stock pointer-events-none{% endif %}" data-val="{{ i }}">
+                                        <i class="fa-solid fa-crosshairs icon"></i>
+                                        <div class="name-txt">Q{{ i }}</div>
+                                        <div class="qty-badge">{{ qty }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="use-btn-v3 !cursor-default !opacity-100" style="background: transparent; border: none; color: #64748b;">{{ t('wars.select_ammo_and_fire') }}</button>
+                        </div>
+                    </div>
+
+                    {# --- EN ALT PANEL: V10.0 KAHRAMAN KÜNYELERİ --- #}
+                    <div class="heroes-v10-container">
+                        {# Savunanlar Kolonu #}
+                        <div>
+                            <div class="v10-col-title def"><i class="fa-solid fa-shield-halved"></i> {{ t('wars.top_defense') }}</div>
+                            {% set defMaxDmg = war.defender_heroes|first.damage|default(1) %}
+                            {% if defMaxDmg == 0 %}{% set defMaxDmg = 1 %}{% endif %}
+
+                            {% for hero in war.defender_heroes|slice(0,3) %}
+                                {% set barPercent = (hero.damage / defMaxDmg * 100)|round %}
+                                <div class="v10-card def {% if loop.index == 1 %}rank-1{% endif %}">
+                                    <div class="v10-rank-badge">RANK #{{ loop.index }}</div>
+                                    <div class="v10-avatar-wrapper"><i class="fa-solid {% if loop.index == 1 %}fa-crown{% else %}fa-user{% endif %}"></i></div>
+                                    <div class="v10-info">
+                                        <div class="v10-top-row"><div class="v10-name" title="{{ hero.nick }}">{{ hero.nick }}</div><div class="v10-dmg-text">{{ hero.damage|number_format }}</div></div>
+                                        <div class="v10-bar-container"><div class="v10-bar-fill" style="width: {{ barPercent }}%;"></div></div>
+                                    </div>
+                                </div>
+                            {% else %} 
+                                <div class="text-xs text-slate-500 italic text-center w-full py-4 border border-white/5 rounded">{{ t('wars.no_target_movement') }}</div> 
+                            {% endfor %}
+                        </div>
+
+                        {# Saldıranlar Kolonu #}
+                        <div>
+                            <div class="v10-col-title atk"><i class="fa-solid fa-jet-fighter"></i> {{ t('wars.attack_vanguard') }}</div>
+                            {% set atkMaxDmg = war.attacker_heroes|first.damage|default(1) %}
+                            {% if atkMaxDmg == 0 %}{% set atkMaxDmg = 1 %}{% endif %}
+
+                            {% for hero in war.attacker_heroes|slice(0,3) %}
+                                {% set barPercent = (hero.damage / atkMaxDmg * 100)|round %}
+                                <div class="v10-card atk {% if loop.index == 1 %}rank-1{% endif %}">
+                                    <div class="v10-rank-badge">RANK #{{ loop.index }}</div>
+                                    <div class="v10-avatar-wrapper"><i class="fa-solid {% if loop.index == 1 %}fa-crown{% else %}fa-user{% endif %}"></i></div>
+                                    <div class="v10-info">
+                                        <div class="v10-top-row"><div class="v10-name" title="{{ hero.nick }}">{{ hero.nick }}</div><div class="v10-dmg-text">{{ hero.damage|number_format }}</div></div>
+                                        <div class="v10-bar-container"><div class="v10-bar-fill" style="width: {{ barPercent }}%;"></div></div>
+                                    </div>
+                                </div>
+                            {% else %} 
+                                <div class="text-xs text-slate-500 italic text-center w-full py-4 border border-white/5 rounded">{{ t('wars.no_target_movement') }}</div> 
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="holo-panel p-16 text-center flex flex-col items-center">
+            <div class="w-24 h-24 bg-slate-900/50 rounded-full flex items-center justify-center mb-6 border border-slate-700 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                <i class="fa-solid fa-dove text-5xl text-emerald-500/50"></i>
+            </div>
+            <h2 class="text-xl font-black text-white uppercase tracking-widest mb-2 drop-shadow-md">{{ t('wars.peace.title') }}</h2>
+            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{{ t('wars.peace.subtitle') }}</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // --- İHA KAMERASI MODU ---
+    function toggleUAV() { document.getElementById('war-main-terminal').classList.toggle('uav-mode'); }
+
+    // --- ŞEFFAF CANLI SAYAÇ MOTORU ---
+    document.addEventListener("DOMContentLoaded", function() {
+        const timers = document.querySelectorAll('.live-timer');
+        timers.forEach(timer => {
+            const targetTime = parseInt(timer.getAttribute('data-ends-at'));
+            const interval = setInterval(() => {
+                const now = new Date().getTime(); const distance = targetTime - now;
+                if (distance <= 0) { clearInterval(interval); timer.innerHTML = "00:00"; timer.style.color = "#ef4444"; setTimeout(() => { location.reload(); }, 2000); return; }
+                const totalMinutes = Math.floor(distance / (1000 * 60)); const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                const mDisplay = totalMinutes < 10 ? "0" + totalMinutes : totalMinutes; const sDisplay = seconds < 10 ? "0" + seconds : seconds;
+                timer.innerHTML = mDisplay + ":" + sDisplay;
+                if(totalMinutes === 0 && seconds <= 10) { timer.classList.add('ending'); } else { timer.classList.remove('ending'); }
+            }, 1000); 
+        });
+    });
+
+    // --- SİLAH SEÇİM MOTORU ---
+    let selectedWeapons = {};
+    $(document).on('click', '.weapon-slot.has-stock', function() {
+        let container = $(this).closest('.weapon-selector'); let warId = container.data('war-id'); let val = $(this).data('val');
+        container.find('.weapon-slot').removeClass('active'); $(this).addClass('active'); selectedWeapons[warId] = val;
+    });
+
+    // --- İNTİKAL (SEYAHAT) MOTORU ---
+    function travelToRegion(regionId) {
+        Swal.fire({
+            title: '{{ t('wars.js.travel_title') }}', 
+            text: '{{ t('wars.js.travel_text') }}',
+            icon: 'warning', showCancelButton: true, confirmButtonText: '{{ t('wars.js.travel_confirm') }}', cancelButtonText: '{{ t('wars.js.cancel') }}',
+            background: '#0f172a', color: '#fff'
+        }).then((result) => {
+            if(result.isConfirmed) {
+                Swal.fire({title:'{{ t('wars.js.travel_loading') }}', background: '#0f172a', color: '#fff', showConfirmButton: false, allowOutsideClick: false});
+                
+                $.ajax({
+                    url: "{{ base_url() }}/api/war/travel", 
+                    type: "POST",
+                    data: { region_id: regionId, csrf_token: $('meta[name="csrf-token"]').attr('content') },
+                    success: function(res) {
+                        if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                        if (res.error) {
+                            Swal.fire({icon: 'error', title: '{{ t('wars.js.error') }}', text: res.message, background: '#0f172a', color: '#fff'});
+                        } else {
+                            Swal.fire({icon: 'success', title: '{{ t('wars.js.arrived') }}', text: res.message, background: '#0f172a', color: '#fff', timer: 1500, showConfirmButton: false})
+                            .then(() => location.reload());
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // --- SAVAŞ MOTORU ---
+    function fight(warId, side, hitCount) {
+        var weaponQ = selectedWeapons[warId] || 0; 
+        Swal.fire({ title: '{{ t('wars.js.fight_loading') }}', background: '#0f172a', color: '#fff', showConfirmButton: false, allowOutsideClick: false, customClass: { popup: 'border border-slate-700 rounded-xl' }});
+        
+        $.ajax({
+            url: "{{ base_url() }}/api/war/fight", type: "POST",
+            data: { war_id: warId, side: side, weapon_q: weaponQ, hit_count: hitCount, csrf_token: $('meta[name="csrf-token"]').attr('content') },
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                if (res.error) {
+                    Swal.fire({icon: 'error', title: '{{ t('wars.js.error') }}', text: res.message, background: '#0f172a', color: '#fff', customClass: { popup: 'border border-slate-700 rounded-xl' }});
+                } else {
+                    let dmgColor = side === 'attacker' ? '#ef4444' : '#3b82f6';
+                    let reportHtml = '<div class="py-4 text-center">';
+                    if(res.critical_hits > 0) {
+                        reportHtml += '<i class="fa-solid fa-bolt text-yellow-400 text-5xl drop-shadow-[0_0_15px_yellow] mb-3"></i>';
+                        reportHtml += '<h2 class="text-xl font-black uppercase tracking-widest mb-1 text-yellow-400">{{ t('wars.js.critical_hit') }}</h2>';
+                        reportHtml += '<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">{{ t('wars.js.hit_count') }}: ' + res.hits + ' | {{ t('wars.js.critical_count') }}: ' + res.critical_hits + '</p>';
+                    } else {
+                        reportHtml += '<i class="fa-solid fa-crosshairs text-4xl ' + (side==='attacker'?'text-red-500':'text-blue-500') + ' mb-3"></i>';
+                        reportHtml += '<h2 class="text-lg font-black uppercase tracking-widest mb-1 text-white">{{ t('wars.js.target_hit') }}</h2>';
+                        reportHtml += '<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">{{ t('wars.js.hit_count') }}: ' + res.hits + '</p>';
+                    }
+                    reportHtml += '<p class="text-4xl font-mono font-black drop-shadow-md" style="color:'+dmgColor+'">' + res.damage + '</p></div>';
+
+                    Swal.fire({
+                        html: reportHtml, background: '#0f172a', showConfirmButton: false, timer: 1500,
+                        customClass: { popup: 'border border-slate-700 rounded-xl shadow-lg' }
+                    }).then(() => location.reload());
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

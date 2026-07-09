@@ -1,0 +1,153 @@
+﻿{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in w-full max-w-2xl mx-auto">
+    
+{# v7.0 ÃœST BAÅLIK (SÄ°BER TEMA) #}
+    <div class="glass-panel p-6 border-l-4 border-amber-600 flex items-center gap-4 bg-zinc-950 shadow-[0_0_30px_rgba(217,119,6,0.15)] relative overflow-hidden rounded-xl border border-zinc-800/50">
+        {# Arkaplan tarama Ã§izgileri efekti #}
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJ0cmFuc3BhcmVudCI+PC9yZWN0Pgo8cGF0aCBkPSJNMCAwaDR2MUgweiIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjAzKSI+PC9wYXRoPgo8L3N2Zz4=')] opacity-50 pointer-events-none"></div>
+
+        <div class="w-14 h-14 rounded-2xl bg-zinc-900 border border-amber-900/50 flex items-center justify-center text-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.2)] relative z-10">
+            <i class="fa-solid fa-mask text-2xl"></i>
+        </div>
+        <div class="relative z-10">
+            <h1 class="text-lg font-black text-zinc-100 uppercase tracking-[0.2em] leading-tight">{{ t('blackmarket.create.hero.title') }}</h1>
+            <p class="text-[10px] text-amber-600 font-black uppercase tracking-widest mt-1 flex items-center gap-2">
+                <span class="animate-pulse w-2 h-2 bg-amber-600 rounded-full"></span> {{ t('blackmarket.create.hero.subtitle') }}
+            </p>
+        </div>
+    </div>
+
+    {# Ä°LAN FORMU #}
+    <div class="glass-panel p-8 bg-zinc-950/80 border border-zinc-800/80 relative rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden">
+        
+        <form id="blackMarketForm" class="space-y-6 relative z-10">
+            
+            {# Kategori SeÃ§imi #}
+            <div class="group">
+                <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 group-focus-within:text-amber-500 transition-colors">{{ t('blackmarket.create.form.category') }}</label>
+                <div class="relative">
+                    <select name="category" class="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm font-bold px-4 py-3 rounded-lg outline-none focus:border-amber-600/50 transition-all appearance-none cursor-pointer focus:shadow-[0_0_15px_rgba(217,119,6,0.1)]">
+                        <option value="silah" class="bg-zinc-950">{{ t('blackmarket.create.option.weapon') }}</option>
+                        <option value="yiyecek" class="bg-zinc-950">{{ t('blackmarket.create.option.food') }}</option>
+                        <option value="hammadde" class="bg-zinc-950">{{ t('blackmarket.create.option.raw') }}</option>
+                        <option value="diger" class="bg-zinc-950">{{ t('blackmarket.create.option.other') }}</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-zinc-600 text-[10px] pointer-events-none group-focus-within:text-amber-500"></i>
+                </div>
+            </div>
+
+            {# EÅŸya AdÄ± #}
+            <div class="group">
+                <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 group-focus-within:text-amber-500 transition-colors">{{ t('blackmarket.create.form.item_name') }}</label>
+                <input type="text" name="item_name" placeholder="{{ t('blackmarket.create.form.item_placeholder') }}" required class="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm font-bold px-4 py-3 rounded-lg outline-none focus:border-amber-600/50 transition-all placeholder-zinc-700 focus:shadow-[0_0_15px_rgba(217,119,6,0.1)]">
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                {# {{ t('blackmarket.create.form.quantity') }} #}
+                <div class="group">
+                    <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 group-focus-within:text-amber-500 transition-colors">{{ t('blackmarket.create.form.quantity') }}</label>
+                    <input type="number" name="quantity" min="1" value="1" required class="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-sm font-bold px-4 py-3 rounded-lg outline-none focus:border-amber-600/50 transition-all focus:shadow-[0_0_15px_rgba(217,119,6,0.1)]">
+                </div>
+
+                {# Fiyat #}
+                <div class="group">
+                    <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 group-focus-within:text-amber-500 transition-colors">{{ t('blackmarket.create.form.price') }}</label>
+                    <div class="relative">
+                        <input type="number" name="price" step="0.01" min="0.01" placeholder="0.00" required class="w-full bg-zinc-900 border border-zinc-800 text-amber-500 text-sm font-mono font-bold px-4 py-3 rounded-lg outline-none focus:border-amber-600/50 transition-all focus:shadow-[0_0_15px_rgba(217,119,6,0.1)]">
+                        <span class="absolute right-4 top-3.5 text-[10px] text-zinc-600 font-bold uppercase">G</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Bilgi Paneli #}
+            <div class="bg-amber-900/10 border border-amber-600/20 rounded-xl p-4 flex items-start gap-4 mt-4 backdrop-blur-sm">
+                <i class="fa-solid fa-shield-halved text-amber-600 text-lg mt-1"></i>
+                <div class="space-y-1">
+                    <p class="text-[11px] text-zinc-300 font-bold uppercase tracking-wide">{{ t('blackmarket.create.info.title') }}</p>
+                    <p class="text-[10px] text-zinc-500 leading-relaxed font-medium">
+                        {{ t('blackmarket.create.info.copy_1') }} 
+                        {{ t('blackmarket.create.info.copy_2') }}
+                    </p>
+                </div>
+            </div>
+
+            {# Butonlar #}
+            <div class="flex items-center justify-between pt-6 border-t border-zinc-800/50">
+                <a href="{{ path_for('blackmarket') }}" class="text-[10px] font-black text-zinc-500 hover:text-amber-500 uppercase tracking-widest transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left-long"></i> {{ t('blackmarket.create.back') }}
+                </a>
+                
+                <button type="submit" id="submitAdBtn" class="group bg-zinc-900 hover:bg-amber-600 text-amber-500 hover:text-zinc-950 border border-zinc-800 hover:border-amber-500 px-8 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-[0_5px_15px_rgba(0,0,0,0.4)] flex items-center gap-3 active:scale-95">
+                    <i class="fa-solid fa-fingerprint group-hover:animate-pulse"></i> {{ t('blackmarket.create.submit') }}
+                </button>
+            </div>
+        </form>
+        
+        {# Form MesajÄ± #}
+        <div id="formMessage" class="hidden mt-4 text-[11px] font-black text-center p-4 rounded-xl uppercase tracking-widest border backdrop-blur-md animate-bounce-short"></div>
+        
+    </div>
+</div>
+
+<style>
+@keyframes bounce-short {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+.animate-bounce-short { animation: bounce-short 2s ease-in-out infinite; }
+</style>
+
+<script>
+$(document).ready(function() {
+    $('#blackMarketForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        var $btn = $('#submitAdBtn');
+        var originalText = $btn.html();
+        
+    // v7.0 Loading Durumu
+        $btn.html('<i class="fa-solid fa-satellite fa-spin"></i> {{ t('blackmarket.create.js.encrypting') }}').prop('disabled', true).addClass('opacity-70 cursor-wait');
+        
+        var formData = $(this).serialize();
+        
+        $.ajax({
+            url: '{{ path_for('storeBlackMarketAd') }}', 
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                var msgDiv = $('#formMessage');
+                msgDiv.removeClass('hidden bg-red-950/80 text-red-400 border-red-900/50 bg-amber-900/20 text-amber-500 border-amber-600/30');
+                
+                if(response.error) {
+                    msgDiv.addClass('bg-red-950/80 text-red-400 border-red-900/50')
+                          .html('<i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ t('blackmarket.create.js.error') }}: ' + response.message)
+                          .slideDown();
+                    $btn.html(originalText).prop('disabled', false).removeClass('opacity-70 cursor-wait');
+                } else {
+                    msgDiv.addClass('bg-amber-900/20 text-amber-500 border-amber-600/30 shadow-[0_0_20px_rgba(217,119,6,0.1)]')
+                          .html('<i class="fa-solid fa-check-double mr-2"></i> {{ t('blackmarket.create.js.success') }}')
+                          .slideDown();
+                    
+                    $('#blackMarketForm')[0].reset();
+                    
+                    setTimeout(function() {
+                        window.location.href = '{{ path_for('blackmarket') }}';
+                    }, 1500);
+                }
+            },
+            error: function() {
+                var msgDiv = $('#formMessage');
+                msgDiv.removeClass('hidden')
+                      .addClass('bg-red-950/80 text-red-400 border-red-900/50')
+                      .html('<i class="fa-solid fa-wifi-slash mr-2"></i> {{ t('blackmarket.create.js.connection') }}')
+                      .slideDown();
+                $btn.html(originalText).prop('disabled', false).removeClass('opacity-70 cursor-wait');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

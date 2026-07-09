@@ -1,0 +1,559 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    .map-shell {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .map-container {
+        position: relative;
+        border: 1px solid rgba(51, 65, 85, 0.9);
+        border-radius: 18px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at top, rgba(96, 165, 250, 0.12), transparent 34%),
+            linear-gradient(180deg, rgba(8, 15, 28, 0.98), rgba(8, 15, 28, 0.94));
+        box-shadow: 0 24px 60px rgba(2, 6, 23, 0.42);
+    }
+
+    .map-container::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border: 1px solid rgba(148, 163, 184, 0.06);
+        border-radius: 18px;
+        pointer-events: none;
+        z-index: 15;
+    }
+
+    .leaflet-container {
+        background:
+            radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.2), transparent 30%),
+            linear-gradient(180deg, #87aee7 0%, #7fa6df 38%, #789fd7 100%) !important;
+        cursor: default;
+    }
+
+    #world-map {
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+    }
+
+    #world-map path {
+        transition: fill-opacity 0.12s ease, stroke-width 0.12s ease, stroke 0.12s ease, filter 0.12s ease;
+        cursor: pointer;
+        stroke-linejoin: round;
+    }
+
+    .tactical-tooltip {
+        background: rgba(4, 10, 20, 0.92) !important;
+        border: 1px solid rgba(148, 163, 184, 0.45) !important;
+        color: #f8fafc !important;
+        font-family: sans-serif;
+        font-weight: 700 !important;
+        border-radius: 8px;
+        padding: 6px 10px;
+        text-align: center;
+        box-shadow: 0 12px 24px rgba(2, 6, 23, 0.45);
+    }
+
+    .leaflet-tooltip-left::before,
+    .leaflet-tooltip-right::before,
+    .leaflet-tooltip-top::before,
+    .leaflet-tooltip-bottom::before {
+        border-color: transparent !important;
+    }
+
+    .leaflet-control-zoom {
+        border: 1px solid rgba(15, 23, 42, 0.95) !important;
+        margin-top: 18px !important;
+        margin-left: 18px !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        box-shadow: 0 12px 24px rgba(2, 6, 23, 0.24);
+    }
+
+    .leaflet-control-zoom a {
+        background: rgba(15, 23, 42, 0.94) !important;
+        color: #f8fafc !important;
+        border: none !important;
+        font-weight: 700 !important;
+        transition: background-color 0.2s ease;
+    }
+
+    .leaflet-control-zoom a:hover {
+        background: rgba(30, 41, 59, 1) !important;
+    }
+
+    .map-overlay {
+        position: absolute;
+        z-index: 1200;
+        pointer-events: none;
+    }
+
+    .map-overlay > * {
+        pointer-events: auto;
+    }
+
+    .map-topbar {
+        top: 16px;
+        left: 16px;
+        right: 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .map-floating-card {
+        border: 1px solid rgba(71, 85, 105, 0.85);
+        border-radius: 14px;
+        background: rgba(7, 12, 22, 0.84);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 18px 32px rgba(2, 6, 23, 0.3);
+    }
+
+    .map-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .map-action-btn {
+        border: 1px solid rgba(71, 85, 105, 0.85);
+        background: rgba(15, 23, 42, 0.9);
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: 0.65rem 0.85rem;
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        transition: all 0.18s ease;
+    }
+
+    .map-action-btn:hover {
+        border-color: rgba(56, 189, 248, 0.55);
+        color: #f8fafc;
+        background: rgba(14, 28, 43, 0.98);
+    }
+
+    .map-legend {
+        bottom: 16px;
+        left: 16px;
+        width: min(320px, calc(100% - 32px));
+    }
+
+    .map-legend-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .map-legend-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        flex: 0 0 auto;
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+    }
+
+    #tactical-panel {
+        position: absolute;
+        top: 0;
+        right: -400px;
+        width: 360px;
+        max-width: calc(100% - 28px);
+        height: 100%;
+        background:
+            radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 28%),
+            linear-gradient(180deg, rgba(7, 12, 22, 0.97), rgba(7, 12, 22, 0.95));
+        border-left: 1px solid rgba(56, 189, 248, 0.28);
+        box-shadow: -18px 0 36px rgba(2, 6, 23, 0.52);
+        transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2500;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .map-panel-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 0.42rem 0.7rem;
+        border: 1px solid rgba(71, 85, 105, 0.85);
+        background: rgba(15, 23, 42, 0.72);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
+
+    .map-status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        flex: 0 0 auto;
+    }
+
+    .map-data-card {
+        border: 1px solid rgba(51, 65, 85, 0.9);
+        border-radius: 14px;
+        padding: 0.8rem 0.9rem;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(8, 15, 28, 0.94));
+    }
+
+    .map-operation-btn[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 1024px) {
+        .map-topbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .map-actions {
+            justify-content: flex-start;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .map-container {
+            height: 72vh !important;
+        }
+
+        #tactical-panel {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .map-legend {
+            right: 16px;
+            width: auto;
+        }
+    }
+</style>
+
+<div class="map-shell w-full pb-10 px-2 md:px-4 pt-4 animate-fade-in">
+    <section class="map-container w-full h-[76vh] md:h-[84vh]">
+        <div id="map-loader" class="absolute inset-0 z-[2000] flex flex-col items-center justify-center transition-opacity duration-500 bg-[linear-gradient(180deg,#8cb1e7,#7da2da)]">
+            <i class="fa-solid fa-earth-americas text-5xl text-slate-900 animate-spin mb-4" style="animation-duration: 3s;"></i>
+            <div class="text-slate-900 font-black uppercase tracking-[0.3em] text-sm">{{ t('map.loader.loading') }}</div>
+        </div>
+
+        <div id="world-map"></div>
+
+        <div class="map-overlay map-topbar">
+            <div class="map-floating-card px-4 py-3 max-w-md">
+                <div class="text-[10px] text-slate-400 uppercase tracking-[0.22em] font-bold">{{ t('map.controls.overview') }}</div>
+                <div id="map-selection-hint" class="mt-2 text-sm text-slate-200 font-semibold">{{ t('map.panel.selection_hint') }}</div>
+            </div>
+            <div class="map-actions">
+                <button id="btn-focus-active" class="map-action-btn">{{ t('map.controls.focus_active') }}</button>
+                <button id="btn-world-view" class="map-action-btn">{{ t('map.controls.world_view') }}</button>
+            </div>
+        </div>
+
+        <div class="map-overlay map-legend">
+            <div class="map-floating-card p-4">
+                <div class="text-[10px] text-slate-400 uppercase tracking-[0.22em] font-bold">{{ t('map.legend.title') }}</div>
+                <div class="mt-3 space-y-2 text-sm text-slate-200">
+                    <div class="map-legend-row">
+                        <span class="map-legend-swatch" style="background:#22d3ee;"></span>
+                        <span>{{ t('map.legend.active') }}</span>
+                    </div>
+                    <div class="map-legend-row">
+                        <span class="map-legend-swatch" style="background:#64748b;"></span>
+                        <span>{{ t('map.legend.neutral') }}</span>
+                    </div>
+                    <div class="pt-2 text-xs text-slate-400">{{ t('map.legend.hint') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <aside id="tactical-panel">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <div class="space-y-2">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-[0.24em] font-bold">{{ t('map.controls.overview') }}</div>
+                    <h2 id="panel-title-name" class="text-white font-black uppercase tracking-[0.08em] text-lg leading-tight">{{ t('map.panel.waiting') }}</h2>
+                    <div id="panel-status-pill" class="map-panel-pill text-slate-200">
+                        <span id="panel-status-dot" class="map-status-dot bg-slate-500"></span>
+                        <span id="panel-status-text">{{ t('map.panel.selection_hint') }}</span>
+                    </div>
+                </div>
+                <button onclick="closeTacticalPanel()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-4 flex-1 overflow-y-auto flex flex-col text-white gap-4">
+                <div class="map-data-card">
+                    <div class="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-bold">{{ t('map.panel.country') }}</div>
+                    <div id="panel-subtitle-name" class="mt-2 text-lg font-black text-white">--</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="map-data-card text-center">
+                        <div class="text-[9px] text-slate-400 uppercase tracking-[0.18em]">{{ t('map.panel.currency') }}</div>
+                        <div id="panel-currency" class="text-emerald-400 font-bold text-sm mt-2">--</div>
+                    </div>
+                    <div class="map-data-card text-center">
+                        <div class="text-[9px] text-slate-400 uppercase tracking-[0.18em]">{{ t('map.panel.minimum_wage') }}</div>
+                        <div id="panel-min-wage" class="text-white font-bold text-sm mt-2">--</div>
+                    </div>
+                </div>
+
+                <div class="map-data-card">
+                    <div class="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-bold">{{ t('map.panel.president') }}</div>
+                    <div id="panel-president" class="text-white font-bold text-base mt-2">--</div>
+                </div>
+
+                <div class="mt-auto">
+                    <button id="btn-start-operation" class="map-operation-btn w-full bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-[0.18em] py-3 rounded-xl transition-colors shadow-lg" disabled>
+                        {{ t('map.panel.start_operation') }}
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </section>
+</div>
+
+<script>
+const mapI18n = {
+    unownedRegion: {{ t('map.panel.unowned_region')|json_encode|raw }},
+    none: {{ t('map.panel.none')|json_encode|raw }},
+    unknownRegion: {{ t('map.panel.unknown_region')|json_encode|raw }},
+    unknownCountry: {{ t('map.panel.unknown_country')|json_encode|raw }},
+    awaitingPresident: {{ t('map.panel.awaiting_president')|json_encode|raw }},
+    selectionHint: {{ t('map.panel.selection_hint')|json_encode|raw }},
+    activeStatus: {{ t('map.panel.status_active')|json_encode|raw }},
+    neutralStatus: {{ t('map.panel.status_neutral')|json_encode|raw }},
+    missingFile: {{ t('map.js.missing_file')|json_encode|raw }},
+    initError: {{ t('map.js.init_error')|json_encode|raw }},
+    sampleData: {{ t('map.js.sample_data')|json_encode|raw }},
+    genericError: {{ t('map.js.error')|json_encode|raw }}
+};
+
+const countryData = {{ countryDataJson|raw }};
+const regionData = {{ regionDataJson|raw }};
+const featureNameAliases = {
+    'czech republic': 'czechia',
+    'republic of turkey': 'turkey',
+    'russian federation': 'russia',
+    'syrian arab republic': 'syria',
+    'iran, islamic republic of': 'iran',
+    'macedonia': 'north macedonia',
+    'uk': 'united kingdom',
+    'great britain': 'united kingdom'
+};
+
+function normalizeMapKey(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/['`.]/g, '')
+        .replace(/&/g, ' and ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function findLookupRecord(source, rawValue) {
+    const key = normalizeMapKey(rawValue);
+    if (!key) {
+        return null;
+    }
+
+    return source[key] || source[featureNameAliases[key]] || null;
+}
+
+function getFeatureCountryName(properties) {
+    return properties.admin
+        || properties.NAME_0
+        || properties.country
+        || properties.sovereignt
+        || properties.SOVEREIGNT
+        || '';
+}
+
+function getFeatureRegionName(properties) {
+    return properties.name
+        || properties.NAME_1
+        || properties.name_1
+        || properties.region
+        || '';
+}
+
+function closeTacticalPanel() {
+    document.getElementById('tactical-panel').style.right = '-400px';
+}
+
+function setPanelStatus(isActive) {
+    const dot = document.getElementById('panel-status-dot');
+    const text = document.getElementById('panel-status-text');
+
+    if (isActive) {
+        dot.className = 'map-status-dot bg-emerald-400';
+        text.innerText = mapI18n.activeStatus;
+        return;
+    }
+
+    dot.className = 'map-status-dot bg-slate-500';
+    text.innerText = mapI18n.neutralStatus;
+}
+
+function openTacticalPanel(regionName, regionRecord, countryRecord, fallbackCountryName) {
+    document.getElementById('tactical-panel').style.right = '0';
+    document.getElementById('panel-title-name').innerText = regionName;
+
+    const isActive = !!(regionRecord || countryRecord);
+    const resolvedCountryName = regionRecord?.country_name || countryRecord?.name || fallbackCountryName || mapI18n.unownedRegion;
+    const resolvedCurrency = regionRecord?.currency || countryRecord?.currency || mapI18n.none;
+    const resolvedMinimumWage = regionRecord?.minimum_wage ?? countryRecord?.minimum_wage ?? 0;
+    const resolvedPresident = regionRecord?.president || countryRecord?.president || mapI18n.awaitingPresident;
+    const actionButton = document.getElementById('btn-start-operation');
+
+    document.getElementById('panel-subtitle-name').innerText = resolvedCountryName;
+    document.getElementById('panel-currency').innerText = resolvedCurrency;
+    document.getElementById('panel-min-wage').innerText = resolvedMinimumWage;
+    document.getElementById('panel-president').innerText = resolvedPresident;
+    document.getElementById('map-selection-hint').innerText = `${resolvedCountryName} / ${regionName}`;
+    setPanelStatus(isActive);
+
+    if (isActive) {
+        actionButton.disabled = false;
+    } else {
+        actionButton.disabled = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const defaultBounds = L.latLngBounds([[30, -15], [62, 65]]);
+        const map = L.map('world-map', {
+            center: [45, 18],
+            zoom: 4,
+            minZoom: 2,
+            maxZoom: 9,
+            zoomControl: false,
+            preferCanvas: true,
+            zoomSnap: 0.5,
+            worldCopyJump: false
+        });
+
+        const activeLayers = [];
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+        map.on('click', function() { closeTacticalPanel(); });
+
+        document.getElementById('btn-focus-active').addEventListener('click', function() {
+            if (!activeLayers.length) {
+                map.flyToBounds(defaultBounds, { padding: [32, 32], maxZoom: 4 });
+                return;
+            }
+
+            const group = L.featureGroup(activeLayers);
+            map.flyToBounds(group.getBounds(), { padding: [34, 34], maxZoom: 5 });
+        });
+
+        document.getElementById('btn-world-view').addEventListener('click', function() {
+            map.flyToBounds(defaultBounds, { padding: [32, 32], maxZoom: 4 });
+        });
+
+        fetch('/public/assets/static/worldmap/worldmap.json')
+            .then(r => {
+                if (!r.ok) {
+                    throw new Error(mapI18n.missingFile);
+                }
+                return r.json();
+            })
+            .then(geoJson => {
+                console.log(mapI18n.sampleData, geoJson.features[0].properties);
+
+                const geojsonLayer = L.geoJSON(geoJson, {
+                    style: function(feature) {
+                        const p = feature.properties;
+                        const regionName = getFeatureRegionName(p);
+                        const countryName = getFeatureCountryName(p);
+                        const matchedRegion = findLookupRecord(regionData, regionName);
+                        const matchedCountry = findLookupRecord(countryData, countryName);
+                        const isActive = !!(matchedRegion || matchedCountry);
+
+                        return {
+                            fillColor: matchedRegion?.color || matchedCountry?.color || '#64748b',
+                            fillOpacity: isActive ? 0.92 : 0.76,
+                            color: isActive ? 'rgba(226, 232, 240, 0.4)' : 'rgba(30, 41, 59, 0.75)',
+                            weight: isActive ? 1 : 0.55,
+                            opacity: 1
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const p = feature.properties;
+                        const regionName = getFeatureRegionName(p) || mapI18n.unknownRegion;
+                        const rawCountryName = getFeatureCountryName(p) || mapI18n.unknownCountry;
+                        const matchedRegion = findLookupRecord(regionData, regionName);
+                        const matchedCountry = findLookupRecord(countryData, rawCountryName);
+                        const isActive = !!(matchedRegion || matchedCountry);
+                        const displayCountryName = matchedRegion?.country_name || matchedCountry?.name || rawCountryName;
+                        const tooltipContent = `<div style="font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.14em;">${displayCountryName}</div><div style="font-size:12px;">${regionName}</div>`;
+
+                        if (isActive) {
+                            activeLayers.push(layer);
+                        }
+
+                        layer.bindTooltip(tooltipContent, { className: 'tactical-tooltip', sticky: true, direction: 'auto' });
+                        layer.on({
+                            mouseover: function(e) {
+                                e.target.setStyle({
+                                    weight: isActive ? 2.2 : 1.2,
+                                    color: '#f8fafc',
+                                    fillOpacity: isActive ? 1 : 0.84
+                                });
+                                if (!L.Browser.ie && !L.Browser.edge) {
+                                    e.target.bringToFront();
+                                }
+                            },
+                            mouseout: function(e) {
+                                geojsonLayer.resetStyle(e.target);
+                            },
+                            click: function(e) {
+                                L.DomEvent.stopPropagation(e);
+                                openTacticalPanel(regionName, matchedRegion, matchedCountry, rawCountryName);
+                            }
+                        });
+                    }
+                }).addTo(map);
+
+                if (activeLayers.length) {
+                    const group = L.featureGroup(activeLayers);
+                    map.fitBounds(group.getBounds(), { padding: [34, 34], maxZoom: 5 });
+                } else {
+                    map.fitBounds(defaultBounds, { padding: [32, 32], maxZoom: 4 });
+                }
+
+                setTimeout(() => {
+                    const loader = document.getElementById('map-loader');
+                    if (loader) {
+                        loader.style.opacity = '0';
+                        setTimeout(() => loader.remove(), 500);
+                    }
+                }, 450);
+            })
+            .catch(error => {
+                console.error(mapI18n.genericError, error);
+            });
+    } catch (error) {
+        console.error(mapI18n.initError, error);
+    }
+});
+</script>
+{% endblock %}

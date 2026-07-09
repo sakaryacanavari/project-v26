@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('tr') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default('Sistem Hatasi') }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at top, rgba(56, 189, 248, 0.10), transparent 42%),
+                #020617;
+            color: #e2e8f0;
+            font-family: Inter, Arial, sans-serif;
+        }
+        .error-shell {
+            width: 100%;
+            max-width: 640px;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+        }
+        .error-code {
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: #38bdf8;
+        }
+        .error-title {
+            margin-top: 12px;
+            font-size: 28px;
+            font-weight: 900;
+            color: #f8fafc;
+        }
+        .error-body {
+            margin-top: 14px;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #94a3b8;
+        }
+        .error-actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .error-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 170px;
+            padding: 12px 18px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            transition: 0.18s ease;
+        }
+        .error-btn--primary {
+            background: #0891b2;
+            color: #f8fafc;
+        }
+        .error-btn--ghost {
+            border: 1px solid rgba(255,255,255,0.10);
+            color: #cbd5e1;
+            background: rgba(255,255,255,0.03);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-shell">
+        <div class="error-code">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Hata {{ error_code|default(500) }}
+        </div>
+        <div class="error-title">{{ error_title|default('Sistem Hatasi') }}</div>
+        <div class="error-body">{{ error_message|default('Beklenmeyen bir hata olustu.') }}</div>
+        <div class="error-actions">
+            <a href="{{ base_url() }}/" class="error-btn error-btn--primary">
+                <i class="fa-solid fa-house"></i> {{ t('error.home') }}
+            </a>
+            <a href="javascript:history.back()" class="error-btn error-btn--ghost">
+                <i class="fa-solid fa-arrow-left"></i> {{ t('error.back') }}
+            </a>
+        </div>
+    </div>
+</body>
+</html>

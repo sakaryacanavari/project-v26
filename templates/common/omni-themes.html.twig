@@ -1,0 +1,324 @@
+{% set __defaultTheme = 'dark_cyan' %}
+{% set __rawTheme = themeState.combined|default(my.theme|default(__defaultTheme)) %}
+{% set __themeParts = __rawTheme|split('_') %}
+{% set __serverMode = __themeParts[0]|default('dark') %}
+{% set __serverColor = __themeParts[1]|default('cyan') %}
+
+<script>
+    (function () {
+        const VALID_MODES = ['dark', 'oled', 'dim', 'magma', 'aurora'];
+        const VALID_COLORS = ['cyan', 'diamond', 'blue', 'mono', 'red', 'amber', 'purple', 'pink', 'lavender', 'overdrive', 'blood', 'matrix'];
+
+        const DEFAULT_MODE = 'dark';
+        const DEFAULT_COLOR = 'cyan';
+
+        const serverModeRaw = '{{ __serverMode|e('js') }}';
+        const serverColorRaw = '{{ __serverColor|e('js') }}';
+
+        const storedModeRaw = localStorage.getItem('omni_mode');
+        const storedColorRaw = localStorage.getItem('omni_color');
+
+        function sanitizeMode(mode) {
+            return VALID_MODES.indexOf(mode) !== -1 ? mode : DEFAULT_MODE;
+        }
+
+        function sanitizeColor(color) {
+            return VALID_COLORS.indexOf(color) !== -1 ? color : DEFAULT_COLOR;
+        }
+
+        const resolvedMode = sanitizeMode(storedModeRaw || serverModeRaw || DEFAULT_MODE);
+        const resolvedColor = sanitizeColor(storedColorRaw || serverColorRaw || DEFAULT_COLOR);
+
+        localStorage.setItem('omni_mode', resolvedMode);
+        localStorage.setItem('omni_color', resolvedColor);
+
+        document.documentElement.setAttribute('data-theme', resolvedColor);
+        document.documentElement.setAttribute('data-mode', resolvedMode);
+
+        document.documentElement.classList.remove(
+            'theme-dark',
+            'theme-oled',
+            'theme-dim',
+            'theme-magma',
+            'theme-aurora'
+        );
+
+        if (resolvedMode !== 'dark') {
+            document.documentElement.classList.add('theme-' + resolvedMode);
+        }
+    })();
+</script>
+
+<style>
+    :root {
+        --brand-primary: #06b6d4;
+        --brand-glow: rgba(6, 182, 212, 0.5);
+    }
+
+    html[data-theme="red"] { --brand-primary: #ef4444; --brand-glow: rgba(239, 68, 68, 0.5); }
+    html[data-theme="purple"] { --brand-primary: #a855f7; --brand-glow: rgba(168, 85, 247, 0.5); }
+    html[data-theme="cyan"] { --brand-primary: #06b6d4; --brand-glow: rgba(6, 182, 212, 0.5); }
+    html[data-theme="amber"] { --brand-primary: #f59e0b; --brand-glow: rgba(245, 158, 11, 0.5); }
+    html[data-theme="blue"] { --brand-primary: #3b82f6; --brand-glow: rgba(59, 130, 246, 0.5); }
+    html[data-theme="pink"] { --brand-primary: #ec4899; --brand-glow: rgba(236, 72, 153, 0.5); }
+    html[data-theme="mono"] { --brand-primary: #94a3b8; --brand-glow: rgba(148, 163, 184, 0.3); }
+    html[data-theme="diamond"] { --brand-primary: #2dd4bf; --brand-glow: rgba(45, 212, 191, 0.5); }
+    html[data-theme="overdrive"] { --brand-primary: #facc15; --brand-glow: rgba(250, 204, 21, 0.5); }
+    html[data-theme="blood"] { --brand-primary: #be123c; --brand-glow: rgba(190, 18, 60, 0.5); }
+    html[data-theme="matrix"] { --brand-primary: #22c55e; --brand-glow: rgba(34, 197, 94, 0.5); }
+    html[data-theme="lavender"] { --brand-primary: #c084fc; --brand-glow: rgba(192, 132, 252, 0.5); }
+
+    html[data-theme] .text-indigo-400,
+    html[data-theme] .text-cyan-400,
+    html[data-theme] .text-emerald-400 {
+        color: var(--brand-primary) !important;
+        transition: color 0.4s ease;
+    }
+
+    html[data-theme] .bg-indigo-600,
+    html[data-theme] .bg-indigo-500 {
+        background-color: var(--brand-primary) !important;
+        transition: background-color 0.4s ease;
+    }
+
+    html[data-theme] .border-indigo-500,
+    html[data-theme] .border-cyan-500 {
+        border-color: var(--brand-primary) !important;
+        transition: border-color 0.4s ease;
+    }
+
+    html[data-theme] .bg-indigo-500\/10,
+    html[data-theme] .bg-cyan-500\/10 {
+        background-color: color-mix(in srgb, var(--brand-primary) 15%, transparent) !important;
+    }
+
+    html[data-theme] .nav-item::after { background: var(--brand-primary) !important; box-shadow: 0 -2px 10px var(--brand-glow) !important; }
+    html[data-theme] .drop-link:hover { border-left-color: var(--brand-primary) !important; color: var(--brand-primary) !important; }
+    html[data-theme] .avatar-box { border-color: var(--brand-primary) !important; box-shadow: 0 0 15px var(--brand-glow) !important; }
+
+    .tc-cyan { color: #06b6d4; }
+    .tc-red { color: #ef4444; }
+    .tc-purple { color: #a855f7; }
+    .tc-amber { color: #f59e0b; }
+    .tc-blue { color: #3b82f6; }
+    .tc-pink { color: #ec4899; }
+    .tc-mono { color: #94a3b8; }
+    .tc-diamond { color: #2dd4bf; }
+    .tc-overdrive { color: #facc15; }
+    .tc-blood { color: #be123c; }
+    .tc-matrix { color: #22c55e; }
+    .tc-lavender { color: #c084fc; }
+
+    html.theme-oled body {
+        background-color: #020202 !important;
+        background-image: none !important;
+        color: #f3f4f6 !important;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-synthesis-weight: none;
+    }
+
+    html.theme-oled .glass-panel,
+    body.theme-oled #v2-settings-center .holo-panel {
+        background: #050505 !important;
+        border-color: rgba(255,255,255,0.08) !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-oled header {
+        background: #000000 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    }
+
+    html.theme-oled .dropdown-v6,
+    html.theme-oled .omni-drop,
+    body.theme-oled #v2-settings-center .cyber-input,
+    body.theme-oled #v2-settings-center .cyber-select {
+        background: #050505 !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+    html.theme-oled .ticker-v6 {
+        background: #000000 !important;
+        border-top: 0 !important;
+    }
+
+    html.theme-oled .bg-black\/40,
+    html.theme-oled .bg-slate-950\/80,
+    body.theme-oled #v2-settings-center .bg-black\/40 {
+        background-color: #000000 !important;
+        border-color: rgba(255,255,255,0.05) !important;
+    }
+
+    html.theme-oled .top-nav-link,
+    html.theme-oled .drop-link,
+    html.theme-oled .omni-title,
+    html.theme-oled .omni-sub,
+    html.theme-oled .omni-top .ttl,
+    html.theme-oled .omni-tab,
+    html.theme-oled .glass-panel,
+    html.theme-oled .mono-font {
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    html.theme-dim body {
+        background-color: #0f172a !important;
+        background-image: none !important;
+    }
+
+    html.theme-dim .glass-panel,
+    body.theme-dim #v2-settings-center .holo-panel {
+        background: #1e293b !important;
+        border-color: rgba(255,255,255,0.05) !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+    }
+
+    html.theme-dim header {
+        background: rgba(15,23,42,0.95) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    }
+
+    html.theme-dim .dropdown-v6,
+    html.theme-dim .omni-drop,
+    body.theme-dim #v2-settings-center .cyber-input,
+    body.theme-dim #v2-settings-center .cyber-select {
+        background: #1e293b !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+    html.theme-dim .ticker-v6 {
+        background: #0f172a !important;
+        border-top: 0 !important;
+    }
+
+    html.theme-dim .bg-black\/40,
+    body.theme-dim #v2-settings-center .bg-black\/40 {
+        background-color: #0f172a !important;
+        border-color: rgba(255,255,255,0.05) !important;
+    }
+
+    html.theme-magma body {
+        background-color: #2a0a0a !important;
+        background-image: none !important;
+        color: #fffedd !important;
+    }
+
+    html.theme-magma .glass-panel,
+    body.theme-magma #v2-settings-center .holo-panel {
+        background: rgba(40, 10, 10, 0.9) !important;
+        border-color: rgba(249, 115, 22, 0.2) !important;
+        box-shadow: 0 10px 30px rgba(249, 115, 22, 0.1) !important;
+    }
+
+    html.theme-magma header {
+        background: rgba(30, 5, 5, 0.95) !important;
+        border-bottom: 1px solid rgba(249, 115, 22, 0.2) !important;
+    }
+
+    html.theme-magma .dropdown-v6,
+    html.theme-magma .omni-drop {
+        background: rgba(40, 10, 10, 0.98) !important;
+        border-color: rgba(249, 115, 22, 0.2) !important;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.8) !important;
+    }
+
+    html.theme-magma .bg-black\/40,
+    body.theme-magma #v2-settings-center .bg-black\/40 {
+        background: rgba(20, 5, 5, 0.8) !important;
+        border-color: rgba(249, 115, 22, 0.1) !important;
+    }
+
+    html.theme-magma .border-white\/5 {
+        border-color: rgba(249, 115, 22, 0.15) !important;
+    }
+
+    html.theme-magma .ticker-v6 {
+        background: rgba(20, 5, 5, 0.95) !important;
+        border-top: 0 !important;
+    }
+
+    html.theme-magma .omni-top,
+    html.theme-magma .omni-foot,
+    html.theme-magma .omni-tabs {
+        background: rgba(20, 5, 5, 1) !important;
+        border-color: rgba(249, 115, 22, 0.2) !important;
+    }
+
+    html.theme-magma .omni-mini,
+    html.theme-magma .omni-tab,
+    html.theme-magma .omni-ico,
+    html.theme-magma .omni-i {
+        background: rgba(40, 10, 10, 1) !important;
+        border-color: rgba(249, 115, 22, 0.2) !important;
+    }
+
+    html.theme-magma .omni-item {
+        border-color: rgba(249, 115, 22, 0.1) !important;
+    }
+
+    html.theme-aurora body {
+        background-color: #140b1f !important;
+        background-image:
+            radial-gradient(circle at 15% 20%, rgba(236, 72, 153, 0.14), transparent 32%),
+            radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.16), transparent 34%),
+            radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.10), transparent 28%) !important;
+        color: #fdf4ff !important;
+    }
+
+    html.theme-aurora .glass-panel,
+    body.theme-aurora #v2-settings-center .holo-panel {
+        background: rgba(28, 14, 40, 0.82) !important;
+        border-color: rgba(236, 72, 153, 0.14) !important;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.52) !important;
+    }
+
+    html.theme-aurora header {
+        background: rgba(20, 9, 30, 0.95) !important;
+        border-bottom: 1px solid rgba(168, 85, 247, 0.18) !important;
+    }
+
+    html.theme-aurora .dropdown-v6,
+    html.theme-aurora .omni-drop {
+        background: rgba(25, 12, 36, 0.96) !important;
+        border-color: rgba(236, 72, 153, 0.16) !important;
+        box-shadow: 0 20px 48px rgba(0,0,0,0.70) !important;
+    }
+
+    html.theme-aurora .bg-black\/40,
+    body.theme-aurora #v2-settings-center .bg-black\/40 {
+        background: rgba(18, 8, 28, 0.72) !important;
+        border-color: rgba(168, 85, 247, 0.12) !important;
+    }
+
+    html.theme-aurora .border-white\/5 {
+        border-color: rgba(236, 72, 153, 0.10) !important;
+    }
+
+    html.theme-aurora .ticker-v6 {
+        background: rgba(17, 8, 25, 0.92) !important;
+        border-top: 0 !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-aurora .omni-top,
+    html.theme-aurora .omni-foot,
+    html.theme-aurora .omni-tabs {
+        background: rgba(24, 10, 34, 0.98) !important;
+        border-color: rgba(236, 72, 153, 0.10) !important;
+    }
+
+    html.theme-aurora .omni-mini,
+    html.theme-aurora .omni-tab,
+    html.theme-aurora .omni-ico,
+    html.theme-aurora .omni-i {
+        background: rgba(32, 14, 46, 0.92) !important;
+        border-color: rgba(168, 85, 247, 0.16) !important;
+    }
+
+    html.theme-aurora .omni-item {
+        border-color: rgba(236, 72, 153, 0.08) !important;
+    }
+</style>

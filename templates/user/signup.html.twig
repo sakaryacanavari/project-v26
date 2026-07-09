@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('tr') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('auth.signup.title') }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --auth-canvas: #07090b;
+            --auth-panel: rgba(10, 15, 20, 0.35);
+            --auth-panel-raised: rgba(18, 25, 30, 0.45);
+            --auth-ink: #ffffff;
+            --auth-muted: #94a3b8;
+            --auth-line: rgba(255, 255, 255, 0.08);
+            --auth-line-strong: rgba(255, 255, 255, 0.16);
+            --auth-signal: #00f2fe; /* brighter cyan */
+            --auth-seal: #ff4b4b; /* vibrant red */
+            --auth-gold: #fbc2eb; /* soft pink/gold gradient hint */
+            --auth-warning: #f59e0b;
+            --auth-deep: #020617;
+            --auth-glass-shadow: 0 32px 64px -12px rgba(0,0,0,0.8);
+            --auth-glass-border: 1px solid rgba(255,255,255,0.06);
+            --auth-glass-blur: blur(24px) saturate(160%);
+            --auth-map-line: rgba(255, 255, 255, 0.035);
+            --line: var(--auth-line);
+            --muted: var(--auth-muted);
+            --signal: var(--auth-signal);
+            --seal: var(--auth-seal);
+            --gold: var(--auth-gold);
+        }
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: var(--auth-ink);
+            background-color: var(--auth-deep);
+            background-image:
+                radial-gradient(ellipse at 10% 20%, rgba(0, 242, 254, 0.18), transparent 42%),
+                radial-gradient(ellipse at 88% 84%, rgba(251, 194, 235, 0.14), transparent 44%),
+                linear-gradient(120deg, rgba(0, 242, 254, 0.06), transparent 36%, rgba(255, 75, 75, 0.045) 72%, transparent),
+                radial-gradient(ellipse at 50% 50%, rgba(10, 15, 20, 0.92), var(--auth-deep));
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Cpath d="M30 30h30v30H30zM0 0h30v30H0z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+            z-index: 0;
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, var(--auth-map-line) 1px, transparent 1px),
+                linear-gradient(180deg, var(--auth-map-line) 1px, transparent 1px),
+                radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 30%);
+            background-size: 56px 56px, 56px 56px, 100% 100%;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.28));
+            z-index: 0;
+        }
+        .display-font { font-family: 'Archivo Black', sans-serif; }
+        .mono-font { font-family: 'IBM Plex Mono', monospace; }
+        .auth-shell { animation: enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; position: relative; z-index: 1; }
+        .auth-shell::before {
+            content: "";
+            position: absolute;
+            inset: 5% 3% auto 3%;
+            height: 16rem;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, rgba(0, 242, 254, 0.14), transparent 66%);
+            filter: blur(18px);
+            opacity: 0.8;
+            z-index: -1;
+        }
+        
+        .terminal-panel {
+            background: linear-gradient(180deg, rgba(18, 28, 38, 0.66), rgba(8, 12, 18, 0.54));
+            border: var(--auth-glass-border);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), var(--auth-glass-shadow);
+            backdrop-filter: var(--auth-glass-blur);
+            -webkit-backdrop-filter: var(--auth-glass-blur);
+        }
+
+        .field-input {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.028)),
+                rgba(2, 6, 23, 0.58);
+            border: 1px solid rgba(255, 255, 255, 0.115);
+            color: #fff;
+            border-radius: 8px !important;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 26px rgba(0,0,0,0.18);
+        }
+        .field-input:focus {
+            background:
+                linear-gradient(180deg, rgba(0, 242, 254, 0.085), rgba(255,255,255,0.035)),
+                rgba(0, 0, 0, 0.44);
+            border-color: rgba(0, 242, 254, 0.6);
+            box-shadow: 0 0 0 4px rgba(0, 242, 254, 0.15), inset 0 0 10px rgba(0, 242, 254, 0.05);
+            outline: none;
+        }
+        .field-input.is-invalid {
+            border-color: rgba(255, 75, 75, 0.8);
+            box-shadow: 0 0 0 4px rgba(255, 75, 75, 0.14);
+        }
+        .field-input.is-warning {
+            border-color: rgba(245, 158, 11, 0.85);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.14);
+        }
+        .field-input:focus-visible,
+        .auth-btn-primary:focus-visible,
+        .auth-btn-secondary:focus-visible,
+        .auth-locale-btn:focus-visible,
+        #togglePass1:focus-visible,
+        #togglePass2:focus-visible,
+        #biometricBtn:focus-visible {
+            outline: 2px solid rgba(0, 242, 254, 0.85);
+            outline-offset: 3px;
+        }
+        .field-input::placeholder { color: rgba(148, 163, 184, 0.56); }
+        select.field-input {
+            appearance: none;
+            background-image:
+                linear-gradient(45deg, transparent 50%, rgba(0, 242, 254, 0.9) 50%),
+                linear-gradient(135deg, rgba(0, 242, 254, 0.9) 50%, transparent 50%),
+                linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.028));
+            background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%, 0 0;
+            background-size: 6px 6px, 6px 6px, 100% 100%;
+            background-repeat: no-repeat;
+            padding-right: 2.4rem !important;
+        }
+        
+        .feedback-text { min-height: 12px; }
+        
+        .loader {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-left-color: var(--auth-signal);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        
+        #error-box { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top; }
+        #error-box.hidden { opacity: 0; transform: translateY(-10px); height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; pointer-events: none; }
+        
+        .seal-grid {
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+            background-size: 18px 18px;
+        }
+        
+        .auth-side {
+            position: relative;
+            background:
+                linear-gradient(145deg, rgba(0, 242, 254, 0.075) 0%, rgba(255,255,255,0.032) 42%, rgba(0,0,0,0.24) 100%);
+            border: 1px solid rgba(255,255,255,0.075);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.075), 0 24px 55px rgba(0,0,0,0.36);
+            backdrop-filter: blur(16px);
+        }
+        .auth-side::before {
+            content: "";
+            position: absolute;
+            inset: 1rem;
+            pointer-events: none;
+            border: 1px solid rgba(0, 242, 254, 0.08);
+            border-radius: 1.15rem;
+        }
+        
+        .auth-side::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 242, 254, 0.05) 100%);
+            pointer-events: none;
+        }
+
+        .auth-brand-stage {
+            position: relative;
+            background:
+                radial-gradient(circle at 20% 10%, rgba(0, 242, 254, 0.12), transparent 34%),
+                rgba(0,0,0,0.26);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 40px rgba(0,0,0,0.28);
+        }
+        .auth-brand-stage::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--auth-signal), var(--auth-gold));
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+        }
+
+        .auth-brand {
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .auth-step-grid { display: grid; grid-template-columns: 1fr; gap: 0.65rem; }
+        
+        .auth-step {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02) !important;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05) !important;
+            transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+        }
+        .auth-step::before {
+            content: "";
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--auth-signal), var(--auth-gold));
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+        .auth-step:hover {
+            transform: translateX(4px);
+            border-color: rgba(0,242,254,0.3) !important;
+            background: rgba(255,255,255,0.05) !important;
+        }
+        .auth-step:hover::before { opacity: 1; }
+
+        .auth-card {
+            position: relative;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(18, 27, 43, 0.82), rgba(8, 12, 23, 0.72)),
+                rgba(15, 23, 42, 0.62);
+            border: 1px solid rgba(255,255,255,0.105);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.11), 0 34px 70px -18px rgba(0,0,0,0.86);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+        }
+        .auth-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.7), transparent 22%, transparent 78%, rgba(251, 194, 235, 0.45));
+            height: 1px;
+            opacity: 0.85;
+        }
+        .auth-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -18% -24% 28%;
+            height: 14rem;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, rgba(0, 242, 254, 0.09), transparent 68%);
+        }
+        .auth-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .auth-card-logo {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            width: 8rem;
+            height: 8rem;
+            opacity: 0.1;
+            transform: rotate(-10deg);
+            filter: grayscale(100%) brightness(200%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .auth-locale-btn {
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            color: var(--auth-muted);
+            opacity: 0.7;
+        }
+        .auth-locale-btn.is-active, .auth-locale-btn:hover {
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            opacity: 1;
+        }
+        
+        .auth-security {
+            background:
+                linear-gradient(180deg, rgba(0, 242, 254, 0.055), rgba(255,255,255,0.025)),
+                rgba(0,0,0,0.32) !important;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.055);
+        }
+        
+        .auth-security-button {
+            background: rgba(255,255,255,0.04) !important;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        .auth-security-button:hover {
+            background: rgba(0, 242, 254, 0.07) !important;
+            box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+        }
+
+        .auth-btn-primary {
+            position: relative;
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.8), rgba(79, 172, 254, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px rgba(0, 242, 254, 0.4);
+        }
+        .auth-btn-primary::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg);
+            transition: all 0.5s ease;
+        }
+        .auth-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(0, 242, 254, 0.6);
+        }
+        .auth-btn-primary:hover::before {
+            left: 150%;
+        }
+
+        .auth-btn-secondary {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--auth-muted);
+            transition: all 0.3s ease;
+        }
+        .auth-btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .auth-label {
+            text-shadow: 0 0 18px rgba(0, 242, 254, 0.22);
+        }
+        .auth-help {
+            color: rgba(215, 208, 191, 0.78) !important;
+        }
+        #bioIcon {
+            border-radius: 6px;
+            background: rgba(0, 242, 254, 0.06);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        
+        .auth-error {
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            background: rgba(217,75,61,0.15) !important;
+        }
+        .auth-error::before {
+            content: "";
+            position: absolute;
+            left: 0; top: 0; bottom: 0; width: 4px;
+            background: var(--auth-seal);
+        }
+
+        @keyframes enter { 
+            from { opacity: 0; transform: translateY(30px) scale(0.95); filter: blur(10px); } 
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Scrollbar overlay fix */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        @media (max-width: 1280px) {
+            body { align-items: flex-start; }
+            .auth-shell { grid-template-columns: 1fr !important; max-width: 48rem !important; margin: 0 auto; justify-content: center; }
+            .auth-side { display: none !important; }
+        }
+        @media (max-width: 480px) {
+            body.auth-page { padding-left: 0.75rem; padding-right: 0.75rem; }
+            .auth-card { padding: 1.25rem !important; border-radius: 18px !important; }
+            .auth-card-logo { display: none; }
+            .auth-card-head .relative { flex-direction: column; align-items: stretch; }
+            .auth-card-head .flex-col { align-items: flex-start; }
+            .auth-brand { font-size: 2.5rem !important; }
+            .field-input { font-size: 16px !important; }
+            .auth-security-button { align-items: flex-start; flex-direction: column; }
+            #bioStatus { align-self: flex-start; }
+            .auth-actions { flex-direction: column !important; align-items: stretch !important; gap: 0.75rem !important; }
+            .auth-actions button, .auth-actions a { width: 100%; min-width: 0; }
+        }
+    </style>
+</head>
+<body class="auth-page min-h-screen px-4 py-3 selection:bg-cyan-400 selection:text-black">
+    <main class="auth-shell mx-auto grid min-h-[calc(100vh-1.5rem)] w-full max-w-6xl items-center gap-4 xl:grid-cols-[.68fr_1.32fr]">
+        <section class="auth-side terminal-panel relative overflow-hidden rounded-3xl p-5 sm:p-6 xl:min-h-[500px]">
+            <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[color:var(--signal)] to-[color:var(--gold)] opacity-80"></div>
+            <div class="absolute right-6 top-6 rounded-full border border-[color:var(--line)] px-3 py-1 mono-font text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--gold)]">{{ t('auth.badge.citizenship') }}</div>
+            <div class="auth-brand-stage mt-10 p-5">
+                <div class="auth-side-copy">
+                    <p class="mono-font text-[10px] font-bold uppercase tracking-[0.42em] text-[color:var(--muted)]">{{ t('auth.signup.kicker') }}</p>
+                    <h1 class="auth-brand display-font mt-3 text-4xl uppercase leading-[.9] sm:text-6xl">{{ t('auth.project_name') }}</h1>
+                    <p class="auth-copy mt-4 max-w-md text-base font-bold leading-6 text-[#b8b5a9]">{{ t('auth.signup.hero_copy') }}</p>
+                </div>
+            </div>
+            <div class="auth-step-grid mt-5">
+                <div class="auth-step seal-grid border border-[color:var(--line)] bg-black/20 p-3"><div class="mono-font text-[9px] uppercase tracking-[0.2em] text-[color:var(--muted)]">{{ t('auth.signup.step_identity') }}</div><div class="auth-step-value mt-1.5 text-lg font-black text-[color:var(--signal)]">{{ t('auth.signup.step_identity_copy') }}</div></div>
+                <div class="auth-step seal-grid border border-[color:var(--line)] bg-black/20 p-3"><div class="mono-font text-[9px] uppercase tracking-[0.2em] text-[color:var(--muted)]">{{ t('auth.signup.step_security') }}</div><div class="auth-step-value mt-1.5 text-lg font-black text-[color:var(--seal)]">{{ t('auth.signup.step_security_copy') }}</div></div>
+                <div class="auth-step seal-grid border border-[color:var(--line)] bg-black/20 p-3"><div class="mono-font text-[9px] uppercase tracking-[0.2em] text-[color:var(--muted)]">{{ t('auth.signup.step_country') }}</div><div class="auth-step-value mt-1.5 text-lg font-black text-[color:var(--gold)]">{{ t('auth.signup.step_country_copy') }}</div></div>
+            </div>
+            <div class="auth-footer absolute bottom-5 left-6 right-6 hidden border-t border-[color:var(--line)] pt-3 xl:block"><div class="mono-font text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted)]">{{ t('auth.signup.footer_note') }}</div></div>
+        </section>
+
+        <section class="auth-card terminal-panel rounded-3xl p-4 sm:p-5">
+            <div class="auth-card-logo">
+                <img src="{{ base_url() }}/img/projectv26LOGO2.png" alt="">
+            </div>
+            <div class="auth-card-head mb-4 border-b border-[color:var(--line)] pb-4">
+                <div class="relative z-10 flex items-start justify-between gap-4">
+                    <div>
+                        <p class="mono-font text-[10px] font-bold uppercase tracking-[0.32em] text-[color:var(--muted)]">{{ t('auth.signup.panel_kicker') }}</p>
+                        <h2 class="auth-card-title display-font mt-1.5 text-2xl uppercase">{{ t('auth.signup.panel_title') }}</h2>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <div class="rounded-full border border-[color:var(--line)] px-3 py-1 mono-font text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--signal)]">{{ t('auth.badge.closed_beta') }}</div>
+                        <div class="auth-locale flex items-center gap-1" aria-label="{{ t('auth.language_label') }}">
+                            {% for code, locale in availableLocales %}
+                                <button type="button" class="auth-locale-btn mono-font px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] transition{% if code == lang %} is-active{% endif %}" data-locale="{{ code }}">
+                                    {{ locale.flag }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="error-box" class="auth-error hidden mb-4 p-4" role="alert" aria-live="assertive"><span id="error-text" class="text-[13px] font-bold leading-relaxed text-red-100"></span></div>
+            <form id="signupForm" action="{{ path_for('signup') }}" method="post" class="auth-form flex flex-col gap-3" novalidate>
+                <input type="hidden" name="fingerprint" id="signupFingerprint" value="">
+                <div class="auth-grid grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div><label for="inputUsername" class="auth-label mono-font mb-1.5 block text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--signal)]">{{ t('auth.field.username') }}</label><input type="text" name="username" id="inputUsername" minlength="4" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" class="auth-field-input field-input w-full rounded-none px-4 py-2.5 text-sm font-bold" placeholder="{{ t('auth.placeholder.username') }}" required aria-describedby="username-help feedback-username" aria-invalid="false"><p id="username-help" class="auth-help mt-1 text-[11px] font-bold leading-relaxed text-[#a8a397]">{{ t('auth.signup.username_hint') }}</p><p id="feedback-username" class="feedback-text mt-0.5 text-[11px] font-bold text-[color:var(--muted)]" aria-live="polite"></p></div>
+                    <div><label for="inputEmail" class="auth-label mono-font mb-1.5 block text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--signal)]">{{ t('auth.field.email') }}</label><input type="email" name="email" id="inputEmail" maxlength="150" autocomplete="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" class="auth-field-input field-input w-full rounded-none px-4 py-2.5 text-sm font-bold" placeholder="{{ t('auth.placeholder.email') }}" required aria-describedby="email-help feedback-email" aria-invalid="false"><p id="email-help" class="auth-help mt-1 text-[11px] font-bold leading-relaxed text-[#a8a397]">{{ t('auth.signup.email_hint') }}</p><p id="feedback-email" class="feedback-text mt-0.5 text-[11px] font-bold text-[color:var(--muted)]" aria-live="polite"></p></div>
+                </div>
+                <div class="auth-grid grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div><label for="inputPassword" class="auth-label mono-font mb-1.5 block text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--signal)]">{{ t('auth.field.password') }}</label><div class="relative"><input type="password" name="password" id="inputPassword" minlength="10" maxlength="72" autocomplete="new-password" class="auth-field-input field-input w-full rounded-none px-4 py-2.5 pr-12 text-sm font-bold" placeholder="{{ t('auth.placeholder.password') }}" required aria-describedby="caps-password feedback-password" aria-invalid="false"><button type="button" id="togglePass1" class="absolute right-3 top-1/2 -translate-y-1/2 border border-[color:var(--line)] px-2 py-1 mono-font text-[10px] font-bold uppercase text-[color:var(--muted)] hover:text-[color:var(--signal)]" aria-controls="inputPassword" aria-pressed="false">{{ t('auth.action.show') }}</button></div><div class="mt-2 flex items-center gap-2"><div class="h-2 flex-1 overflow-hidden border border-[color:var(--line)] bg-black/40"><div id="passwordStrengthBar" class="h-full w-0 bg-red-500 transition-all duration-200"></div></div><span id="passwordStrengthText" class="mono-font text-[10px] font-black uppercase tracking-wider text-red-300">{{ t('auth.strength.weak') }}</span></div><p id="caps-password" class="feedback-text mt-0.5 text-[11px] font-bold text-amber-300" aria-live="polite"></p><p id="feedback-password" class="feedback-text mt-0.5 text-[11px] font-bold text-[color:var(--muted)]" aria-live="polite"></p></div>
+                    <div><label for="inputPassword2" class="auth-label mono-font mb-1.5 block text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--signal)]">{{ t('auth.field.password_repeat') }}</label><div class="relative"><input type="password" name="password2" id="inputPassword2" minlength="10" maxlength="72" autocomplete="new-password" class="auth-field-input field-input w-full rounded-none px-4 py-2.5 pr-12 text-sm font-bold" placeholder="{{ t('auth.placeholder.password') }}" required aria-describedby="caps-password2 feedback-password2" aria-invalid="false"><button type="button" id="togglePass2" class="absolute right-3 top-1/2 -translate-y-1/2 border border-[color:var(--line)] px-2 py-1 mono-font text-[10px] font-bold uppercase text-[color:var(--muted)] hover:text-[color:var(--signal)]" aria-controls="inputPassword2" aria-pressed="false">{{ t('auth.action.show') }}</button></div><p id="caps-password2" class="feedback-text mt-0.5 text-[11px] font-bold text-amber-300" aria-live="polite"></p><p id="feedback-password2" class="feedback-text mt-0.5 text-[11px] font-bold text-[color:var(--muted)]" aria-live="polite"></p></div>
+                </div>
+                <div class="auth-grid grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div><label for="inputCountry" class="auth-label mono-font mb-1.5 block text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--signal)]">{{ t('auth.field.country') }}</label><select name="country" id="inputCountry" required class="auth-field-input field-input w-full rounded-none px-4 py-2.5 text-sm font-bold uppercase" aria-describedby="feedback-country" aria-invalid="false"><option value="" selected disabled>{{ t('auth.placeholder.country') }}</option>{% for country in countries %}<option value="{{ country.id }}">{{ country.name }}</option>{% endfor %}</select><p id="feedback-country" class="feedback-text mt-0.5 text-[11px] font-bold text-[color:var(--muted)]" aria-live="polite"></p></div>
+                    <div><label for="inputReferrer" class="auth-label mono-font mb-1.5 block text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--signal)]">{{ t('auth.field.referrer') }} <span class="text-[color:var(--muted)]">{{ t('auth.field.optional') }}</span></label><input type="text" name="referrer" id="inputReferrer" value="{{ referrer|default('') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" class="auth-field-input field-input w-full rounded-none px-4 py-2.5 text-sm font-bold text-[color:var(--gold)]" placeholder="{{ t('auth.placeholder.referrer') }}" aria-describedby="feedback-referrer" aria-invalid="false"><p id="feedback-referrer" class="feedback-text mt-0.5 text-[11px] font-bold text-[color:var(--muted)]" aria-live="polite"></p></div>
+                </div>
+                <div class="auth-security space-y-2 border border-[color:var(--line)] bg-black/20 p-3">
+                    <input type="hidden" name="human_verified" id="humanVerified" value="0">
+                    <button type="button" id="biometricBtn" class="auth-security-button flex w-full items-center justify-between gap-3 border border-[color:var(--line)] bg-black/30 p-2.5 text-left transition hover:border-[color:var(--signal)]" aria-describedby="feedback-general"><span class="flex items-center gap-3"><span id="bioIcon" class="flex h-8 w-8 items-center justify-center border border-[color:var(--line)] mono-font text-xs font-black text-[color:var(--muted)]">ID</span><span><span class="mono-font block text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--signal)]">{{ t('auth.signup.security_protocol') }}</span><span id="bioDesc" class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#b8b5a9]">{{ t('auth.signup.security_click') }}</span></span></span><span id="bioStatus" class="mono-font border border-red-500/20 bg-red-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-300">{{ t('auth.signup.security_pending') }}</span></button>
+                    <label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="terms" id="terms" required class="mt-0.5 h-4 w-4 shrink-0 accent-cyan-400"><span class="text-[11px] font-bold uppercase leading-relaxed text-[#d7d0bf]">{{ t('auth.signup.terms_text') }}</span></label>
+                    <p id="feedback-general" class="feedback-text text-[12px] font-bold text-[color:var(--muted)]" aria-live="polite"></p>
+                </div>
+                <div class="auth-actions flex flex-col gap-3 pt-1 sm:flex-row sm:items-center"><button type="submit" id="submitBtn" class="auth-btn-primary inline-flex min-w-[170px] items-center justify-center px-6 py-3 transition disabled:cursor-wait disabled:opacity-70"><span class="display-font text-xs uppercase tracking-[0.1em]">{{ t('auth.signup.submit') }}</span></button><a href="{{ path_for('login') }}" class="auth-btn-secondary inline-flex min-w-[160px] items-center justify-center px-5 py-3 text-center mono-font text-[10px] font-bold uppercase tracking-[0.16em] transition">{{ t('auth.signup.login_link') }}</a></div>
+            </form>
+        </section>
+    </main>
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        const errorBox = document.getElementById('error-box');
+        const errorText = document.getElementById('error-text');
+        const usernameInput = document.getElementById('inputUsername');
+        const emailInput = document.getElementById('inputEmail');
+        const passwordInput = document.getElementById('inputPassword');
+        const passwordRepeatInput = document.getElementById('inputPassword2');
+        const countryInput = document.getElementById('inputCountry');
+        const referrerInput = document.getElementById('inputReferrer');
+        const termsInput = document.getElementById('terms');
+        const bioBtn = document.getElementById('biometricBtn');
+        const bioInput = document.getElementById('humanVerified');
+        const bioIcon = document.getElementById('bioIcon');
+        const bioDesc = document.getElementById('bioDesc');
+        const bioStatus = document.getElementById('bioStatus');
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        const strengthText = document.getElementById('passwordStrengthText');
+        const fingerprintInput = document.getElementById('signupFingerprint');
+        const localeButtons = document.querySelectorAll('[data-locale]');
+        const feedbackMap = {
+            username: document.getElementById('feedback-username'),
+            email: document.getElementById('feedback-email'),
+            password: document.getElementById('feedback-password'),
+            password2: document.getElementById('feedback-password2'),
+            country: document.getElementById('feedback-country'),
+            referrer: document.getElementById('feedback-referrer'),
+            general: document.getElementById('feedback-general')
+        };
+        const fieldInputs = {
+            username: usernameInput,
+            email: emailInput,
+            password: passwordInput,
+            password2: passwordRepeatInput,
+            country: countryInput,
+            referrer: referrerInput
+        };
+        const capsWarnings = {
+            password: document.getElementById('caps-password'),
+            password2: document.getElementById('caps-password2')
+        };
+        const reservedNickExact = new Set(['admin', 'administrator', 'root', 'system', 'support', 'moderator', 'mod', 'official', 'owner', 'staff', 'developer', 'dev', 'omni', 'srepublik']);
+        const reservedNickPartial = ['admin', 'root', 'mod', 'gm', 'support', 'staff', 'official', 'system'];
+        const blockedNickWords = ['hitler', 'nazi'];
+        const commonPasswords = new Set(['123456', '12345678', '123456789', '1234567890', 'qwerty', 'qwerty123', 'password', 'password123', 'admin123', 'welcome', 'letmein', 'iloveyou']);
+        const texts = {
+            capsLock: '{{ t("auth.validation.caps_lock")|e("js") }}',
+            usernameRequired: '{{ t("auth.validation.username_required")|e("js") }}',
+            usernameLength: '{{ t("auth.validation.username_length")|e("js") }}',
+            usernamePattern: '{{ t("auth.validation.username_pattern")|e("js") }}',
+            usernameReserved: '{{ t("auth.validation.username_reserved")|e("js") }}',
+            usernameSystem: '{{ t("auth.validation.username_system")|e("js") }}',
+            usernameBlocked: '{{ t("auth.validation.username_blocked")|e("js") }}',
+            usernameNumeric: '{{ t("auth.validation.username_numeric")|e("js") }}',
+            passwordRequired: '{{ t("auth.validation.password_required")|e("js") }}',
+            passwordMismatch: '{{ t("auth.validation.password_mismatch")|e("js") }}',
+            passwordLength: '{{ t("auth.validation.password_length")|e("js") }}',
+            passwordLong: '{{ t("auth.validation.password_long")|e("js") }}',
+            passwordSpace: '{{ t("auth.validation.password_space")|e("js") }}',
+            passwordCommon: '{{ t("auth.validation.password_common")|e("js") }}',
+            passwordPersonal: '{{ t("auth.validation.password_personal")|e("js") }}',
+            emailRequired: '{{ t("auth.validation.email_required")|e("js") }}',
+            emailInvalid: '{{ t("auth.validation.email_invalid")|e("js") }}',
+            countryInvalid: '{{ t("auth.validation.country_invalid")|e("js") }}',
+            securityRequired: '{{ t("auth.validation.security_required")|e("js") }}',
+            termsRequired: '{{ t("auth.validation.terms_required")|e("js") }}',
+            processing: '{{ t("auth.signup.processing")|e("js") }}',
+            completed: '{{ t("auth.signup.completed")|e("js") }}',
+            failed: '{{ t("auth.signup.failed")|e("js") }}',
+            autoLoginFailed: '{{ t("auth.signup.auto_login_failed")|e("js") }}',
+            connection: '{{ t("auth.validation.connection_error")|e("js") }}',
+            nickChecking: '{{ t("auth.signup.nick_checking")|e("js") }}',
+            nickCheckDone: '{{ t("auth.signup.nick_check_done")|e("js") }}',
+            nickCheckUnavailable: '{{ t("auth.signup.nick_check_unavailable")|e("js") }}',
+            securityScanning: '{{ t("auth.signup.security_scanning")|e("js") }}',
+            securitySigning: '{{ t("auth.signup.security_signing")|e("js") }}',
+            securityApproved: '{{ t("auth.signup.security_approved")|e("js") }}',
+            securityDone: '{{ t("auth.signup.security_done")|e("js") }}',
+            show: '{{ t("auth.action.show")|e("js") }}',
+            hide: '{{ t("auth.action.hide")|e("js") }}',
+            weak: '{{ t("auth.strength.weak")|e("js") }}',
+            medium: '{{ t("auth.strength.medium")|e("js") }}',
+            strong: '{{ t("auth.strength.strong")|e("js") }}',
+            veryStrong: '{{ t("auth.strength.very_strong")|e("js") }}'
+        };
+        let isScanning = false;
+        let nickCheckTimer = null;
+        let lastNickChecked = '';
+
+        function buildFingerprint() {
+            const parts = [navigator.userAgent || '', navigator.language || '', Intl.DateTimeFormat().resolvedOptions().timeZone || '', String(screen.width || 0) + 'x' + String(screen.height || 0), String(window.devicePixelRatio || 1), navigator.platform || ''];
+            return btoa(unescape(encodeURIComponent(parts.join('|')))).slice(0, 255);
+        }
+        function showError(message) { errorText.textContent = String(message || texts.failed).slice(0, 300); errorBox.classList.remove('hidden'); }
+        function hideError() { errorBox.classList.add('hidden'); }
+        function setFeedback(field, message, tone) {
+            const target = feedbackMap[field]; if (!target) return;
+            target.textContent = message || '';
+            target.className = 'feedback-text mt-0.5 text-[11px] font-bold';
+            if (!message) target.classList.add('text-[color:var(--muted)]');
+            else if (tone === 'success') target.classList.add('text-emerald-300');
+            else if (tone === 'warning') target.classList.add('text-amber-300');
+            else target.classList.add('text-red-300');
+        }
+        function clearFeedback(field) { setFeedback(field, '', 'neutral'); }
+        function clearFieldState(field) {
+            const input = fieldInputs[field];
+            if (!input) return;
+            input.classList.remove('is-invalid', 'is-warning');
+            input.setAttribute('aria-invalid', 'false');
+        }
+        function clearAllFieldStates() {
+            Object.keys(fieldInputs).forEach(clearFieldState);
+        }
+        function normalizeNickname(value) { return String(value || '').trim().replace(/[^A-Za-z0-9_]/g, '').replace(/_+/g, '_').replace(/^_+|_+$/g, ''); }
+        function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
+        function validateNickname(value) {
+            if (!value) return texts.usernameRequired;
+            if (value.length < 4 || value.length > 20) return texts.usernameLength;
+            const canonical = value.toLowerCase();
+            if (!/^(?=.{4,20}$)(?=.*[A-Za-z])[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*$/.test(value)) return texts.usernamePattern;
+            if (reservedNickExact.has(canonical)) return texts.usernameReserved;
+            for (const word of reservedNickPartial) if (canonical.includes(word)) return texts.usernameSystem;
+            for (const word of blockedNickWords) if (canonical.includes(word)) return texts.usernameBlocked;
+            if (/^\d+$/.test(canonical)) return texts.usernameNumeric;
+            return null;
+        }
+        function validatePassword(password, repeat, nickname, email) {
+            if (!password) return {field:'password', message:texts.passwordRequired};
+            if (password !== repeat) return {field:'password2', message:texts.passwordMismatch};
+            if (password.length < 10) return {field:'password', message:texts.passwordLength};
+            if (password.length > 72) return {field:'password', message:texts.passwordLong};
+            if (/\s/.test(password)) return {field:'password', message:texts.passwordSpace};
+            if (commonPasswords.has(password.toLowerCase())) return {field:'password', message:texts.passwordCommon};
+            const local = String(email || '').split('@')[0] || '';
+            for (const val of [nickname, local]) {
+                const target = String(val || '').trim().toLowerCase();
+                if (target.length >= 3 && password.toLowerCase().includes(target)) return {field:'password', message:texts.passwordPersonal};
+            }
+            return null;
+        }
+        function updatePasswordStrength() {
+            let score = 0; const password = passwordInput.value; const lowered = password.toLowerCase(); const local = String(emailInput.value || '').split('@')[0] || '';
+            if (password.length >= 10) score++; if (password.length >= 14) score++; if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++; if (/\d/.test(password)) score++; if (/[^A-Za-z0-9]/.test(password)) score++; if (!commonPasswords.has(lowered)) score++; if (usernameInput.value && !lowered.includes(usernameInput.value.toLowerCase())) score++; if (local && !lowered.includes(local.toLowerCase())) score++;
+            const states = password.length === 0 || score <= 2 ? ['0%', texts.weak, 'bg-red-500', 'text-red-300'] : score <= 4 ? ['50%', texts.medium, 'bg-amber-400', 'text-amber-300'] : score <= 6 ? ['75%', texts.strong, 'bg-cyan-400', 'text-cyan-300'] : ['100%', texts.veryStrong, 'bg-emerald-400', 'text-emerald-300'];
+            strengthBar.style.width = states[0]; strengthBar.className = 'h-full transition-all duration-200 ' + states[2]; strengthText.textContent = states[1]; strengthText.className = 'mono-font text-[10px] font-black uppercase tracking-wider ' + states[3];
+        }
+        function setupPasswordToggle(buttonId, inputId) {
+            const button = document.getElementById(buttonId); const input = document.getElementById(inputId);
+            button.addEventListener('click', function () { const type = input.getAttribute('type') === 'password' ? 'text' : 'password'; input.setAttribute('type', type); button.textContent = type === 'text' ? texts.hide : texts.show; button.setAttribute('aria-pressed', type === 'text' ? 'true' : 'false'); });
+        }
+        function normalizeFormValues() { usernameInput.value = normalizeNickname(usernameInput.value); emailInput.value = normalizeEmail(emailInput.value); referrerInput.value = String(referrerInput.value || '').replace(/\D/g, '').slice(0, 10); fingerprintInput.value = buildFingerprint(); }
+        function applyCapsWarning(target, event) { if (event.getModifierState) capsWarnings[target].textContent = event.getModifierState('CapsLock') ? texts.capsLock : ''; }
+        function requestNicknameAvailability() {
+            const username = normalizeNickname(usernameInput.value); usernameInput.value = username;
+            if (username.length < 4) { clearFeedback('username'); return; }
+            const validation = validateNickname(username); if (validation) { setFeedback('username', validation, 'error'); return; }
+            if (username === lastNickChecked) return;
+            setFeedback('username', texts.nickChecking, 'warning');
+            const formData = new FormData(); formData.append('username', username); formData.append('fingerprint', buildFingerprint());
+            fetch('{{ path_for("checkNicknameAvailability") }}', {method:'POST', body:formData, credentials:'same-origin', headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json, */*'}})
+                .then(async response => { const data = await response.json().catch(() => null); if (!response.ok || !data) throw new Error((data && data.message) ? data.message : ('HTTP ' + response.status)); return data; })
+                .then(data => { lastNickChecked = username; setFeedback('username', data.message || texts.nickCheckDone, data.available ? 'success' : 'error'); })
+                .catch(error => setFeedback('username', error && error.message ? error.message : texts.nickCheckUnavailable, 'warning'));
+        }
+        function clearErrorState(field) { clearFeedback(field); clearFeedback('general'); clearFieldState(field); hideError(); }
+        function applyServerError(field, message) {
+            const target = feedbackMap[field] ? field : 'general';
+            setFeedback(target, message, 'error');
+            showError(message);
+            const input = fieldInputs[target];
+            if (input) {
+                input.classList.add(target === 'referrer' ? 'is-warning' : 'is-invalid');
+                input.setAttribute('aria-invalid', 'true');
+                input.focus();
+            } else if (target === 'general') {
+                if (bioInput.value !== '1') bioBtn.focus();
+                else termsInput.focus();
+            }
+        }
+
+        setupPasswordToggle('togglePass1', 'inputPassword'); setupPasswordToggle('togglePass2', 'inputPassword2'); fingerprintInput.value = buildFingerprint(); updatePasswordStrength();
+        localeButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const formData = new FormData();
+                formData.append('locale', this.getAttribute('data-locale') || '');
+                fetch('{{ path_for("guestLanguage") }}', {method:'POST', body:formData, credentials:'same-origin', headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json, */*'}})
+                    .then(() => window.location.reload());
+            });
+        });
+        bioBtn.addEventListener('click', function () {
+            if (isScanning || bioInput.value === '1') return;
+            isScanning = true; bioStatus.textContent = texts.securityScanning; bioStatus.className = 'mono-font border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300'; bioDesc.textContent = texts.securitySigning; bioIcon.innerHTML = '<span class="loader"></span>';
+            setTimeout(function () { isScanning = false; bioInput.value = '1'; bioStatus.textContent = texts.securityApproved; bioStatus.className = 'mono-font border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300'; bioDesc.textContent = texts.securityDone; bioIcon.innerHTML = '<span class="mono-font text-xs font-black text-emerald-300">OK</span>'; clearFeedback('general'); }, 1000);
+        });
+        usernameInput.addEventListener('input', function () { this.value = normalizeNickname(this.value); lastNickChecked = ''; clearErrorState('username'); clearTimeout(nickCheckTimer); nickCheckTimer = setTimeout(requestNicknameAvailability, 350); updatePasswordStrength(); });
+        emailInput.addEventListener('input', function () { this.value = normalizeEmail(this.value); clearErrorState('email'); updatePasswordStrength(); });
+        referrerInput.addEventListener('input', function () { this.value = String(this.value || '').replace(/\D/g, '').slice(0, 10); clearErrorState('referrer'); });
+        countryInput.addEventListener('change', function () { clearErrorState('country'); });
+        termsInput.addEventListener('change', function () { clearErrorState('general'); });
+        passwordInput.addEventListener('input', function () { clearErrorState('password'); updatePasswordStrength(); });
+        passwordRepeatInput.addEventListener('input', function () { clearErrorState('password2'); });
+        passwordInput.addEventListener('keydown', function (event) { applyCapsWarning('password', event); });
+        passwordInput.addEventListener('keyup', function (event) { applyCapsWarning('password', event); });
+        passwordInput.addEventListener('blur', function () { capsWarnings.password.textContent = ''; });
+        passwordRepeatInput.addEventListener('keydown', function (event) { applyCapsWarning('password2', event); });
+        passwordRepeatInput.addEventListener('keyup', function (event) { applyCapsWarning('password2', event); });
+        passwordRepeatInput.addEventListener('blur', function () { capsWarnings.password2.textContent = ''; });
+
+        signupForm.addEventListener('submit', function (e) {
+            e.preventDefault(); Object.keys(feedbackMap).forEach(clearFeedback); clearAllFieldStates(); hideError(); normalizeFormValues();
+            const usernameError = validateNickname(usernameInput.value); if (usernameError) { applyServerError('username', usernameError); return; }
+            if (!emailInput.value) { applyServerError('email', texts.emailRequired); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) { applyServerError('email', texts.emailInvalid); return; }
+            const passwordError = validatePassword(passwordInput.value, passwordRepeatInput.value, usernameInput.value, emailInput.value); if (passwordError) { applyServerError(passwordError.field, passwordError.message); return; }
+            if (!countryInput.value) { applyServerError('country', texts.countryInvalid); return; }
+            if (bioInput.value !== '1') { applyServerError('general', texts.securityRequired); return; }
+            if (!termsInput.checked) { applyServerError('general', texts.termsRequired); return; }
+            const submitBtn = document.getElementById('submitBtn'); const originalText = submitBtn.innerHTML; submitBtn.innerHTML = '<span class="loader"></span><span class="mono-font text-[11px] font-black uppercase tracking-[0.2em]">' + texts.processing + '</span>'; submitBtn.disabled = true;
+            fetch(this.action, {method:'POST', body:new FormData(this), credentials:'same-origin', headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json, */*'}})
+                .then(async response => { const data = await response.json().catch(() => null); if (!response.ok || !data) throw new Error((data && data.message) ? data.message : ('HTTP ' + response.status)); return data; })
+                .then(data => {
+                    if (data.error !== 0) { applyServerError(data.field || 'general', data.message || texts.failed); submitBtn.innerHTML = originalText; submitBtn.disabled = false; return; }
+                    const loginData = new FormData(); loginData.append('email', emailInput.value); loginData.append('password', passwordInput.value); loginData.append('fingerprint', fingerprintInput.value);
+                    fetch('{{ path_for("login") }}', {method:'POST', body:loginData, credentials:'same-origin', headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json, */*'}})
+                        .then(async response => { const loginResponse = await response.json().catch(() => null); if (!response.ok || !loginResponse || loginResponse.error !== 0) throw new Error((loginResponse && loginResponse.message) ? loginResponse.message : texts.autoLoginFailed); submitBtn.innerHTML = '<span class="mono-font text-[11px] font-black uppercase tracking-[0.2em] text-black">' + texts.completed + '</span>'; window.location.href = '{{ path_for("home") }}'; })
+                        .catch(error => { applyServerError('general', error && error.message ? error.message : texts.autoLoginFailed); submitBtn.innerHTML = originalText; submitBtn.disabled = false; });
+                })
+                .catch(error => { applyServerError('general', error && error.message ? error.message : texts.connection); submitBtn.innerHTML = originalText; submitBtn.disabled = false; });
+        });
+    </script>
+</body>
+</html>

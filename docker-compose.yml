@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "8080:80"
+    environment:
+      APP_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: proje
+      DB_USERNAME: proje
+      DB_PASSWORD: proje
+      COOKIE_DOMAIN: localhost
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: proje
+      MYSQL_USER: proje
+      MYSQL_PASSWORD: proje
+      MYSQL_ROOT_PASSWORD: root
+    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./proje.sql:/docker-entrypoint-initdb.d/01-proje.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql_data:

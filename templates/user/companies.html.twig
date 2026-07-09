@@ -1,0 +1,965 @@
+﻿{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* =============================
+       PRODUCTION CENTER v26.200 Ã¢â‚¬â€ PROJECT-NEXUS HUD
+       ============================= */
+    :root {
+        --company-accent: var(--brand-primary);
+        --company-accent-text: color-mix(in srgb, var(--brand-primary) 85%, #ffffff);
+        --company-accent-strong: color-mix(in srgb, var(--brand-primary) 60%, #020617);
+        --company-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+        --company-accent-border: color-mix(in srgb, var(--brand-primary) 25%, transparent);
+        --company-accent-glow: color-mix(in srgb, var(--brand-primary) 40%, transparent);
+    }
+
+    /* --- Core Layout & Deep Glass Panel --- */
+    .home-theme-surface .glass-panel {
+        background: linear-gradient(145deg, rgba(6, 9, 17, 0.65) 0%, rgba(2, 4, 10, 0.9) 100%) !important;
+        backdrop-filter: blur(32px);
+        border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+        border-radius: 20px;
+    }
+
+    /* --- Finance Cards (Zenith Mat) --- */
+    .finance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; position: relative; z-index: 10; }
+    .finance-card {
+        border-radius: 16px; padding: 18px;
+        background: rgba(0,0,0,0.4);
+        border: 1px solid rgba(255,255,255,0.03);
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        position: relative; overflow: hidden;
+    }
+    .finance-card::after {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background: radial-gradient(circle at top right, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent 60%);
+    }
+    .finance-card:hover {
+        background: color-mix(in srgb, var(--brand-primary) 5%, rgba(0,0,0,0.6));
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--brand-primary) 20%, transparent);
+    }
+    .finance-kicker { font-size: 10px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .finance-kicker i { color: var(--company-accent); opacity: 0.8; }
+    .finance-value { font-size: 24px; line-height: 1; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .05em; drop-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .finance-sub { margin-top: 8px; font-size: 10px; line-height: 1.4; color: #475569; font-weight: 800; }
+
+    /* --- V26.200 Payroll Layout --- */
+    .payroll-layout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .payroll-summary-wrap { display: grid; gap: 16px; grid-column: span 2; }
+    @media (max-width: 900px) { .payroll-layout { grid-template-columns: 1fr; } .payroll-summary-wrap { grid-column: span 1; } }
+
+    .payroll-summary-card {
+        border-radius: 16px; padding: 18px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.03);
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+    .payroll-summary-card::before {
+        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+        background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), transparent 70%);
+    }
+
+    .payroll-summary-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 12px; }
+    .currency-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 900; color: #fff; letter-spacing: .1em; text-transform: uppercase; drop-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .currency-meta { margin-top: 4px; font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+    .currency-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+    
+    .summary-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3); }
+    .summary-status.ok { color: #34d399; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.15); }
+    .summary-status.low { color: #fcd34d; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.15); }
+
+    .summary-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .summary-line { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.02); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+    .summary-line strong { color: #fff; font-weight: 900; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+    .summary-line span { font-size: 8px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: #64748b; }
+
+    .summary-footer { margin-top: 14px; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid rgba(255,255,255,0.03); }
+    .summary-footer-label { font-size: 9px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: #64748b; }
+    .summary-footer-value { font-size: 12px; font-weight: 900; color: var(--brand-primary); text-transform: uppercase; letter-spacing: .08em; }
+
+    /* --- V26.200 Table Rows --- */
+    .v2-table-row {
+        background: rgba(0, 0, 0, 0.3);
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .v2-table-row:hover {
+        background: color-mix(in srgb, var(--brand-primary) 5%, rgba(0,0,0,0.5));
+        transform: scale(1.01) translateX(4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .v2-table-row td {
+        border-top: 1px solid rgba(255,255,255,0.02);
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        padding: 14px;
+    }
+    .v2-table-row:hover td { border-color: color-mix(in srgb, var(--brand-primary) 15%, transparent); border-top-color: color-mix(in srgb, var(--brand-primary) 25%, rgba(255,255,255,0.05)); }
+    .v2-table-row td:first-child { border-left: 3px solid transparent; border-top-left-radius: 14px; border-bottom-left-radius: 14px; }
+    .v2-table-row:hover td:first-child { border-left: 3px solid var(--brand-primary); }
+    .v2-table-row td:last-child { border-right: 1px solid rgba(255,255,255,0.02); border-top-right-radius: 14px; border-bottom-right-radius: 14px; }
+    .v2-table-row:hover td:last-child { border-right-color: color-mix(in srgb, var(--brand-primary) 15%, transparent); }
+
+    .company-table-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 0; scrollbar-width: none; }
+    .company-table-scroll::-webkit-scrollbar { display: none; }
+
+    /* --- Badges & Actions --- */
+    .tech-badge { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 11px; border: 1px solid transparent; background: rgba(0,0,0,0.4); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+    .tech-badge.red { color: #fca5a5; }
+    .tech-badge.green { color: #6ee7b7; }
+    .tech-badge.neutral { color: #cbd5e1; }
+
+    .finance-action-btn {
+        min-height: 40px; border-radius: 12px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: flex-start; gap: 10px;
+        font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; text-decoration: none;
+        border: none; background: rgba(0,0,0,0.4); color: #cbd5e1; cursor: pointer; transition: all 0.3s ease; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .finance-action-btn:hover { background: rgba(0,0,0,0.6); color: #fff; transform: translateX(2px); }
+    .finance-action-btn.primary { background: color-mix(in srgb, var(--company-accent) 15%, rgba(0,0,0,0.5)); color: var(--company-accent-text); }
+    .finance-action-btn.primary:hover { background: color-mix(in srgb, var(--company-accent) 25%, rgba(0,0,0,0.6)); transform: translateY(-2px); box-shadow: 0 5px 15px color-mix(in srgb, var(--company-accent) 20%, transparent); }
+    .finance-action-btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+    .btn-create-primary {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 85%, white), var(--brand-primary));
+        color: #0c0a09; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 4px 15px color-mix(in srgb, var(--brand-primary) 20%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.2));
+        border: none;
+    }
+    .btn-create-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px color-mix(in srgb, var(--brand-primary) 30%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 40%, rgba(255,255,255,0.3)); filter: brightness(1.05); }
+    .btn-create-primary:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 10%, transparent); }
+
+    .btn-amber { background: linear-gradient(135deg, #fde047, #f59e0b); color: #0c0a09; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15); border: none; }
+    .btn-amber:hover:not(:disabled) { background: linear-gradient(135deg, #fef08a, #f59e0b); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25); transform: translateY(-2px); filter: brightness(1.05); }
+    
+    .btn-red { background: linear-gradient(135deg, #fca5a5, #ef4444); color: #0c0a09; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15); border: none; }
+    .btn-red:hover:not(:disabled) { background: linear-gradient(135deg, #fecaca, #ef4444); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.25); transform: translateY(-2px); filter: brightness(1.05); }
+
+    /* --- Modal Inputs (Tactile & Deep) --- */
+    .cyber-input-field {
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.02) !important;
+        color: #f8fafc !important;
+        border-radius: 12px !important;
+        padding: 14px 16px !important;
+        font-size: 13px !important;
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+        appearance: none;
+    }
+    .cyber-input-field:focus {
+        background: rgba(0, 0, 0, 0.8) !important;
+        border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent) !important;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 0 0 1px color-mix(in srgb, var(--brand-primary) 15%, transparent) !important;
+        outline: none;
+    }
+    .cyber-input-field option { background: #0f172a; color: #fff; }
+
+    /* SweetAlert V26.200 */
+    .cyber-modal-popup { background: rgba(8, 10, 14, 0.98) !important; backdrop-filter: blur(32px); border: 1px solid rgba(255, 255, 255, 0.03) !important; border-radius: 24px !important; padding: 2rem 1.5rem !important; box-shadow: 0 35px 70px -15px rgba(0,0,0,0.95) !important; }
+    .cyber-modal-title { color: #f8fafc !important; text-transform: uppercase !important; letter-spacing: 0.15em !important; font-weight: 900 !important; font-size: 14px !important; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 14px !important; margin-bottom: 18px !important; display: flex; align-items: center; gap: 8px; }
+    .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; }
+    .swal-tech-label { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; color: #cbd5e1; }
+    .swal-tech-help { font-size: 11px; color: #64748b; margin-bottom: 10px; font-weight: 600; line-height: 1.4; }
+</style>
+
+<div class="home-theme-surface space-y-6 animate-fade-in w-full max-w-full overflow-hidden">
+    
+    {# ===== HERO PANEL ===== #}
+    <div class="glass-panel p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
+        <i class="fa-solid fa-microchip absolute -right-6 -bottom-6 text-[140px] text-[color:var(--brand-primary)] opacity-[0.02] pointer-events-none rotate-[-10deg]"></i>
+
+        <div class="flex items-center gap-5 relative z-10">
+            <div class="w-14 h-14 rounded-[14px] bg-[color:var(--brand-primary)]/10 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] shrink-0">
+                <i class="fa-solid fa-microchip text-2xl text-[color:var(--brand-primary)] drop-shadow-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-black text-white uppercase tracking-wider leading-tight drop-shadow-md">
+                    {{ t('companies.hero.title') }}
+                </h1>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.15em] mt-1.5 flex items-center gap-2 opacity-80">
+                    <span class="w-1.5 h-1.5 bg-[color:var(--brand-primary)] rounded-full animate-pulse shadow-[0_0_5px_var(--brand-primary)]"></span> {{ t('companies.hero.subtitle') }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {# ===== STATS GRID ===== #}
+    <div class="finance-grid">
+        <div class="finance-card">
+            <div class="finance-kicker"><i class="fa-solid fa-industry"></i> {{ t('companies.stats.total_facilities') }}</div>
+            <div class="finance-value">{{ totalCompanies|default(companies|length) }}</div>
+            <div class="finance-sub">{{ t('companies.stats.total_facilities_hint') }}</div>
+        </div>
+
+        <div class="finance-card">
+            <div class="finance-kicker"><i class="fa-solid fa-briefcase"></i> {{ t('companies.stats.open_offers') }}</div>
+            <div class="finance-value">{{ totalOpenOffers|default(0) }}</div>
+            <div class="finance-sub">{{ t('companies.stats.open_offers_hint') }}</div>
+        </div>
+
+        <div class="finance-card">
+            <div class="finance-kicker"><i class="fa-solid fa-wallet"></i> {{ t('companies.stats.budget_groups') }}</div>
+            <div class="finance-value">{{ payrollSummary|length }}</div>
+            <div class="finance-sub">{{ t('companies.stats.budget_groups_hint') }}</div>
+        </div>
+    </div>
+
+    {# ===== PAYROLL SUMMARY & QUICK ACTIONS ===== #}
+    {% if payrollSummary|length > 0 %}
+        <div class="glass-panel p-6 relative">
+            <div class="flex justify-between items-center mb-6 relative z-10 border-b border-white/5 pb-4">
+                <h2 class="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2 drop-shadow-sm">
+                    <i class="fa-solid fa-vault text-[color:var(--brand-primary)]"></i> {{ t('companies.payroll.title') }}
+                </h2>
+            </div>
+
+            <div class="payroll-layout">
+                <div class="payroll-summary-wrap">
+                    {% for summary in payrollSummary %}
+                        <div class="payroll-summary-card">
+                            <div class="payroll-summary-top">
+                                <div>
+                                    <div class="currency-tag">
+                                        <span class="currency-dot" style="background-color: {{ summary.color ?: '#64748b' }}"></span>
+                                        {{ summary.code }}
+                                    </div>
+                                    {% if summary.country_name %}
+                                        <div class="currency-meta">{{ summary.country_name }}</div>
+                                    {% endif %}
+                                </div>
+                                <span class="summary-status {{ summary.is_sufficient ? 'ok' : 'low' }}">
+                                    <i class="fa-solid {{ summary.is_sufficient ? 'fa-check' : 'fa-exclamation' }}"></i>
+                                    {{ summary.is_sufficient ? t('companies.payroll.ok') : t('companies.payroll.watch') }}
+                                </span>
+                            </div>
+
+                            <div class="summary-list">
+                                <div class="summary-line">
+                                    <span>{{ t('companies.payroll.open_offer') }}</span>
+                                    <strong>{{ summary.offer_count }}</strong>
+                                </div>
+                                <div class="summary-line">
+                                    <span>{{ t('companies.payroll.daily_salary') }}</span>
+                                    <strong>{{ summary.total_salary|number_format(2) }} <span class="text-[10px] text-slate-500">{{ summary.code }}</span></strong>
+                                </div>
+                                <div class="summary-line">
+                                    <span>{{ t('companies.payroll.current_balance') }}</span>
+                                    <strong>{{ summary.balance|number_format(2) }} <span class="text-[10px] text-slate-500">{{ summary.code }}</span></strong>
+                                </div>
+                                <div class="summary-line">
+                                    <span>{{ t('companies.payroll.coverage_day') }}</span>
+                                    <strong>{{ summary.coverage_days }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="summary-footer">
+                                <span class="summary-footer-label">{{ t('companies.payroll.flow') }}</span>
+                                <span class="summary-footer-value">{{ summary.total_salary|number_format(2) }} {{ summary.code }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="finance-side-stack" style="grid-column: span 1; display:flex; flex-direction:column; gap:16px;">
+                    <div class="finance-side-card quick-actions">
+                        <div class="finance-side-title">
+                            <div class="w-6 h-6 rounded bg-[color:var(--brand-primary)]/10 flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.5)]"><i class="fa-solid fa-bolt text-xs text-[color:var(--brand-primary)]"></i></div> {{ t('companies.actions.title') }}
+                        </div>
+                        <div class="finance-side-list" style="grid-auto-rows: min-content;">
+                            <a href="{{ path_for('createCompany') }}" class="finance-action-btn primary">
+                                <i class="fa-solid fa-plus opacity-80"></i> {{ t('companies.actions.create_facility') }}
+                            </a>
+                            <a href="{{ base_url() }}/work-offers" class="finance-action-btn">
+                                <i class="fa-solid fa-briefcase opacity-80"></i> {{ t('companies.actions.job_market') }}
+                            </a>
+                            <button type="button" class="finance-action-btn" onclick="openOfferQuickActionPicker()" {% if openOffers|length == 0 %}disabled{% endif %}>
+                                <i class="fa-solid fa-pen-to-square opacity-80"></i> {{ t('companies.actions.edit_offer') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="finance-side-card activity-log flex-1">
+                        <div class="finance-side-title">
+                            <div class="w-6 h-6 rounded bg-[color:var(--brand-primary)]/10 flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.5)]"><i class="fa-solid fa-clock-rotate-left text-xs text-[color:var(--brand-primary)]"></i></div> {{ t('companies.activity.title') }}
+                        </div>
+                        <div class="finance-side-list">
+                            {% if recentActions|length > 0 %}
+                                {% for action in recentActions %}
+                                    <div class="finance-log-item">
+                                        <span class="finance-log-dot"></span>
+                                        <div class="finance-log-copy">
+                                            <div class="finance-log-title">{{ action.type }}</div>
+                                            <div class="finance-log-sub">{{ action.label }}</div>
+                                            {% if action.timestamp %}
+                                                <div class="finance-log-time">{{ action.timestamp|date('d.m.Y H:i') }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="finance-log-item border-none">
+                                    <span class="finance-log-dot bg-slate-600 shadow-none opacity-50"></span>
+                                    <div class="finance-log-copy">
+                                        <div class="finance-log-title text-slate-500">{{ t('companies.activity.empty') }}</div>
+                                        <div class="finance-log-sub">{{ t('companies.activity.empty_hint') }}</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# ===== MAIN TABLE PANEL ===== #}
+    <div class="glass-panel p-6 relative">
+        <div class="section-head mb-6 border-b border-white/5 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 drop-shadow-sm">
+                <i class="fa-solid fa-city text-[color:var(--brand-primary)] opacity-80"></i> {{ t('companies.panel.title') }}
+                <span class="text-[8px] bg-black/40 px-2 py-1 rounded-md border border-white/5 shadow-inner text-slate-500 ml-2">{{ t('companies.panel.badge') }}</span>
+            </h2>
+
+            <a href="{{ path_for('createCompany') }}" class="btn-create-primary px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus opacity-80 text-xs"></i> {{ t('companies.actions.create_facility') }}
+            </a>
+        </div>
+
+        {% if companies|length > 0 %}
+            <div class="company-table-scroll bg-black/20 p-4 rounded-2xl border border-white/5 shadow-inner">
+                <table id="my-companies" class="w-full text-left company-layout-table">
+                    <thead class="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">
+                        <tr>
+                            <th class="p-3 pb-2 pl-5" style="width: 34%;">{{ t('companies.table.company') }}</th>
+                            <th class="p-3 pb-2 text-left" style="width: 24%;">{{ t('companies.table.logistics') }}</th>
+                            <th class="p-3 pb-2 text-left" style="width: 20%;">{{ t('companies.table.output') }}</th>
+                            <th class="p-3 pb-2 text-left" style="width: 22%;">{{ t('companies.table.offer') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-xs text-white font-bold">
+                        {% for company in companies %}
+                            {% set offer = openOffers[company.id] is defined ? openOffers[company.id] : null %}
+                            {% set companyType = companyTypes[company.type] %}
+                            {% set qualityData = companyType.qualities[company.quality] %}
+                            {% set consumeProduct = qualityData.consume_product|default(0) %}
+                            {% set consumeAmount = qualityData.consume_amount|default(0) %}
+                            {% set outputProduct = companyType.product %}
+                            {% set outputAmount = qualityData.product_amount|default(0) %}
+
+                            <tr class="v2-table-row group">
+                                <td class="p-4 pl-5">
+                                    <div class="flex items-center gap-4 company-cell company-unit">
+                                        <div class="w-14 h-14 bg-black/80 rounded-xl flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] group-hover:shadow-[inset_0_2px_8px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)] transition-all">
+                                            <img src="img/companies/{{ company.type }}.png" class="w-8 h-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="uppercase tracking-widest text-[12px] font-black text-slate-200 group-hover:text-white transition-colors">{{ companyType.name }}</span>
+                                            <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-md tracking-widest bg-black/50 border border-white/5 shadow-inner text-[color:var(--brand-primary)]">Q{{ company.quality }}</span>
+                                                <span class="bg-black/50 border border-white/5 text-slate-500 text-[9px] font-black tracking-widest px-2 py-0.5 rounded shadow-inner">{{ t('companies.table.active') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-left">
+                                    <div class="flex flex-col gap-1.5">
+                                        {% if consumeProduct > 0 %}
+                                            <div class="tech-badge red w-fit">
+                                                <span class="text-[12px]">-{{ consumeAmount }}</span>
+                                                <img class="w-4 h-4 object-contain drop-shadow-sm" src="img/products/{{ consumeProduct }}.png">
+                                            </div>
+                                        {% else %}
+                                            <span class="bg-black/40 border border-white/5 px-3 py-1.5 rounded-lg text-slate-600 font-mono font-black tracking-widest text-[10px] shadow-inner w-fit">{{ t('companies.table.no_input') }}</span>
+                                        {% endif %}
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                            {% if consumeProduct > 0 %}Girdi TÃƒÂ¼ketir{% else %}{{ t('companies.table.no_input_label') }}{% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-left">
+                                    <div class="flex flex-col gap-1.5">
+                                        <div class="tech-badge green w-fit">
+                                            <strong class="text-[14px]">+{{ outputAmount }}</strong>
+                                            <img class="w-4 h-4 drop-shadow-sm" src="img/products/{{ outputProduct }}.png">
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            {% if consumeProduct > 0 %}
+                                                <span class="text-[9px] font-black uppercase tracking-widest bg-red-950/30 text-red-400 px-2 py-0.5 rounded border border-red-500/20 shadow-inner">
+                                                    <i class="fa-solid fa-arrow-down opacity-70"></i> -{{ consumeAmount }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-[9px] font-black uppercase tracking-widest bg-black/40 text-slate-400 px-2 py-0.5 rounded border border-white/5 shadow-inner">
+                                                    <i class="fa-solid fa-box-open opacity-70"></i> {{ t('companies.table.direct') }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-left">
+                                    {% if offer %}
+                                        <div class="flex flex-col gap-2 w-full max-w-[140px]">
+                                            <button
+                                                type="button"
+                                                class="btn-create-primary !py-2.5 !text-[9px] !rounded-lg w-full flex items-center justify-center gap-2"
+                                                onclick="openOfferModal({
+                                                    mode: 'edit',
+                                                    companyId: {{ company.id }},
+                                                    companyName: '{{ companyType.name|e('js') }}',
+                                                    companyQuality: {{ company.quality }},
+                                                    requiredSkill: {{ offer.required_skill|default(0) }},
+                                                    salary: {{ offer.salary|default(0) }},
+                                                    currency: '{{ offer.currency|default('')|upper|e('js') }}'
+                                                })">
+                                                <i class="fa-solid fa-pen-to-square"></i> {{ t('companies.table.edit') }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="finance-action-btn w-full !min-h-[30px] !py-2 !text-[9px] justify-center"
+                                                onclick="cancelWorkOffer({{ company.id }})">
+                                                <i class="fa-solid fa-xmark text-sm text-red-500 opacity-80"></i> {{ t('companies.table.remove') }}
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-full max-w-[140px]">
+                                            <button
+                                                type="button"
+                                                class="btn-create-primary !py-3 !text-[10px] !rounded-xl w-full flex items-center justify-center gap-2 shadow-lg"
+                                                onclick="openOfferModal({
+                                                    mode: 'create',
+                                                    companyId: {{ company.id }},
+                                                    companyName: '{{ companyType.name|e('js') }}',
+                                                    companyQuality: {{ company.quality }},
+                                                    requiredSkill: {{ company.quality }},
+                                                    salary: 1.00,
+                                                    currency: '{{ currencyList|length > 0 ? currencyList[0].code|upper|e('js') : '' }}'
+                                                })">
+                                                <i class="fa-solid fa-bullhorn text-sm opacity-80"></i> {{ t('companies.table.open_offer') }}
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="py-16 text-center bg-black/30 rounded-2xl border border-white/5 shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] mt-4 relative z-10 flex flex-col items-center justify-center">
+                <div class="w-16 h-16 bg-black/60 rounded-[14px] flex items-center justify-center mb-4 border border-white/5 shadow-inner">
+                    <i class="fa-solid fa-industry text-2xl text-slate-500 opacity-60"></i>
+                </div>
+                <p class="text-slate-300 text-[13px] font-black uppercase tracking-[0.2em] mb-2 drop-shadow-sm">{{ t('companies.empty.title') }}</p>
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.1em] mb-6">{{ t('companies.empty.subtitle') }}</p>
+                <a href="{{ path_for('createCompany') }}" class="btn-create-primary px-8 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-hammer opacity-80"></i> {{ t('companies.empty.cta') }}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    const COMPANY_CURRENCIES = [
+        {% for currency in currencyList %}
+            {
+                code: '{{ currency.code|upper|e('js') }}',
+                name: '{{ (attribute(currency, 'name') is defined and attribute(currency, 'name') ? attribute(currency, 'name') : currency.code)|e('js') }}',
+                minimum_wage: {{ attribute(currency, 'minimum_wage') is defined and attribute(currency, 'minimum_wage') is not null ? attribute(currency, 'minimum_wage') + 0 : 0 }},
+                country_name: '{{ (attribute(currency, 'country_name') is defined and attribute(currency, 'country_name') ? attribute(currency, 'country_name') : '')|e('js') }}',
+                color: '{{ (attribute(currency, 'color') is defined and attribute(currency, 'color') is not null ? attribute(currency, 'color') : '')|e('js') }}'
+            }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    window.companyFinanceBalanceMap = {
+        {% for code, balance in currencyBalances|default({}) %}
+            '{{ code|upper|e('js') }}': {{ balance + 0 }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    window.companyQuickActions = {
+        offers: [
+            {% for offer in openOffers %}
+                {
+                    companyId: {{ offer.company|default(0) }},
+                    companyName: '{{ offer.company_name|default('Tesis')|e('js') }}',
+                    companyQuality: {{ offer.company_quality|default(0) }},
+                    requiredSkill: {{ offer.required_skill|default(0) }},
+                    salary: {{ offer.salary|default(0) }},
+                    currency: '{{ offer.currency|default('')|upper|e('js') }}'
+                }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    };
+
+    const companyI18n = {
+        currencyMissing: '{{ t('companies.js.currency_missing')|e('js') }}',
+        minimumWageMissing: '{{ t('companies.js.minimum_wage_missing')|e('js') }}',
+        coverageMissing: '{{ t('companies.js.coverage_missing')|e('js') }}',
+        coverageWaiting: '{{ t('companies.js.coverage_waiting')|e('js') }}',
+        coverageCurrent: '{{ t('companies.js.coverage_current')|e('js') }}',
+        selectOffer: '{{ t('companies.js.select_offer')|e('js') }}',
+        continueText: '{{ t('companies.js.continue')|e('js') }}',
+        cancelText: '{{ t('companies.js.cancel')|e('js') }}',
+        chooseOffer: '{{ t('companies.js.choose_offer')|e('js') }}',
+        editOfferTitle: '{{ t('companies.js.edit_offer_title')|e('js') }}',
+        createOfferTitle: '{{ t('companies.js.create_offer_title')|e('js') }}',
+        requiredSkill: '{{ t('companies.js.required_skill')|e('js') }}',
+        requiredSkillHint: '{{ t('companies.js.required_skill_hint')|e('js') }}',
+        dailySalary: '{{ t('companies.js.daily_salary')|e('js') }}',
+        dailySalaryHint: '{{ t('companies.js.daily_salary_hint')|e('js') }}',
+        currencyLabel: '{{ t('companies.js.currency')|e('js') }}',
+        currencyHint: '{{ t('companies.js.currency_hint')|e('js') }}',
+        saveChanges: '{{ t('companies.js.save_changes')|e('js') }}',
+        publishOffer: '{{ t('companies.js.publish_offer')|e('js') }}',
+        invalidSkill: '{{ t('companies.js.invalid_skill')|e('js') }}',
+        invalidSalary: '{{ t('companies.js.invalid_salary')|e('js') }}',
+        currencyRequired: '{{ t('companies.js.currency_required')|e('js') }}',
+        salaryBelowMin: '{{ t('companies.js.salary_below_min')|e('js') }}',
+        processing: '{{ t('companies.js.processing')|e('js') }}',
+        actionFailed: '{{ t('companies.js.action_failed')|e('js') }}',
+        offerUpdated: '{{ t('companies.js.offer_updated')|e('js') }}',
+        offerPublished: '{{ t('companies.js.offer_published')|e('js') }}',
+        offerUpdatedOk: '{{ t('companies.js.offer_updated_ok')|e('js') }}',
+        offerPublishedOk: '{{ t('companies.js.offer_published_ok')|e('js') }}',
+        connectionError: '{{ t('companies.js.connection_error')|e('js') }}',
+        connectionErrorText: '{{ t('companies.js.connection_error_text')|e('js') }}',
+        removeOffer: '{{ t('companies.js.remove_offer')|e('js') }}',
+        removeOfferText: '{{ t('companies.js.remove_offer_text')|e('js') }}',
+        removeText: '{{ t('companies.js.remove')|e('js') }}',
+        abortText: '{{ t('companies.js.abort')|e('js') }}',
+        removing: '{{ t('companies.js.removing')|e('js') }}',
+        offerRemoveFailed: '{{ t('companies.js.offer_remove_failed')|e('js') }}',
+        offerRemoved: '{{ t('companies.js.offer_removed')|e('js') }}',
+        offerRemovedOk: '{{ t('companies.js.offer_removed_ok')|e('js') }}'
+    };
+
+    function getCurrencyMeta(code) {
+        const normalized = (code || '').toUpperCase();
+        for (let i = 0; i < COMPANY_CURRENCIES.length; i++) {
+            if (COMPANY_CURRENCIES[i].code === normalized) {
+                return COMPANY_CURRENCIES[i];
+            }
+        }
+        return null;
+    }
+
+        function buildCurrencyOptions(selectedCurrency) {
+        const normalizedSelected = (selectedCurrency || '').toUpperCase();
+        let html = '';
+
+        if (!COMPANY_CURRENCIES.length) {
+            html += '<option value="">' + companyI18n.currencyMissing + '</option>';
+            return html;
+        }
+
+        COMPANY_CURRENCIES.forEach(function(currency) {
+            const selected = currency.code === normalizedSelected ? ' selected' : '';
+            const countryPart = currency.country_name ? ' - ' + currency.country_name : '';
+            html += '<option value="' + currency.code + '"' + selected + '>' + currency.code + countryPart + '</option>';
+        });
+
+        return html;
+    }
+
+        function renderMinimumWageInfo(currencyCode) {
+        const meta = getCurrencyMeta(currencyCode);
+        const salaryEl = document.getElementById('offer-salary');
+        const salaryValue = salaryEl ? parseFloat(salaryEl.value || '0') : 0;
+
+        if (!meta) {
+            return companyI18n.minimumWageMissing;
+        }
+
+        const minWage = Number(meta.minimum_wage || 0);
+        const ratio = minWage > 0 ? (salaryValue / minWage).toFixed(2) : '0.00';
+
+        return 'Min. Ucret: ' + minWage.toFixed(2) + ' ' + meta.code + ' | Oran: ' + ratio + 'x';
+    }
+
+        function renderCoverageInfo(currencyCode) {
+        const meta = getCurrencyMeta(currencyCode);
+        const salaryEl = document.getElementById('offer-salary');
+        const infoEl = document.getElementById('offer-coverage-info');
+
+        if (!infoEl) return;
+        if (!meta || !salaryEl) {
+            infoEl.textContent = companyI18n.coverageMissing;
+            return;
+        }
+
+        const salaryValue = parseFloat(salaryEl.value || '0');
+        const balanceValue = parseFloat(salaryEl.getAttribute('data-balance') || '0');
+
+        if (!(salaryValue > 0)) {
+            infoEl.textContent = companyI18n.coverageWaiting;
+            return;
+        }
+
+        const coverage = Math.floor(balanceValue / salaryValue);
+        infoEl.textContent = companyI18n.coverageCurrent
+            .replace(':balance', balanceValue.toFixed(2))
+            .replace(':code', meta.code)
+            .replace(':days', coverage);
+    }
+
+    function bindCurrencyInfo() {
+        const currencyEl = document.getElementById('offer-currency');
+        const salaryEl = document.getElementById('offer-salary');
+        const infoEl = document.getElementById('offer-minimum-wage-info');
+
+        if (!currencyEl || !infoEl) return;
+
+        const updateInfo = function() {
+            const meta = getCurrencyMeta(currencyEl.value);
+            infoEl.textContent = renderMinimumWageInfo(currencyEl.value);
+
+            if (meta && salaryEl) {
+                const min = Number(meta.minimum_wage || 0);
+                salaryEl.setAttribute('min', min > 0 ? min.toFixed(2) : '0.01');
+            }
+            renderCoverageInfo(currencyEl.value);
+        };
+
+        currencyEl.addEventListener('change', updateInfo);
+
+        if (salaryEl) {
+            salaryEl.addEventListener('input', function() {
+                infoEl.textContent = renderMinimumWageInfo(currencyEl.value);
+                renderCoverageInfo(currencyEl.value);
+            });
+        }
+        updateInfo();
+    }
+
+    $(function() {
+        if (typeof peque !== 'undefined' && peque.company) {
+            peque.company.init = function() {};
+        }
+    });
+
+        function openOfferQuickActionPicker() {
+        const quickState = window.companyQuickActions || {};
+        const offers = Array.isArray(quickState.offers) ? quickState.offers : [];
+
+        if (!offers.length) return;
+
+        if (offers.length === 1) {
+            openOfferModal({
+                mode: 'edit', companyId: offers[0].companyId, companyName: offers[0].companyName,
+                companyQuality: offers[0].companyQuality, requiredSkill: offers[0].requiredSkill,
+                salary: offers[0].salary, currency: offers[0].currency
+            });
+            return;
+        }
+
+        const selectOptions = {};
+        offers.forEach(function(offer) {
+            selectOptions[String(offer.companyId)] = offer.companyName + ' (Q' + offer.companyQuality + ') - ' + Number(offer.salary || 0).toFixed(2) + ' ' + (offer.currency || '');
+        });
+
+        Swal.fire({
+            title: companyI18n.selectOffer,
+            input: 'select',
+            inputOptions: selectOptions,
+            showCancelButton: true,
+            confirmButtonText: companyI18n.continueText,
+            cancelButtonText: companyI18n.cancelText,
+            customClass: {
+                popup: 'cyber-modal-popup',
+                title: 'cyber-modal-title',
+                confirmButton: 'cyber-confirm-btn',
+                cancelButton: 'finance-action-btn !text-[11px] !py-3',
+                actions: 'gap-3 mt-6',
+                input: 'cyber-input-field mt-4'
+            },
+            buttonsStyling: false,
+            background: '#0a0c14',
+            color: '#f8fafc',
+            didOpen: function() {
+                const selectEl = Swal.getInput();
+                if (!selectEl) return;
+                Array.from(selectEl.options || []).forEach(function(option) {
+                    option.style.backgroundColor = '#0f172a';
+                    option.style.color = '#f8fafc';
+                });
+            },
+            inputValidator: function(value) {
+                if (!value) return companyI18n.chooseOffer;
+                return null;
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            const selectedOffer = offers.find(function(offer) { return String(offer.companyId) === String(result.value); });
+            if (!selectedOffer) return;
+            openOfferModal({
+                mode: 'edit', companyId: selectedOffer.companyId, companyName: selectedOffer.companyName,
+                companyQuality: selectedOffer.companyQuality, requiredSkill: selectedOffer.requiredSkill,
+                salary: selectedOffer.salary, currency: selectedOffer.currency
+            });
+        });
+    }
+
+        function openOfferModal(config) {
+        const mode = config.mode || 'create';
+        const companyId = parseInt(config.companyId, 10) || 0;
+        const companyName = config.companyName || '';
+        const companyQuality = parseInt(config.companyQuality, 10) || 0;
+        const requiredSkill = typeof config.requiredSkill !== 'undefined'
+            ? parseInt(config.requiredSkill, 10)
+            : (typeof config.skill !== 'undefined' ? parseInt(config.skill, 10) : companyQuality);
+        const salary = typeof config.salary !== 'undefined'
+            ? parseFloat(config.salary)
+            : (typeof config.money !== 'undefined' ? parseFloat(config.money) : 1.00);
+        const fallbackCurrency = COMPANY_CURRENCIES.length ? COMPANY_CURRENCIES[0].code : '';
+        const currency = (config.currency || fallbackCurrency).toUpperCase();
+        const balanceMap = window.companyFinanceBalanceMap || {};
+        const startingBalance = balanceMap[currency] ? Number(balanceMap[currency]) : 0;
+        const isEdit = mode === 'edit';
+
+        Swal.fire({
+            title: isEdit
+                ? '<i class="fa-solid fa-pen-to-square text-[color:var(--brand-primary)] mr-2"></i> ' + companyI18n.editOfferTitle
+                : '<i class="fa-solid fa-bullhorn text-[color:var(--brand-primary)] mr-2"></i> ' + companyI18n.createOfferTitle,
+            html: `
+                <div style="text-align:left; margin-top:20px;">
+                    <div style="font-size:11px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; color:#f8fafc; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:10px;">
+                        <div style="width:28px; height:28px; border-radius:8px; background:color-mix(in srgb, var(--brand-primary) 15%, transparent); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 2px 5px rgba(0,0,0,0.5);"><i class="fa-solid fa-industry text-[color:var(--brand-primary)] text-xs"></i></div>
+                        ${companyName} <span style="color:#94a3b8;">/</span> <span style="color:var(--brand-primary); background:color-mix(in srgb, var(--brand-primary) 10%, transparent); padding:2px 8px; border-radius:6px; font-size:10px; border: 1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent);">Q${companyQuality}</span>
+                    </div>
+
+                    <div style="margin-bottom:20px;">
+                        <label for="offer-required-skill" class="swal-tech-label">${companyI18n.requiredSkill}</label>
+                        <div class="swal-tech-help">${companyI18n.requiredSkillHint}</div>
+                        <input id="offer-required-skill" type="number" min="0" value="${isNaN(requiredSkill) ? 0 : requiredSkill}" class="cyber-input-field w-full">
+                    </div>
+
+                    <div style="margin-bottom:20px;">
+                        <label for="offer-salary" class="swal-tech-label">${companyI18n.dailySalary}</label>
+                        <div class="swal-tech-help">${companyI18n.dailySalaryHint}</div>
+                        <input id="offer-salary" type="number" min="0.01" step="0.01" value="${isNaN(salary) ? 1 : salary}" data-balance="${startingBalance}" class="cyber-input-field w-full">
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label for="offer-currency" class="swal-tech-label">${companyI18n.currencyLabel}</label>
+                        <div class="swal-tech-help">${companyI18n.currencyHint}</div>
+                        <div class="relative">
+                            <select id="offer-currency" class="cyber-input-field w-full pr-10">
+                                ${buildCurrencyOptions(currency)}
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-xs"></i>
+                        </div>
+                        <div class="p-3 mt-4 rounded-xl bg-black/40 border border-white/5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                            <div id="offer-minimum-wage-info" class="swal-tech-help dynamic !mt-0 !text-[10px] text-yellow-500 font-black"></div>
+                            <div id="offer-coverage-info" class="swal-tech-help dynamic !mt-1.5 !text-[10px] text-[color:var(--brand-primary)] font-black"></div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            background: '#0a0c14',
+            color: '#f8fafc',
+            width: 500,
+            showCancelButton: true,
+            confirmButtonText: isEdit ? companyI18n.saveChanges : companyI18n.publishOffer,
+            cancelButtonText: companyI18n.cancelText,
+            customClass: {
+                popup: 'cyber-modal-popup',
+                title: 'cyber-modal-title',
+                confirmButton: 'cyber-confirm-btn',
+                cancelButton: 'finance-action-btn !text-[11px] !py-3',
+                actions: 'gap-4 mt-6 w-full flex-col-reverse md:flex-row justify-end',
+            },
+            buttonsStyling: false,
+            focusConfirm: false,
+            didOpen: () => {
+                bindCurrencyInfo();
+            },
+            preConfirm: () => {
+                const requiredSkillValue = parseInt(document.getElementById('offer-required-skill').value, 10);
+                const salaryValue = parseFloat(document.getElementById('offer-salary').value);
+                const currencyValue = document.getElementById('offer-currency').value.trim().toUpperCase();
+                const currencyMeta = getCurrencyMeta(currencyValue);
+                const minimumWage = currencyMeta ? Number(currencyMeta.minimum_wage || 0) : 0;
+
+                if (isNaN(requiredSkillValue) || requiredSkillValue < 0) {
+                    Swal.showValidationMessage(companyI18n.invalidSkill);
+                    return false;
+                }
+
+                if (isNaN(salaryValue) || salaryValue <= 0) {
+                    Swal.showValidationMessage(companyI18n.invalidSalary);
+                    return false;
+                }
+
+                if (!currencyValue) {
+                    Swal.showValidationMessage(companyI18n.currencyRequired);
+                    return false;
+                }
+
+                if (currencyMeta && salaryValue < minimumWage) {
+                    Swal.showValidationMessage(
+                        companyI18n.salaryBelowMin
+                            .replace(':amount', minimumWage.toFixed(2))
+                            .replace(':code', currencyValue)
+                    );
+                    return false;
+                }
+
+                return {
+                    mode: mode,
+                    company_id: companyId,
+                    required_skill: requiredSkillValue,
+                    salary: salaryValue,
+                    currency: currencyValue
+                };
+            }
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            const endpoint = result.value.mode === 'edit'
+                ? "{{ base_url() }}/api/company/work-offer/update"
+                : "{{ base_url() }}/api/company/work-offer/create";
+
+            Swal.fire({
+                title: '<i class="fa-solid fa-spinner fa-spin text-[color:var(--brand-primary)] mr-2"></i> ' + companyI18n.processing,
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                background: '#0a0c14', color: '#f8fafc',
+                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' }
+            });
+
+            $.ajax({
+                url: endpoint,
+                type: "POST",
+                data: {
+                    company_id: result.value.company_id,
+                    required_skill: result.value.required_skill,
+                    salary: result.value.salary,
+                    currency: result.value.currency,
+                    csrf_token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(res) {
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+
+                    if (res.error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '<i class="fa-solid fa-ban text-red-500 mr-2"></i> ' + companyI18n.actionFailed,
+                            text: res.message,
+                            background: '#0a0c14', color: '#f8fafc',
+                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: result.value.mode === 'edit'
+                                ? '<i class="fa-solid fa-check-circle text-[color:var(--brand-primary)] mr-2"></i> ' + companyI18n.offerUpdated
+                                : '<i class="fa-solid fa-check-circle text-[color:var(--brand-primary)] mr-2"></i> ' + companyI18n.offerPublished,
+                            text: res.message || (result.value.mode === 'edit' ? companyI18n.offerUpdatedOk : companyI18n.offerPublishedOk),
+                            background: '#0a0c14', color: '#f8fafc',
+                            timer: 2000,
+                            showConfirmButton: false,
+                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' }
+                        }).then(() => location.reload());
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '<i class="fa-solid fa-plug-circle-xmark text-red-500 mr-2"></i> ' + companyI18n.connectionError,
+                        text: companyI18n.connectionErrorText,
+                        background: '#0a0c14', color: '#f8fafc',
+                        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
+                        buttonsStyling: false
+                    });
+                }
+            });
+        });
+    }
+
+    function cancelWorkOffer(companyId) {
+        Swal.fire({
+            icon: 'warning',
+            title: '<i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-2"></i> ' + companyI18n.removeOffer,
+            text: companyI18n.removeOfferText,
+            background: '#0a0c14', color: '#f8fafc',
+            showCancelButton: true,
+            confirmButtonText: companyI18n.removeText,
+            cancelButtonText: companyI18n.abortText,
+            customClass: {
+                popup: 'cyber-modal-popup',
+                title: 'cyber-modal-title',
+                confirmButton: 'cyber-confirm-btn !bg-red-600',
+                cancelButton: 'finance-action-btn !text-[11px] !py-3',
+                actions: 'gap-4 mt-6 w-full flex-col-reverse md:flex-row justify-center'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            Swal.fire({
+                title: '<i class="fa-solid fa-spinner fa-spin text-[color:var(--brand-primary)] mr-2"></i> ' + companyI18n.removing,
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                background: '#0a0c14', color: '#f8fafc',
+                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' }
+            });
+
+            $.ajax({
+                url: "{{ base_url() }}/api/company/work-offer/cancel",
+                type: "POST",
+                data: {
+                    company_id: companyId,
+                    csrf_token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(res) {
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) {} }
+
+                    if (res.error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '<i class="fa-solid fa-ban text-red-500 mr-2"></i> ' + companyI18n.actionFailed,
+                            text: res.message || companyI18n.offerRemoveFailed,
+                            background: '#0a0c14', color: '#f8fafc',
+                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '<i class="fa-solid fa-check-circle text-[color:var(--brand-primary)] mr-2"></i> ' + companyI18n.offerRemoved,
+                            text: res.message || companyI18n.offerRemovedOk,
+                            background: '#0a0c14', color: '#f8fafc',
+                            timer: 1600,
+                            showConfirmButton: false,
+                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' }
+                        }).then(() => location.reload());
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '<i class="fa-solid fa-plug-circle-xmark text-red-500 mr-2"></i> ' + companyI18n.connectionError,
+                        text: companyI18n.connectionErrorText,
+                        background: '#0a0c14', color: '#f8fafc',
+                        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
+                        buttonsStyling: false
+                    });
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,1214 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<style>
+    .coalition-action-btn {
+        position: relative;
+        overflow: hidden;
+        background-color: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+        color: var(--brand-primary);
+        border-color: color-mix(in srgb, var(--brand-primary) 34%, transparent);
+        box-shadow: 0 0 18px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+        transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+    }
+
+    .coalition-action-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 0%, color-mix(in srgb, white 28%, transparent) 48%, transparent 100%);
+        opacity: 0;
+        transform: translateX(-120%);
+        transition: transform 240ms ease, opacity 180ms ease;
+        pointer-events: none;
+    }
+
+    .coalition-action-btn:hover {
+        transform: translateY(-1px);
+        background-color: color-mix(in srgb, var(--brand-primary) 28%, transparent);
+        border-color: color-mix(in srgb, var(--brand-primary) 52%, transparent);
+        box-shadow: 0 0 26px color-mix(in srgb, var(--brand-primary) 30%, transparent);
+        color: color-mix(in srgb, var(--brand-primary) 82%, white);
+    }
+
+    .coalition-action-btn:hover::before {
+        opacity: 0.75;
+        transform: translateX(120%);
+    }
+
+    .coalition-action-btn:active {
+        transform: translateY(0) scale(0.97);
+        box-shadow: 0 0 12px color-mix(in srgb, var(--brand-primary) 20%, transparent);
+    }
+
+    .side-action-btn {
+        position: relative;
+        overflow: hidden;
+        min-height: 34px;
+        transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+    }
+
+    .side-action-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .side-action-btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    .side-action-btn--brand {
+        background-color: color-mix(in srgb, var(--brand-primary) 16%, transparent);
+        color: color-mix(in srgb, var(--brand-primary) 84%, white);
+        border-color: color-mix(in srgb, var(--brand-primary) 34%, transparent);
+        box-shadow: 0 0 18px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+    }
+
+    .side-action-btn--brand:hover {
+        background-color: color-mix(in srgb, var(--brand-primary) 28%, transparent);
+        border-color: color-mix(in srgb, var(--brand-primary) 48%, transparent);
+        box-shadow: 0 0 24px color-mix(in srgb, var(--brand-primary) 26%, transparent);
+    }
+
+    .side-action-btn--amber {
+        background-color: rgba(245, 158, 11, 0.12);
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.28);
+        box-shadow: 0 0 18px rgba(245, 158, 11, 0.14);
+    }
+
+    .side-action-btn--amber:hover {
+        background-color: rgba(245, 158, 11, 0.2);
+        border-color: rgba(245, 158, 11, 0.42);
+        box-shadow: 0 0 24px rgba(245, 158, 11, 0.22);
+    }
+
+    .treasury-stat-card {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(2, 6, 23, 0.72) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .party-entry-btn {
+        position: relative;
+        overflow: hidden;
+        transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
+    }
+
+    .party-entry-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.12) 48%, transparent 100%);
+        opacity: 0;
+        transform: translateX(-120%);
+        transition: transform 260ms ease, opacity 180ms ease;
+        pointer-events: none;
+    }
+
+    .party-entry-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .party-entry-btn:hover::before {
+        opacity: 0.7;
+        transform: translateX(120%);
+    }
+
+    .party-entry-btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    .party-entry-btn--leave:hover {
+        box-shadow: 0 0 22px rgba(239, 68, 68, 0.24);
+    }
+
+    .party-entry-btn--join:hover {
+        box-shadow: 0 0 22px rgba(192, 38, 211, 0.26);
+    }
+
+    .ad-plan-btn {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(245, 158, 11, 0.16);
+        background: rgba(15, 23, 42, 0.72);
+        transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease;
+    }
+
+    .ad-plan-btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(245, 158, 11, 0.34);
+        box-shadow: 0 0 18px rgba(245, 158, 11, 0.14);
+    }
+
+    .ad-plan-btn.is-active {
+        border-color: rgba(245, 158, 11, 0.5);
+        background: rgba(245, 158, 11, 0.14);
+        box-shadow: 0 0 22px rgba(245, 158, 11, 0.18);
+    }
+
+    #treasury-panel > .relative.grid.grid-cols-2.gap-2.mb-4 > p {
+        display: none;
+    }
+</style>
+<div class="space-y-6 animate-fade-in w-full">
+    
+    {# YENİ: AMBARGO UYARISI BANNER'I #}
+    {% if party.embargoes %}
+        <div class="bg-red-900/40 border-l-4 border-red-500 p-4 rounded-r-xl shadow-[0_0_20px_rgba(239,68,68,0.2)] flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 text-2xl shrink-0 border border-red-500/50">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <div>
+                <h3 class="text-red-500 font-black uppercase text-sm tracking-widest">{{ t('party.profile.embargoed') }}</h3>
+                <p class="text-white text-[11px] font-bold mt-1">{{ t('party.profile.embargoed_text') }} 
+                    {% for e in party.embargoes %} <span class="text-red-400 bg-black/40 px-2 py-0.5 rounded ml-1">{{ e.coalition_name }}</span> {% endfor %}
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+    {# --- ÜST BANNER --- #}
+    <div class="glass-panel border-l-4 border-fuchsia-500 overflow-hidden relative">
+        <div class="h-48 w-full bg-slate-900 relative">
+            {% if party.cover_pic %}
+                <img src="{% if party.cover_pic starts with 'http' %}{{ party.cover_pic }}{% else %}{{ base_url() }}/img/parties/covers/{{ party.cover_pic }}{% endif %}" class="w-full h-full object-cover opacity-60">
+            {% else %}
+                <div class="absolute inset-0 bg-gradient-to-r from-fuchsia-900/80 to-indigo-900/80"></div>
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+            {% endif %}
+            
+            <div class="absolute top-4 right-4 flex gap-3 z-10">
+                {% if party.is_leader %}
+                    <button id="open-settings-btn" class="bg-slate-900/80 hover:bg-slate-800 text-white px-5 py-2 rounded-lg font-black text-[10px] uppercase backdrop-blur-md transition-all shadow-lg flex items-center gap-2 border border-slate-500/50">
+                        <i class="fa-solid fa-gear animate-[spin_4s_linear_infinite]"></i> {{ t('party.profile.settings') }}
+                    </button>
+                {% endif %}
+
+                {% if party.affiliation %}
+                    <button onclick="leaveParty()" class="party-entry-btn party-entry-btn--leave bg-red-600/80 hover:bg-red-500 text-white px-6 py-2 rounded-lg font-black text-[10px] uppercase backdrop-blur-md transition-all shadow-lg flex items-center gap-2 border border-red-400/50">
+                        <i class="fa-solid fa-right-from-bracket"></i> {{ t('party.profile.leave_party') }}
+                    </button>
+                {% elseif party.my_pending_application %}
+                    <button type="button" class="party-entry-btn bg-amber-500/20 text-amber-300 px-6 py-2 rounded-lg font-black text-[10px] uppercase backdrop-blur-md transition-all shadow-lg flex items-center gap-2 border border-amber-400/30 cursor-not-allowed">
+                        <i class="fa-solid fa-hourglass-half"></i> {{ t('party.profile.application_pending') }}
+                    </button>
+                {% else %}
+                    <button onclick="joinParty()" class="party-entry-btn party-entry-btn--join bg-fuchsia-600/90 hover:bg-fuchsia-500 text-white px-8 py-2 rounded-lg font-black text-[11px] uppercase backdrop-blur-md transition-all shadow-[0_0_20px_rgba(192,38,211,0.5)] border border-fuchsia-400/50">
+                        <i class="fa-solid fa-paper-plane"></i> {{ t('party.profile.apply') }}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="px-6 pb-6 relative">
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="-mt-12 w-28 h-28 rounded-2xl bg-black border-4 border-fuchsia-500/50 shadow-[0_0_30px_rgba(217,70,239,0.4)] overflow-hidden relative z-10 shrink-0">
+                    <img src="{% if party.logo_url %}{{ party.logo_url }}{% else %}{{ base_url() }}/img/parties/{{ party.id }}.png{% endif %}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover">
+                </div>
+                
+                <div class="pt-2 flex-1 flex flex-col md:flex-row justify-between items-start md:items-end">
+                    <div>
+                        <div class="text-[10px] font-black text-fuchsia-400 uppercase tracking-[0.3em] mb-1">
+                            {% if party.is_leader %}<span class="text-yellow-500"><i class="fa-solid fa-crown mr-1"></i> {{ t('party.profile.leader') }} </span> | {% endif %}
+                            {{ t('party.profile.official_org') }}
+                        </div>
+                        <h1 class="text-3xl font-black text-white tracking-[0.08em] leading-none mb-3">{{ party.name }}</h1>
+                        
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 tracking-wide">
+                                <i class="fa-solid fa-scale-balanced text-indigo-400 mr-1"></i> {{ party.ideology }}
+                            </span>
+                            <span class="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 tracking-wide">
+                                <i class="fa-solid fa-coins text-yellow-500 mr-1"></i> {{ party.economy_stance }}
+                            </span>
+                            <span class="px-3 py-1 rounded-md bg-fuchsia-500/20 border border-fuchsia-500/30 text-[10px] font-black text-fuchsia-400 uppercase tracking-tighter shadow-inner">
+                                <i class="fa-solid fa-user-group mr-1"></i> {{ party.members_count|default('0') }} - ÜYE
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- AYARLAR MODALİ --- #}
+    {% if party.is_leader %}
+    <div id="party-settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="glass-panel w-full max-w-2xl border-t-4 border-fuchsia-500 p-6 relative">
+            <button id="close-settings-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            <h2 class="text-xl font-black text-white uppercase tracking-widest mb-6 border-b border-white/10 pb-4">
+                <i class="fa-solid fa-sliders text-fuchsia-500 mr-2"></i> {{ t('party.profile.settings_title') }}
+            </h2>
+            <form id="v13-settings-form" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.ideology') }}</label>
+                        <select id="set-ideology" class="w-full bg-black/60 border border-white/10 text-white p-3 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500 transition-all">
+                            <option value="Merkez" {% if party.ideology == 'Merkez' %}selected{% endif %}>Merkez (Ilımlı)</option>
+                            <option value="Merkez Sağ" {% if party.ideology == 'Merkez Sağ' %}selected{% endif %}>Merkez Sağ</option>
+                            <option value="Merkez Sol" {% if party.ideology == 'Merkez Sol' %}selected{% endif %}>Merkez Sol</option>
+                            <option value="Muhafazakar" {% if party.ideology == 'Muhafazakar' %}selected{% endif %}>Muhafazakar</option>
+                            <option value="Liberal" {% if party.ideology == 'Liberal' %}selected{% endif %}>Liberal</option>
+                            <option value="Sosyalist" {% if party.ideology == 'Sosyalist' %}selected{% endif %}>Sosyalist</option>
+                            <option value="Milliyetçi" {% if party.ideology == 'Milliyetçi' %}selected{% endif %}>Milliyetçi</option>
+                            <option value="Aşırı Sağ" {% if party.ideology == 'Aşırı Sağ' %}selected{% endif %}>Aşırı Sağ</option>
+                            <option value="Aşırı Sol" {% if party.ideology == 'Aşırı Sol' %}selected{% endif %}>Aşırı Sol</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.economy') }}</label>
+                        <select id="set-economy" class="w-full bg-black/60 border border-white/10 text-white p-3 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500 transition-all">
+                            <option value="Karma Ekonomi" {% if party.economy_stance == 'Karma Ekonomi' %}selected{% endif %}>Karma Ekonomi</option>
+                            <option value="Serbest Piyasa" {% if party.economy_stance == 'Serbest Piyasa' %}selected{% endif %}>Serbest Piyasa</option>
+                            <option value="Kapitalist" {% if party.economy_stance == 'Kapitalist' %}selected{% endif %}>Kapitalist</option>
+                            <option value="Devletçi" {% if party.economy_stance == 'Devletçi' %}selected{% endif %}>Devletçi</option>
+                            <option value="Komünist" {% if party.economy_stance == 'Komünist' %}selected{% endif %}>Komünist</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.daily_fee') }}</label>
+                        <input id="set-fee" type="number" step="0.1" min="0" max="10" value="{{ party.daily_fee|default('0.00') }}" class="w-full bg-black/60 border border-white/10 text-white p-3 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500 transition-all">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.cover_link') }}</label>
+                    <input id="set-cover" type="text" value="{{ party.cover_pic }}" placeholder="https://i.imgur.com/foto.jpg" class="w-full bg-black/60 border border-white/10 text-white p-3 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500 transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.logo_link') }}</label>
+                    <input id="set-logo-url" type="text" value="{{ party.logo_url|default('') }}" placeholder="https://i.imgur.com/logo.png" class="w-full bg-black/60 border border-white/10 text-white p-3 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500 transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.manifesto') }}</label>
+                    <textarea id="set-desc" class="w-full min-h-[120px] bg-black/60 border border-white/10 text-white p-4 rounded-xl text-[11px] font-bold outline-none focus:border-fuchsia-500 transition-all resize-none">{{ party.description }}</textarea>
+                </div>
+                <button type="submit" class="w-full bg-fuchsia-700 hover:bg-fuchsia-600 text-white py-4 rounded-xl font-black text-[11px] uppercase border border-fuchsia-400/30 transition-all shadow-lg active:scale-95">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> {{ t('party.profile.save_doctrine') }}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {# --- KOALİSYON KURMA MODALİ --- #}
+    {% if party.is_leader and not party.coalition %}
+    <div id="coalition-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="glass-panel w-full max-w-lg border-t-4 border-cyan-500 p-6 relative">
+            <button id="close-coalition-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            <h2 class="text-xl font-black text-white uppercase tracking-widest mb-6 border-b border-white/10 pb-4">
+                <i class="fa-solid fa-handshake-simple text-cyan-500 mr-2"></i> {{ t('party.profile.create_coalition') }}
+            </h2>
+            <form id="create-coalition-form" class="space-y-5">
+                <div id="coalition-create-feedback" class="hidden rounded-xl border px-4 py-3 text-[11px] font-bold"></div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.coalition_name') }}</label>
+                    <input id="coalition-name" type="text" required placeholder="Örn: Büyük İttifak" class="w-full bg-black/60 border border-white/10 text-white p-3 rounded-xl text-xs font-bold outline-none focus:border-cyan-500 transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.coalition_logo') }}</label>
+                    <input id="coalition-logo" type="text" placeholder="https://i.imgur.com/logo.png" class="w-full bg-black/60 border border-white/10 text-white p-3 rounded-xl text-xs font-bold outline-none focus:border-cyan-500 transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.coalition_manifesto') }}</label>
+                    <textarea id="coalition-manifesto" class="w-full min-h-[100px] bg-black/60 border border-white/10 text-white p-4 rounded-xl text-[11px] font-bold outline-none focus:border-cyan-500 transition-all resize-none" placeholder="{{ t('party.profile.coalition_manifesto_placeholder') }}"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white py-4 rounded-xl font-black text-[11px] uppercase border border-cyan-400/30 transition-all shadow-lg active:scale-95">
+                    <i class="fa-solid fa-check mr-2"></i> {{ t('party.profile.create_coalition_submit') }}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {# --- DİPLOMASİ: KOALİSYON DURUM & MERKEZ BANKASI PANELİ --- #}
+    {% if party.coalition %}
+        <div id="coalition-panel" class="hidden glass-panel p-5 border-l-4 border-cyan-500 bg-cyan-900/10 mb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-all duration-500">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                    <i class="fa-solid fa-handshake-angle text-2xl"></i>
+                </div>
+                <div>
+                    <h4 class="text-[11px] font-black text-cyan-400 uppercase tracking-widest">{{ t('party.profile.coalition_alliance') }}</h4>
+                    <p class="text-[16px] font-black text-white mt-0.5 mb-2">{{ party.coalition.name }}</p>
+                    
+                    <div class="bg-black/40 border border-cyan-500/30 px-3 py-1.5 rounded-lg inline-flex items-center gap-2 shadow-inner">
+                        <i class="fa-solid fa-vault text-yellow-500 text-lg"></i>
+                        <div>
+                            <div class="text-[9px] text-cyan-200 font-bold uppercase tracking-wider leading-none">{{ t('party.profile.coalition_treasury') }}</div>
+                            <div class="text-[14px] font-black text-yellow-500 leading-none mt-0.5">
+                                <span id="coalition-treasury-amount">{{ party.coalition.treasury|default('0.00') }}</span> Altın
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col items-end gap-3 w-full md:w-auto">
+                <div class="flex items-center gap-3">
+                    {% if party.coalition.members %}
+                        {% for allied in party.coalition.members %}
+                            <div class="relative inline-block group">
+                                <a href="{{ path_for('party', {'id': allied.id, 'slug': allied.slug|default('party')}) }}" class="block">
+                                    <img src="{{ base_url() }}/img/parties/{{ allied.id }}.png" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-10 h-10 rounded-lg bg-black border border-cyan-500/30 group-hover:border-cyan-400 transition-all object-cover shadow-lg">
+                                </a>
+                                <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10 border border-white/10 font-bold">{{ allied.name }}</div>
+                                
+                                {% if party.coalition.is_founder %}
+                                    <button onclick="distributeFund({{ allied.id }}, '{{ allied.name|escape('js') }}')" class="absolute -top-2 -right-2 w-5 h-5 bg-yellow-600 border border-yellow-400 rounded-full text-[10px] text-white flex items-center justify-center hover:bg-yellow-500 hover:scale-110 transition-all shadow-[0_0_10px_rgba(234,179,8,0.5)] z-20" title="Partiye Teşvik Fonu Aktar">
+                                        <i class="fa-solid fa-coins"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if party.is_leader %}
+                        <button onclick="leaveCoalition()" class="ml-2 w-10 h-10 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-lg" title="Koalisyondan Ayrıl">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    {% endif %}
+                </div>
+
+                {% if party.is_leader %}
+                    <button onclick="fundCoalition()" id="fund-btn" class="coalition-action-btn w-full md:w-auto px-4 py-2 rounded-lg text-[10px] font-black uppercase border shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-money-bill-transfer mr-1"></i> {{ t('party.profile.transfer_to_coalition') }}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="glass-panel p-4 border-l-4 border-slate-700 bg-black/40 mb-2 space-y-4">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-handshake-simple text-slate-500 text-xl"></i>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('party.profile.no_coalition') }}</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 md:justify-end">
+                    {% if party.is_leader %}
+                        <button id="open-coalition-btn" class="coalition-action-btn px-4 py-2 rounded-lg font-black text-[10px] uppercase border shadow-lg">
+                            <i class="fa-solid fa-plus mr-1"></i> {{ t('party.profile.coalition_create_short') }}
+                        </button>
+                    {% endif %}
+                    {% if party.can_invite_to_coalition %}
+                        <button onclick="inviteToCoalition({{ party.id }})" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase border border-indigo-400/30 transition-all shadow-lg shadow-indigo-500/20">
+                            <i class="fa-solid fa-envelope-open-text mr-1"></i> {{ t('party.profile.invite_alliance') }}
+                        </button>
+                    {% endif %}
+
+                    {# AMBARGO UYGULA/KALDIR BUTONLARI #}
+                    {% if party.can_manage_embargo %}
+                        {% if party.my_coalition_embargo %}
+                            <button onclick="toggleEmbargo({{ party.id }}, 'remove')" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase border border-slate-500/30 transition-all shadow-lg shadow-slate-500/20">
+                                <i class="fa-solid fa-lock-open mr-1"></i> Ambargoyu Kaldır
+                            </button>
+                        {% else %}
+                            <button onclick="toggleEmbargo({{ party.id }}, 'add')" class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase border border-red-500/30 transition-all shadow-lg shadow-red-500/20">
+                                <i class="fa-solid fa-ban mr-1"></i> Ambargo Uygula (50 Altın)
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if party.is_leader and party.pending_invites %}
+                <div class="pt-4 border-t border-white/5 space-y-2">
+                    <div class="text-[9px] font-black text-yellow-500 uppercase tracking-widest flex items-center gap-1 mb-2"><i class="fa-solid fa-envelope"></i> {{ t('party.profile.pending_invites') }}</div>
+                    {% for invite in party.pending_invites %}
+                        <div class="bg-black/60 border border-yellow-500/30 p-3 rounded-lg flex justify-between items-center shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                            <div>
+                                <div class="text-[11px] font-bold text-white">{{ invite.coalition_name }}</div>
+                                <div class="text-[9px] text-slate-400 tracking-[0.14em] mt-0.5">{{ t('party.profile.invited_by') }}: {{ invite.inviter_name }}</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="handleInvite({{ invite.invite_id }}, 'accept')" class="w-8 h-8 rounded bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white transition-all flex justify-center items-center" title="Kabul Et"><i class="fa-solid fa-check"></i></button>
+                                <button onclick="handleInvite({{ invite.invite_id }}, 'reject')" class="w-8 h-8 rounded bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition-all flex justify-center items-center" title="Reddet"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {# --- REKLAM PANELİ --- #}
+    {% if party.is_leader and party.ad_until and party.ad_until > "now"|date("Y-m-d H:i:s") %}
+        <div class="glass-panel p-4 border-l-4 border-amber-500 bg-amber-950/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-[0_0_20px_rgba(245,158,11,0.1)] mb-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                    <i class="fa-solid fa-bullhorn text-xl animate-pulse"></i>
+                </div>
+                <div>
+                    <h4 class="text-[11px] font-black text-amber-400 uppercase tracking-widest">Aktif Reklam Kampanyası</h4>
+                    <p class="text-[9px] text-amber-500/70 mt-1 uppercase tracking-widest">{{ t('party.profile.ad_highlighted') }}</p>
+                </div>
+            </div>
+            <div class="text-left md:text-right bg-black/40 p-3 rounded-xl border border-amber-500/20 w-full md:w-auto">
+                <div class="text-[8px] text-amber-500/60 uppercase tracking-widest mb-1">Kampanya Bitiş Tarihi</div>
+                <div class="text-[12px] font-black text-white flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-amber-400"></i> {{ party.ad_until|date("d.m.Y - H:i") }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+        {# --- SOL SÜTUN --- #}
+        <section class="col-span-12 lg:col-span-8 space-y-6">
+            <div class="glass-panel p-6 border-t-2 border-fuchsia-500 bg-black/40">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-scroll text-fuchsia-400"></i> {{ t('party.profile.manifesto') }}
+                </h2>
+                <div class="text-slate-300 text-xs leading-relaxed font-bold tracking-[0.08em] italic bg-black/20 p-5 rounded-xl border border-white/5 whitespace-pre-wrap">{{ (party.description is not empty ? party.description|nl2br : t('party.profile.role.leader') ~ ' henüz bir vizyon belirlemedi.')|raw }}</div>
+            </div>
+
+            <div class="hidden glass-panel p-6 border-t-2 border-sky-500 bg-black/40">
+                <div class="flex items-center justify-between gap-3 mb-4 border-b border-white/5 pb-3">
+                    <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="fa-solid fa-timeline text-sky-400"></i> {{ t('party.profile.logs') }}
+                    </h2>
+                    <span class="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">Son 10 kayit</span>
+                </div>
+                <div class="space-y-3">
+                    {% if party.logs %}
+                        {% for log in party.logs %}
+                            <div class="rounded-xl border border-white/5 bg-black/25 px-4 py-3">
+                                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="text-[12px] font-bold text-slate-200 leading-6">{{ log.message }}</div>
+                                    <div class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500 shrink-0">
+                                        {% if log.created_at %}{{ log.created_at|date('d.m.Y H:i') }}{% else %}Kayit zamani yok{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="rounded-xl border border-white/5 bg-black/20 px-4 py-4 text-[12px] font-bold text-slate-500">
+                            {{ t('party.profile.no_party_log') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="hidden glass-panel p-6 border-t-2 border-blue-500 bg-black/40">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-users-viewfinder text-blue-400"></i> Parti Üyeleri
+                </h2>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {% for member in party.member_list %}
+                        <div class="bg-black/40 border border-white/5 p-3 rounded-xl flex items-center justify-between group hover:border-blue-500/30 transition-all xl:max-w-[420px]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-slate-800 overflow-hidden border border-white/10 shrink-0">
+                                    <img src="{% if member.avatar %}{{ member.avatar }}{% else %}{{ base_url() }}/img/avatars/{{ member.uid }}.png{% endif %}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <div class="text-[11px] font-bold text-white tracking-wide">{{ member.nick|default(member.name) }}</div>
+                                    <div class="text-[9px] font-black uppercase tracking-widest mt-0.5
+                                        {% if member.uid == party.uid %} text-yellow-500
+                                        {% elseif member.level == 2 %} text-fuchsia-400
+                                        {% elseif member.level == 1 %} text-blue-400
+                                        {% else %} text-slate-500 {% endif %}">
+                                        {% if member.uid == party.uid %} <i class="fa-solid fa-crown mr-1"></i> {{ t('party.profile.role.leader') }}
+                                        {% elseif member.level == 2 %} <i class="fa-solid fa-star mr-1"></i> {{ t('party.profile.role.secretary') }}
+                                        {% elseif member.level == 1 %} <i class="fa-solid fa-bullhorn mr-1"></i> Sözcü
+                                        {% else %} <i class="fa-solid fa-user mr-1"></i> Üye {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if party.is_leader and member.uid != party.uid %}
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
+                                    <button onclick="assignRole({{ member.uid }}, 2)" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 1)" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 0)" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        
+        {# --- SAĞ SÜTUN --- #}
+        <aside class="col-span-12 lg:col-span-4 space-y-4">
+            {% if party.is_leader or party.my_pending_application %}
+            <div class="glass-panel p-5 border-l-4 border-emerald-500 bg-emerald-500/5">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-envelope-open-text text-emerald-400"></i> {{ t('party.profile.applications') }}
+                </h2>
+                {% if party.is_leader %}
+                    <div class="space-y-3">
+                        {% if party.join_applications %}
+                            {% for application in party.join_applications %}
+                                <div class="rounded-xl border border-white/5 bg-black/35 p-3">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-11 h-11 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shrink-0">
+                                            <img src="{% if application.avatar %}{{ application.avatar }}{% else %}{{ base_url() }}/img/avatars/{{ application.uid }}.png{% endif %}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover">
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center justify-between gap-2">
+                                    <div class="text-[12px] font-bold text-white truncate">{{ application.nick|default(t('party.profile.role.member') ~ ' #' ~ application.uid) }}</div>
+                                                <div class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500 shrink-0">
+                                                    {% if application.created_at %}{{ application.created_at|date('d.m H:i') }}{% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="mt-2 rounded-lg border border-emerald-500/10 bg-emerald-500/5 px-3 py-2 text-[11px] leading-5 text-slate-300 font-bold whitespace-pre-wrap">
+                                                {{ application.message is not empty ? application.message : t('party.profile.no_extra_note') }}
+                                            </div>
+                                            <div class="mt-3 grid grid-cols-2 gap-2">
+                                                <button type="button" onclick="reviewApplication({{ application.id }}, 'approve')" class="side-action-btn rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-[10px] font-black uppercase text-emerald-300 inline-flex justify-center items-center gap-2 hover:bg-emerald-500 hover:text-white">
+                                                    <i class="fa-solid fa-check"></i> Kabul Et
+                                                </button>
+                                                <button type="button" onclick="reviewApplication({{ application.id }}, 'reject')" class="side-action-btn rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-[10px] font-black uppercase text-red-300 inline-flex justify-center items-center gap-2 hover:bg-red-500 hover:text-white">
+                                                    <i class="fa-solid fa-xmark"></i> Reddet
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="rounded-xl border border-white/5 bg-black/20 px-4 py-4 text-[12px] font-bold text-slate-500">
+                                {{ t('party.profile.applications_none') }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-4">
+                        <div class="text-[10px] font-black uppercase tracking-[0.16em] text-amber-400">{{ t('party.profile.application_processing') }}</div>
+                        <div class="mt-2 text-[12px] leading-6 font-bold text-slate-200">
+                            {{ t('party.profile.application_processing_text') }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="glass-panel p-5 border-l-4 border-blue-500 bg-blue-500/5">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-users-viewfinder text-blue-400"></i> {{ t('party.profile.members') }}
+                </h2>
+                <div class="space-y-3">
+                    {% for member in party.member_list %}
+                        <div class="bg-black/40 border border-white/5 p-3 rounded-xl flex items-center justify-between gap-3 group hover:border-blue-500/30 transition-all">
+                            <div class="min-w-0 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-slate-800 overflow-hidden border border-white/10 shrink-0">
+                                    <img src="{% if member.avatar %}{{ member.avatar }}{% else %}{{ base_url() }}/img/avatars/{{ member.uid }}.png{% endif %}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover">
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[12px] font-bold text-white tracking-wide truncate">{{ member.nick|default(member.name) }}</div>
+                                    <div class="text-[9px] font-black uppercase tracking-widest mt-0.5{% if member.uid == party.uid %} text-yellow-500{% elseif member.level == 2 %} text-fuchsia-400{% elseif member.level == 1 %} text-blue-400{% else %} text-slate-500{% endif %}">
+                                        {% if member.uid == party.uid %}<i class="fa-solid fa-crown mr-1"></i> {{ t('party.profile.role.leader') }}{% elseif member.level == 2 %}<i class="fa-solid fa-star mr-1"></i> {{ t('party.profile.role.secretary') }}{% elseif member.level == 1 %}<i class="fa-solid fa-bullhorn mr-1"></i> {{ t('party.profile.role.spokesman') }}{% else %}<i class="fa-solid fa-user mr-1"></i> {{ t('party.profile.role.member') }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if party.is_leader and member.uid != party.uid %}
+                                <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
+                                    <button onclick="removeMember({{ member.uid }}, '{{ member.nick|default(member.name)|escape('js') }}')" class="bg-red-600/20 hover:bg-red-500 text-red-400 hover:text-white w-8 h-8 rounded flex items-center justify-center text-[11px] border border-red-500/30" title="{{ t('party.profile.kick_member') }}"><i class="fa-solid fa-user-slash"></i></button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div id="treasury-panel" class="glass-panel p-5 border-l-4 relative overflow-hidden transition-all duration-500" style="border-color: color-mix(in srgb, var(--brand-primary) 72%, #f59e0b); background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 10%, rgba(15, 23, 42, 0.92)) 0%, rgba(2, 6, 23, 0.9) 100%);">
+                <div class="absolute inset-0 opacity-60 pointer-events-none" style="background: radial-gradient(circle at top right, color-mix(in srgb, var(--brand-primary) 20%, transparent) 0%, transparent 48%);"></div>
+                <div class="relative flex items-start justify-between gap-3 mb-4">
+                    <div>
+                        <div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: color-mix(in srgb, var(--brand-primary) 74%, white);">{{ t('party.profile.treasury') }}</div>
+                        <h2 class="mt-2 text-[24px] font-black text-white leading-none flex items-end gap-2">
+                            {% if party.affiliation and party.affiliation.party == party.id %}
+                                <span id="treasury-amount">{{ party.treasury|default('0.00') }}</span>
+                                <span class="text-[11px] font-black uppercase tracking-[0.18em] text-amber-400 pb-1">Gold</span>
+                            {% else %}
+                                <span class="text-[18px] font-black tracking-[0.12em] text-slate-400">Gizli</span>
+                            {% endif %}
+                        </h2>
+                        <p class="mt-1.5 pr-2 text-[11px] leading-5 text-slate-400 font-bold">Operasyon fonu, aidat akisi ve reklam butcesi bu panelden yonetilir.</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center border shrink-0" style="background: color-mix(in srgb, var(--brand-primary) 12%, transparent); border-color: color-mix(in srgb, var(--brand-primary) 26%, transparent); box-shadow: 0 0 18px color-mix(in srgb, var(--brand-primary) 14%, transparent);">
+                        <i class="fa-solid fa-sack-dollar text-lg" style="color: color-mix(in srgb, var(--brand-primary) 70%, #fbbf24);"></i>
+                    </div>
+                </div>
+                
+                <div class="relative grid grid-cols-2 gap-2 mb-4">
+                    <div class="treasury-stat-card rounded-lg p-3">
+                        <div class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">Gunluk Aidat</div>
+                        <div class="mt-2 text-[16px] font-black text-white">{{ party.daily_fee|default('0.00') }} <span class="text-[10px] text-fuchsia-400 uppercase tracking-wider">Gold</span></div>
+                    </div>
+                    <div class="treasury-stat-card rounded-lg p-3">
+                        <div class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">{{ t('party.profile.member_count') }}</div>
+                        <div class="mt-1.5 flex flex-col items-start">
+                            <span class="text-[18px] font-black leading-none text-white">{{ party.members_count|default('0') }}</span>
+                        </div>
+                    </div>
+                    <p class="text-[9px] text-fuchsia-400 font-bold uppercase tracking-widest"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Günlük Aidat: {{ party.daily_fee|default('0.00') }} GOLD</p>
+                </div>
+                
+                {% if party.is_leader %}
+                <div class="relative mb-4 rounded-xl border border-amber-500/15 bg-black/25 p-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="text-[9px] font-black uppercase tracking-[0.16em] text-amber-400">Reklam Paketleri</div>
+                        <div id="party-ad-selection-label" class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">{{ party.ad_campaigns[0].label }} / {{ party.ad_campaigns[0].cost|number_format(0, '.', '') }} Gold</div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-3 gap-2">
+                        {% for campaign in party.ad_campaigns %}
+                            <button
+                                type="button"
+                                class="ad-plan-btn {% if loop.first %}is-active{% endif %} rounded-lg px-2 py-2.5 text-left {% if party.ad_purchase_locked %}opacity-50 cursor-not-allowed saturate-50{% endif %}"
+                                data-ad-plan
+                                data-days="{{ campaign.days }}"
+                                data-cost="{{ campaign.cost|number_format(0, '.', '') }}"
+                                data-label="{{ campaign.label }}"
+                                {% if party.ad_purchase_locked %}disabled{% endif %}>
+                                <div class="text-[9px] font-black uppercase tracking-[0.12em] text-white">{{ campaign.label }}</div>
+                                <div class="mt-1 text-[11px] font-black text-amber-400">{{ campaign.cost|number_format(0, '.', '') }} Gold</div>
+                                <div class="mt-1 text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">{{ campaign.badge }}</div>
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="party-ad-selected-days" value="{{ party.ad_campaigns[0].days }}">
+                    {% if party.ad_purchase_locked and party.ad_purchase_available_at %}
+                    <div class="mt-3 rounded-lg border border-red-500/20 bg-red-500/8 px-3 py-2 text-[10px] font-bold text-red-300">
+                        Reklam kilidi aktif. Tekrar: {{ party.ad_purchase_available_at|date('d.m.Y H:i') }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="relative grid grid-cols-2 gap-2">
+                {% if party.affiliation %}
+                    <button onclick="donateMoney()" id="donate-btn" class="side-action-btn side-action-btn--brand w-full rounded-lg px-3 py-2.5 font-black text-[9px] uppercase border inline-flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-coins"></i> Bagis Yap
+                    </button>
+                {% endif %}
+
+                <button
+                    id="v14-buy-ad-btn"
+                    class="side-action-btn side-action-btn--amber w-full rounded-lg px-3 py-2.5 font-black text-[9px] uppercase border inline-flex justify-center items-center gap-2 {% if not party.is_leader or party.ad_purchase_locked %}opacity-50 cursor-not-allowed saturate-50{% endif %}"
+                    {% if not party.is_leader or party.ad_purchase_locked %}disabled title="{% if party.ad_purchase_locked %}{{ t('party.profile.ad_lock') }}{% else %}{{ t('party.profile.only_leader_can_ad') }}{% endif %}"{% endif %}>
+                    <i class="fa-solid {% if party.is_leader and not party.ad_purchase_locked %}fa-bullhorn{% else %}fa-lock{% endif %}"></i>
+                    {{ t('party.profile.buy_ad') }}
+                </button>
+                </div>
+            </div>
+
+            {% if party.coalition %}
+            <div class="glass-panel p-5 border-l-4 border-cyan-500 bg-cyan-500/5">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-handshake-angle text-cyan-400"></i> Koalisyon Ittifaki
+                </h2>
+                <div class="space-y-4">
+                    <div class="min-w-0 rounded-xl border border-cyan-500/15 bg-black/20 px-3 py-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-400">{{ t('party.profile.official_union') }}</div>
+                                <div class="mt-1 text-[17px] font-black text-white tracking-[0.03em] truncate">{{ party.coalition.name }}</div>
+                            </div>
+                            <span class="shrink-0 rounded-md border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-cyan-300">Aktif</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="treasury-stat-card rounded-lg p-3">
+                            <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
+                                <i class="fa-solid fa-vault text-yellow-500"></i>
+                                <span>{{ t('party.profile.coalition_treasury_lower') }}</span>
+                            </div>
+                            <div class="mt-2 text-[16px] font-black text-yellow-400">{{ party.coalition.treasury|default('0.00') }} <span class="text-[10px] uppercase tracking-wider text-yellow-500">Altin</span></div>
+                        </div>
+                        <div class="treasury-stat-card rounded-lg p-3">
+                            <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
+                                <i class="fa-solid fa-building-shield text-cyan-400"></i>
+                                <span>{{ t('party.profile.linked_party') }}</span>
+                            </div>
+                            <div class="mt-2 text-[18px] font-black text-white">{{ party.coalition.members ? party.coalition.members|length : 0 }}</div>
+                        </div>
+                    </div>
+
+                    <p class="px-1 text-[10px] leading-5 text-slate-500 font-bold">{{ t('party.profile.coalition_controls_help') }}</p>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        {% if party.is_leader %}
+                            <button onclick="fundCoalition()" id="fund-btn" class="coalition-action-btn w-full rounded-lg px-3 py-2.5 text-[9px] font-black uppercase border inline-flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-money-bill-transfer"></i> Kasa Aktar
+                            </button>
+                        {% endif %}
+
+                        {% if party.is_leader %}
+                            <button onclick="leaveCoalition()" class="w-full rounded-lg px-3 py-2.5 text-[9px] font-black uppercase border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all inline-flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-right-from-bracket"></i> {{ t('party.profile.leave_short') }}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="glass-panel p-5 border-l-4 border-sky-500 bg-sky-500/5">
+                <div class="flex items-center justify-between gap-3 mb-4 border-b border-white/5 pb-3">
+                    <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="fa-solid fa-timeline text-sky-400"></i> {{ t('party.profile.logs') }}
+                    </h2>
+                    <span class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">Son 10 kayit</span>
+                </div>
+                <div class="space-y-3">
+                    {% if party.logs %}
+                        {% for log in party.logs %}
+                            <div class="rounded-xl border border-white/5 bg-black/30 px-4 py-3">
+                                <div class="text-[11px] leading-6 font-bold text-slate-200">{{ log.message }}</div>
+                                <div class="mt-2 text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+                                    {% if log.created_at %}{{ log.created_at|date('d.m.Y H:i') }}{% else %}Kayit zamani yok{% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="rounded-xl border border-white/5 bg-black/20 px-4 py-4 text-[12px] font-bold text-slate-500">
+                            {{ t('party.profile.no_party_log') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="hidden glass-panel p-5 border-l-4 border-blue-500 bg-blue-500/5">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-users-viewfinder text-blue-400"></i> Parti Ãœyeleri
+                </h2>
+                <div class="space-y-3">
+                    {% for member in party.member_list %}
+                        <div class="bg-black/40 border border-white/5 p-3 rounded-xl flex items-center justify-between gap-3 group hover:border-blue-500/30 transition-all">
+                            <div class="min-w-0 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-slate-800 overflow-hidden border border-white/10 shrink-0">
+                                    <img src="{% if member.avatar %}{{ member.avatar }}{% else %}{{ base_url() }}/img/avatars/{{ member.uid }}.png{% endif %}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover">
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[12px] font-bold text-white tracking-wide truncate">{{ member.nick|default(member.name) }}</div>
+                                    <div class="text-[9px] font-black uppercase tracking-widest mt-0.5
+                                        {% if member.uid == party.uid %} text-yellow-500
+                                        {% elseif member.level == 2 %} text-fuchsia-400
+                                        {% elseif member.level == 1 %} text-blue-400
+                                        {% else %} text-slate-500 {% endif %}">
+                                        {% if member.uid == party.uid %} <i class="fa-solid fa-crown mr-1"></i> {{ t('party.profile.role.leader') }}
+                                        {% elseif member.level == 2 %} <i class="fa-solid fa-star mr-1"></i> {{ t('party.profile.role.secretary') }}
+                                        {% elseif member.level == 1 %} <i class="fa-solid fa-bullhorn mr-1"></i> SÃ¶zcÃ¼
+                                        {% else %} <i class="fa-solid fa-user mr-1"></i> Ãœye {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if party.is_leader and member.uid != party.uid %}
+                                <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
+                                    <button onclick="assignRole({{ member.uid }}, 2)" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 1)" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 0)" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="hidden glass-panel p-5 border-l-4 border-blue-500 bg-blue-500/5">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-users-viewfinder text-blue-400"></i> {{ t('party.profile.members') }}
+                </h2>
+                <div class="space-y-3">
+                    {% for member in party.member_list %}
+                        <div class="bg-black/40 border border-white/5 p-3 rounded-xl flex items-center justify-between gap-3 group hover:border-blue-500/30 transition-all">
+                            <div class="min-w-0 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-slate-800 overflow-hidden border border-white/10 shrink-0">
+                                    <img src="{% if member.avatar %}{{ member.avatar }}{% else %}{{ base_url() }}/img/avatars/{{ member.uid }}.png{% endif %}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover">
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[12px] font-bold text-white tracking-wide truncate">{{ member.nick|default(member.name) }}</div>
+                                    <div class="text-[9px] font-black uppercase tracking-widest mt-0.5{% if member.uid == party.uid %} text-yellow-500{% elseif member.level == 2 %} text-fuchsia-400{% elseif member.level == 1 %} text-blue-400{% else %} text-slate-500{% endif %}">
+                                        {% if member.uid == party.uid %}<i class="fa-solid fa-crown mr-1"></i> {{ t('party.profile.role.leader') }}{% elseif member.level == 2 %}<i class="fa-solid fa-star mr-1"></i> {{ t('party.profile.role.secretary') }}{% elseif member.level == 1 %}<i class="fa-solid fa-bullhorn mr-1"></i> {{ t('party.profile.role.spokesman') }}{% else %}<i class="fa-solid fa-user mr-1"></i> {{ t('party.profile.role.member') }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if party.is_leader and member.uid != party.uid %}
+                                <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
+                                    <button onclick="assignRole({{ member.uid }}, 2)" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 1)" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 0)" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="hidden glass-panel p-6 border-l-4 border-indigo-500 bg-indigo-500/5">
+                <h2 class="text-[11px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-4 text-center">{{ t('party.profile.congress_candidacy') }}</h2>
+                {% if party.affiliation %}
+                    <button id="v11-congress-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-black text-[10px] uppercase border border-indigo-400/30 shadow-lg shadow-indigo-500/10 transition-all">{{ t('party.profile.start_candidacy') }}</button>
+                {% else %}
+                    <div class="p-4 bg-black/60 rounded-xl border border-red-500/20 text-center">
+                        <p class="text-[9px] text-red-400 font-black uppercase">{{ t('party.profile.register_first') }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        $(document).ready(function() {
+            const partyId = {{ party.id|default('0') }};
+            const $coalitionFeedback = $('#coalition-create-feedback');
+            const $coalitionName = $('#coalition-name');
+            const $coalitionManifesto = $('#coalition-manifesto');
+
+            function setCoalitionFeedback(type, message) {
+                var isError = type === 'error';
+                $coalitionFeedback
+                    .removeClass('hidden border-red-500/40 bg-red-500/10 text-red-300 border-emerald-500/40 bg-emerald-500/10 text-emerald-300')
+                    .addClass(isError ? 'border-red-500/40 bg-red-500/10 text-red-300' : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300')
+                    .text(message);
+            }
+
+            function resetCoalitionFeedback() {
+                $coalitionFeedback.addClass('hidden').text('');
+                $coalitionName.removeClass('border-red-500/60');
+                $coalitionManifesto.removeClass('border-red-500/60');
+            }
+
+            $coalitionName.on('input', function() {
+                $(this).removeClass('border-red-500/60');
+            });
+
+            $coalitionManifesto.on('input', function() {
+                $(this).removeClass('border-red-500/60');
+            });
+
+            $('#open-coalition-btn').click(function() { resetCoalitionFeedback(); $('#coalition-create-modal').removeClass('hidden').css('display', 'flex'); });
+            $('#close-coalition-btn').click(function() { resetCoalitionFeedback(); $('#coalition-create-modal').addClass('hidden').css('display', 'none'); });
+            $('#open-settings-btn').click(function() { $('#party-settings-modal').removeClass('hidden').css('display', 'flex'); });
+            $('#close-settings-btn').click(function() { $('#party-settings-modal').addClass('hidden').css('display', 'none'); });
+
+            $('#create-coalition-form').on('submit', function(e) {
+                e.preventDefault();
+                resetCoalitionFeedback();
+
+                var $btn = $(this).find('button[type="submit"]');
+                var defaultBtnHtml = $btn.html();
+                var data = {
+                    name: $coalitionName.val().trim(),
+                    logo: $('#coalition-logo').val().trim(),
+                    manifesto: $coalitionManifesto.val().trim()
+                };
+
+                $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin mr-2"></i> {{ t('party.profile.building') }}');
+
+                $.post("{{ base_url() }}/api/party/create-coalition", data, function(res) {
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+
+                    if (res && res.error > 0) {
+                        if (res.field === 'name') {
+                            $coalitionName.addClass('border-red-500/60').focus();
+                        } else if (res.field === 'manifesto') {
+                            $coalitionManifesto.addClass('border-red-500/60').focus();
+                        }
+
+                        setCoalitionFeedback('error', res.message || '{{ t('party.profile.coalition_create_failed') }}');
+                        $btn.prop('disabled', false).html(defaultBtnHtml);
+                        return;
+                    }
+
+                    setCoalitionFeedback('success', '{{ t('party.profile.coalition_created') }}');
+                    window.location.reload();
+                }).fail(function() {
+                    setCoalitionFeedback('error', '{{ t('party.profile.coalition_create_server_failed') }}');
+                    $btn.prop('disabled', false).html(defaultBtnHtml);
+                });
+            });
+
+            $('#v13-settings-form').on('submit', function(e) {
+                e.preventDefault();
+                var $btn = $(this).find('button[type="submit"]');
+                $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> {{ t('party.profile.saving') }}');
+                
+                var data = { 
+                    id: partyId, 
+                    ideology: $('#set-ideology').val(), 
+                    economy_stance: $('#set-economy').val(), 
+                    cover_pic: $('#set-cover').val().trim(), 
+                    logo_url: $('#set-logo-url').val().trim(),
+                    description: $('#set-desc').val().trim(),
+                    daily_fee: $('#set-fee').val()
+                };
+                
+                $.post("{{ base_url() }}/api/party/update", data, function(res) { 
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                    
+                    if (res && res.error > 0) {
+                        alert("{{ t('party.profile.error_prefix') }}: " + res.message);
+                        $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk mr-2"></i> {{ t('party.profile.save_doctrine') }}');
+                    } else {
+                        window.location.reload(); 
+                    }
+                }).fail(function(){ 
+                    alert("{{ t('party.profile.connection_server_unreachable') }}"); 
+                    $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk mr-2"></i> {{ t('party.profile.save_doctrine') }}');
+                });
+            });
+
+            $('#v14-buy-ad-btn').click(function() {
+                if(confirm("{{ t('party.profile.buy_ad_confirm_old') }}")) {
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> İŞLENİYOR...');
+                    $.post("{{ base_url() }}/api/party/buy-ad", { id: partyId }, function(res) {
+                        if(res.error) { alert("Hata: " + (res.message || "{{ t('party.profile.error_insufficient') }}")); $btn.prop('disabled', false).html('<i class="fa-solid fa-bullhorn"></i> {{ t('party.profile.buy_ad') }}'); }
+                        else { window.location.reload(); }
+                    }).fail(function() {
+                        alert("{{ t('party.profile.connection_generic') }}");
+                        $btn.prop('disabled', false).html('<i class="fa-solid fa-bullhorn"></i> {{ t('party.profile.buy_ad') }}');
+                    });
+                }
+            });
+
+            $('[data-ad-plan]').on('click', function() {
+                var $plan = $(this);
+                $('[data-ad-plan]').removeClass('is-active');
+                $plan.addClass('is-active');
+                $('#party-ad-selected-days').val($plan.data('days'));
+                $('#party-ad-selection-label').text($plan.data('label') + ' / ' + $plan.data('cost') + ' Gold');
+            });
+
+            $('#v14-buy-ad-btn').off('click').on('click', function() {
+                var selectedDays = parseInt($('#party-ad-selected-days').val() || '1', 10);
+                var $selectedPlan = $('[data-ad-plan].is-active').first();
+                var selectedCost = $selectedPlan.data('cost') || 20;
+                var selectedLabel = $selectedPlan.data('label') || (selectedDays + ' Gun');
+
+                if (confirm('{{ t('party.profile.ad_confirm_dynamic') }}'.replace('%label%', selectedLabel).replace('%cost%', selectedCost))) {
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> {{ t('party.profile.processing') }}');
+
+                    $.post("{{ base_url() }}/api/party/buy-ad", { id: partyId, days: selectedDays }, function(res) {
+                        if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                        if (res && res.error) {
+                            alert('Hata: ' + (res.message || '{{ t('party.profile.error_insufficient') }}'));
+                            $btn.prop('disabled', false).html('<i class="fa-solid fa-bullhorn"></i> {{ t('party.profile.buy_ad') }}');
+                            return;
+                        }
+                        window.location.reload();
+                    }).fail(function() {
+                        alert('{{ t('party.profile.connection_error_short') }}');
+                        $btn.prop('disabled', false).html('<i class="fa-solid fa-bullhorn"></i> {{ t('party.profile.buy_ad') }}');
+                    });
+                }
+            });
+
+            window.donateMoney = function() {
+                var m = prompt("Parti Kasasına Bağış Miktarı (Altın):", "10");
+                if (m && parseFloat(m) > 0) {
+                    var $btn = $('#donate-btn');
+                    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> {{ t('party.profile.transferring') }}');
+                    $.post("{{ base_url() }}/api/party/donate", { id: partyId, amount: m }, function(res) {
+                        if(res.error) {
+                            alert("{{ t('party.profile.error_prefix') }}: " + res.message);
+                            $btn.prop('disabled', false).html('<i class="fa-solid fa-coins"></i> {{ t('party.profile.donate') }}');
+                            return;
+                        }
+                        var newTotal = res.result || res;
+                        $('#treasury-amount').text(parseFloat(newTotal).toFixed(2));
+                        $('#treasury-panel').addClass('ring-4 ring-yellow-500 bg-yellow-500/20');
+                        setTimeout(function() {
+                            $('#treasury-panel').removeClass('ring-4 ring-yellow-500 bg-yellow-500/20');
+                            $btn.prop('disabled', false).html('<i class="fa-solid fa-coins"></i> {{ t('party.profile.donate') }}');
+                        }, 1000);
+                    }).fail(function(){ 
+                        alert("Bağlantı hatası: İşlem başarısız.");
+                        $btn.prop('disabled', false).html('<i class="fa-solid fa-coins"></i> {{ t('party.profile.donate') }}');
+                    });
+                }
+            };
+
+            window.fundCoalition = function() {
+                var m = prompt("Parti kasanızdan {{ t('party.profile.coalition_treasury') }}na ne kadar ALTIN aktarmak istiyorsunuz?", "10");
+                if (m && parseFloat(m) > 0) {
+                    var $btn = $('#fund-btn');
+                    var $panel = $('#coalition-panel');
+                    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> {{ t('party.profile.transferring') }}');
+                    $.post("{{ base_url() }}/api/coalition/donate", { amount: m }, function(res) {
+                        if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                        if (res.error > 0) {
+                            alert("Hata: " + (res.message || "İşlem reddedildi."));
+                            $btn.prop('disabled', false).html('<i class="fa-solid fa-money-bill-transfer mr-1"></i> {{ t('party.profile.transfer_to_coalition') }}');
+                        } else {
+                            $panel.addClass('ring-4 ring-cyan-500 bg-cyan-500/20');
+                            setTimeout(function() { window.location.reload(); }, 500);
+                        }
+                    }).fail(function() { 
+                        alert("{{ t('party.profile.connection_generic') }}"); 
+                        $btn.prop('disabled', false).html('<i class="fa-solid fa-money-bill-transfer mr-1"></i> {{ t('party.profile.transfer_to_coalition') }}'); 
+                    });
+                }
+            };
+        });
+
+        function joinParty() {
+            var note = prompt("{{ t('party.profile.note_prompt') }}", "");
+            if (note === null) {
+                return;
+            }
+
+            $.post("{{ base_url() }}/api/party/join", { id: {{ party.id|default('0') }}, message: note }, function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                if (res && res.error > 0) {
+                    alert("{{ t('party.profile.error_prefix') }}: " + (res.message || "{{ t('party.profile.member_application_failed') }}"));
+                    return;
+                }
+                alert(res.message || "{{ t('party.profile.member_application_sent') }}");
+                window.location.reload();
+            }).fail(function() {
+                alert("{{ t('party.profile.connection_error_short') }}: {{ t('party.profile.member_application_failed') }}");
+            });
+        }
+
+        function leaveParty() { if(confirm("{{ t('party.profile.leave_confirm') }}")) $.post("{{ base_url() }}/api/party/leave", { id: {{ party.id|default('0') }} }, function() { window.location.href = "{{ path_for('partyList') }}"; }); }
+        function leaveCoalition() { if(confirm("{{ t('party.profile.leave_coalition_confirm') }}")) $.post("{{ base_url() }}/api/coalition/leave", { party_id: {{ party.id|default('0') }} }, function() { window.location.reload(); }); }
+        function assignRole(targetUid, newRole) { if(confirm("{{ t('party.profile.change_rank_confirm') }}")) $.post("{{ base_url() }}/api/party/assign-role", { party_id: {{ party.id|default('0') }}, target_uid: targetUid, new_role: newRole }, function() { window.location.reload(); }); }
+        function removeMember(targetUid, memberName) {
+            if (!confirm((memberName || '{{ t('party.profile.role.member') }}') + " partiden cikarilsin mi?")) {
+                return;
+            }
+
+            $.post("{{ base_url() }}/api/party/remove-member", { party_id: {{ party.id|default('0') }}, target_uid: targetUid }, function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                if (res && res.error > 0) {
+                    alert("{{ t('party.profile.error_prefix') }}: " + (res.message || "{{ t('party.profile.member_remove_failed') }}"));
+                    return;
+                }
+                window.location.reload();
+            }).fail(function() {
+                alert("{{ t('party.profile.connection_error_short') }}: {{ t('party.profile.member_remove_failed') }}");
+            });
+        }
+        function reviewApplication(applicationId, action) {
+            var question = action === 'approve' ? "{{ t('party.profile.review_approve') }}" : "{{ t('party.profile.review_reject') }}";
+            if (!confirm(question)) {
+                return;
+            }
+
+            $.post("{{ base_url() }}/api/party/review-application", { application_id: applicationId, action: action }, function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                if (res && res.error > 0) {
+                    alert("{{ t('party.profile.error_prefix') }}: " + (res.message || "{{ t('party.profile.review_failed') }}"));
+                    return;
+                }
+                window.location.reload();
+            }).fail(function() {
+                alert("{{ t('party.profile.connection_error_short') }}: {{ t('party.profile.review_failed') }}");
+            });
+        }
+
+        window.inviteById = function() {
+            var targetId = prompt("{{ t('party.profile.invite_party_prompt') }}");
+            if(targetId && parseInt(targetId) > 0) {
+                $.post("{{ base_url() }}/api/coalition/invite", { target_party_id: parseInt(targetId) }, function(res) {
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                    if (res && res.error > 0) alert("Hata: " + (res.message || "Davet gönderilemedi."));
+                    else alert("{{ t('party.profile.invite_sent') }}");
+                }).fail(function() { alert("{{ t('party.profile.connection_generic') }}"); });
+            }
+        };
+
+        window.inviteToCoalition = function(targetPartyId) {
+            if(confirm("{{ t('party.profile.invite_coalition_confirm') }}")) {
+                $.post("{{ base_url() }}/api/coalition/invite", { target_party_id: targetPartyId }, function(res) {
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                    if (res && res.error > 0) alert("{{ t('party.profile.error_prefix') }}: " + (res.message || "{{ t('party.profile.permission_denied') }}"));
+                    else { alert("{{ t('party.profile.diplomatic_sent') }}"); window.location.reload(); }
+                }).fail(function() { alert("{{ t('party.profile.connection_server_failed') }}"); });
+            }
+        };
+
+        window.handleInvite = function(inviteId, action) {
+            var url = action === 'accept' ? "/api/coalition/accept" : "/api/coalition/reject";
+            var msg = action === 'accept' ? "{{ t('party.profile.handle_invite_accept') }}" : "{{ t('party.profile.handle_invite_reject') }}";
+            if(confirm(msg)) {
+                $.post("{{ base_url() }}" + url, { invite_id: inviteId }, function(res) { window.location.reload(); });
+            }
+        };
+
+        window.distributeFund = function(targetPartyId, targetName) {
+            var m = prompt("{{ t('party.profile.distribute_fund_prompt') }}".replace('%party%', targetName), "10");
+            if (m && parseFloat(m) > 0) {
+                $.post("{{ base_url() }}/api/coalition/distribute", { target_party_id: targetPartyId, amount: m }, function(res) {
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                    if (res && res.error > 0) {
+                        alert("Hata: " + (res.message || "İşlem reddedildi."));
+                    } else {
+                        alert("İşlem Başarılı: " + targetName + " partisine " + m + " Altın aktarıldı.");
+                        window.location.reload();
+                    }
+                }).fail(function() { alert("{{ t('party.profile.connection_generic') }}"); });
+            }
+        };
+
+        window.toggleEmbargo = function(targetPartyId, action) {
+            var url = action === 'add' ? "/api/coalition/embargo/add" : "/api/coalition/embargo/remove";
+            var msg = action === 'add' 
+                ? "DİKKAT: Bu partiye Siyasi Ambargo uygulamak, {{ t('party.profile.coalition_treasury') }}ndan 50 ALTIN eksiltecektir. Onaylıyor musunuz?" 
+                : "Bu parti üzerindeki ambargoyu kaldırmak istiyor musunuz?";
+
+            if(confirm(msg)) {
+                $.post("{{ base_url() }}" + url, { target_party_id: targetPartyId }, function(res) {
+                    if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                    if (res && res.error > 0) {
+                        alert("Hata: " + (res.message || "{{ t('party.profile.unauthorized_or_insufficient') }}"));
+                    } else {
+                        window.location.reload();
+                    }
+                }).fail(function() { alert("{{ t('party.profile.connection_generic') }}"); });
+            }
+        };
+        leaveParty = function() {
+            if (!confirm("AyrÄ±lmak istediÄŸinize emin misiniz?")) {
+                return;
+            }
+
+            $.post("{{ base_url() }}/api/party/leave", { id: {{ party.id|default('0') }} }, function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                if (res && res.error > 0) {
+                    alert("{{ t('party.profile.error_prefix') }}: " + (res.message || "{{ t('party.profile.leave_failed') }}"));
+                    return;
+                }
+                window.location.href = "{{ path_for('partyList') }}";
+            }).fail(function() {
+                alert("{{ t('party.profile.connection_error_short') }}: {{ t('party.profile.leave_failed') }}");
+            });
+        };
+        leaveParty = function() {
+            if (!confirm("{{ t('party.profile.leave_confirm') }}")) {
+                return;
+            }
+
+            $.post("{{ base_url() }}/api/party/leave", { id: {{ party.id|default('0') }} }, function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                if (res && res.error > 0) {
+                    alert("{{ t('party.profile.error_prefix') }}: " + (res.message || "{{ t('party.profile.leave_failed') }}"));
+                    return;
+                }
+                window.location.href = "{{ path_for('partyList') }}";
+            }).fail(function() {
+                alert("{{ t('party.profile.connection_error_short') }}: {{ t('party.profile.leave_failed') }}");
+            });
+        };
+    </script>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

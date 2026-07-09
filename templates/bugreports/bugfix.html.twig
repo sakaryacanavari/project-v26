@@ -1,0 +1,897 @@
+﻿{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  /* =============================
+     BUG OPS v26.200 â€” PROJECT-NEXUS HUD
+     ============================= */
+  :root {
+    --bug-accent: var(--brand-primary);
+    --bug-accent-text: color-mix(in srgb, var(--brand-primary) 85%, #ffffff);
+    --bug-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+    --bug-accent-border: color-mix(in srgb, var(--brand-primary) 25%, transparent);
+    --bug-accent-glow: color-mix(in srgb, var(--brand-primary) 40%, transparent);
+  }
+
+  /* --- Core Layout & Glass Panel --- */
+  .home-theme-surface .glass-panel {
+      background: linear-gradient(145deg, rgba(6, 9, 17, 0.65) 0%, rgba(2, 4, 10, 0.9) 100%) !important;
+      backdrop-filter: blur(32px);
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+      border-radius: 16px;
+  }
+
+  /* --- Animations --- */
+  @keyframes v10-slide-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes v10-accIn { 0% { opacity: 0; transform: translateY(-5px); } 100% { opacity: 1; transform: translateY(0); } }
+
+  /* Smooth Scrollbar */
+  .no-scrollbar::-webkit-scrollbar { display:none; }
+  .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--bug-accent-border); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--bug-accent); }
+
+  /* --- Inputs & Selects --- */
+  .v10-input-wrap { position: relative; width: 100%; }
+  .v10-input-wrap i.icon-left { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none; }
+  .v10-input-wrap i.icon-right { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 10px; pointer-events: none; }
+  
+  .v10-input {
+    width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
+    color: #f8fafc; padding: 12px 14px; border-radius: 12px; font-size: 12px; font-weight: 600;
+    transition: all 0.3s ease; outline: none;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .v10-input.has-icon-left { padding-left: 36px; }
+  .v10-input:focus {
+    border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent);
+    background: rgba(0,0,0,0.6);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 0 2px color-mix(in srgb, var(--brand-primary) 15%, transparent);
+  }
+  .v10-input::placeholder { color: #64748b; opacity: 0.6; font-weight: 500; }
+  select.v10-input { cursor: pointer; appearance: none; }
+  select.v10-input option { background: #0f172a; color: #fff; }
+
+  /* --- Accordion --- */
+  .v10-acc { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; }
+  .v10-acc.open { max-height: 2500px; opacity: 1; margin-top: 12px; animation: v10-accIn 0.4s ease both; }
+
+  /* --- Drawer (Right Side Panel) --- */
+  .v10-drawer-wrap { position:fixed; inset:0; z-index:10000; display:none; background: rgba(2,4,8,0.8); backdrop-filter: blur(12px); opacity: 0; transition: opacity .3s ease; }
+  .v10-drawer-wrap.open { display:block; opacity: 1; }
+  .v10-drawer { position:absolute; right:0; top:0; height:100%; width:min(650px, 95vw); background: linear-gradient(165deg, rgba(8, 12, 22, 0.95) 0%, rgba(2, 4, 10, 1) 100%); border-left: 1px solid rgba(255,255,255,0.05); box-shadow: -20px 0 50px rgba(0,0,0,0.9); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display:flex; flex-direction:column; }
+  .v10-drawer-wrap.open .v10-drawer { transform: translateX(0); }
+
+  /* --- Wizard Panel Steps --- */
+  .v10-panel { display: none; opacity: 0; }
+  .v10-panel.show { display: block; animation: v10-slide-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  
+  .v10-step { display:inline-flex; align-items:center; gap:6px; padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.03); background: rgba(0,0,0,.3); color: rgba(226,232,240,.5); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+  .v10-step .dot { width:6px; height:6px; border-radius:50%; background: rgba(255,255,255,.2); transition: all 0.3s; }
+  .v10-step.active { border-color: color-mix(in srgb, var(--brand-primary) 30%, transparent); background: color-mix(in srgb, var(--brand-primary) 10%, transparent); color: #fff; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); }
+  .v10-step.active .dot { background: var(--brand-primary); transform: scale(1.2); box-shadow: 0 0 8px var(--brand-glow); }
+  .v10-step.done { border-color: rgba(16, 185, 129,.3); color: rgba(16, 185, 129,.9); }
+  .v10-step.done .dot { background: rgba(16, 185, 129, 0.9); }
+
+  /* --- Category Tiles --- */
+  .v10-cat { border:1px solid rgba(255,255,255,.03); background: rgba(0,0,0,.4); transition: all .3s cubic-bezier(0.2, 0.8, 0.2, 1); border-radius: 14px; cursor: pointer; position: relative; overflow: hidden; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); }
+  .v10-cat::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--brand-primary) 5%, transparent), transparent); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .v10-cat:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--brand-primary) 30%, transparent); box-shadow: 0 8px 15px rgba(0,0,0,.6); }
+  .v10-cat:hover::before { opacity: 1; }
+  .v10-cat.active { border-color: var(--brand-primary); box-shadow: inset 0 0 15px color-mix(in srgb, var(--brand-primary) 10%, transparent), 0 8px 15px rgba(0,0,0,.6); transform: scale(1.02); background: color-mix(in srgb, var(--brand-primary) 5%, rgba(0,0,0,0.6)); }
+  .v10-cat.active::before { opacity: 1; background: linear-gradient(to top, color-mix(in srgb, var(--brand-primary) 15%, transparent), transparent); }
+
+  /* --- Buttons --- */
+  .v10-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding: 12px 20px; border-radius: 12px; border: none; background: rgba(255,255,255,.05); color: #cbd5e1; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; transition: all .3s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); }
+  .v10-btn:hover { background: rgba(255,255,255,.08); color: #fff; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); }
+  .v10-btn:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
+  
+  .v10-btn.primary { background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 80%, white), var(--brand-primary)); color: #0c0a09; box-shadow: 0 4px 15px color-mix(in srgb, var(--brand-primary) 20%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.2)); }
+  .v10-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px color-mix(in srgb, var(--brand-primary) 30%, transparent), inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 40%, rgba(255,255,255,0.3)); filter: brightness(1.05); color: #0c0a09; }
+  .v10-btn.primary:active { transform: translateY(0); box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 10%, transparent); }
+
+  .bug-theme-text { color: var(--bug-accent-text); }
+  .bug-theme-chip {
+    background: color-mix(in srgb, var(--bug-accent) 15%, transparent);
+    border-color: var(--bug-accent-border);
+    color: var(--bug-accent-text);
+  }
+
+  /* --- Utilities --- */
+  .v10-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .v10-dot.red { background: rgba(239, 68, 68, 1); box-shadow: 0 0 8px rgba(239, 68, 68, .6); }
+  .v10-dot.amb { background: rgba(245, 158, 11, 1); box-shadow: 0 0 8px rgba(245, 158, 11, .6); }
+  .v10-dot.gre { background: rgba(16, 185, 129, 1); box-shadow: 0 0 8px rgba(16, 185, 129, .6); }
+  .v10-dot.sla { background: rgba(148, 163, 184, 1); }
+
+  /* Modern Tabs */
+  .v10-tabs { display:flex; gap:8px; }
+  .v10-tab { padding: 10px 16px; border-radius: 10px; color: rgba(226,232,240,.6); font-size: 11px; font-weight: 800; cursor:pointer; transition: all .3s; display:inline-flex; align-items:center; gap:8px; text-transform: uppercase; border: 1px solid transparent; background: rgba(0,0,0,0.3); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+  .v10-tab:hover { background: rgba(255,255,255,.03); color: #fff; border-color: rgba(255,255,255,0.05); }
+  .v10-tab.active { background: color-mix(in srgb, var(--brand-primary) 15%, transparent); color: #fff; border-color: color-mix(in srgb, var(--brand-primary) 30%, transparent); box-shadow: inset 0 0 10px color-mix(in srgb, var(--brand-primary) 10%, transparent); }
+
+  /* Markdown & Blocks */
+  .v10-md { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; color: rgba(226,232,240,.9); line-height: 1.6; }
+  .v10-md strong { color: #fff; font-weight: 800; }
+  .v10-md code { padding: 3px 6px; border-radius: 6px; background: rgba(255,255,255,.08); color: var(--brand-primary); font-size: 12px; }
+  .v10-md pre { padding: 16px; border-radius: 12px; background: rgba(0,0,0,.5); overflow:auto; margin: 12px 0; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); }
+  .v10-md hr { border: none; border-top: 1px dashed rgba(255,255,255,.1); margin: 20px 0; }
+
+  /* SweetAlert V26 */
+  .cyber-modal-popup { background: rgba(8, 10, 14, 0.98) !important; backdrop-filter: blur(32px); border: 1px solid rgba(255, 255, 255, 0.03) !important; border-radius: 20px !important; padding: 2rem 1.5rem !important; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.95) !important; }
+  .cyber-modal-title { color: #f8fafc !important; text-transform: uppercase !important; letter-spacing: 0.15em !important; font-weight: 900 !important; font-size: 14px !important; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 14px !important; margin-bottom: 18px !important; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; line-height: 1.6 !important; }
+  .cyber-confirm-btn { background: var(--brand-primary) !important; color: #0c0a09 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.08em !important; border-radius: 10px !important; padding: 12px 24px !important; font-size: 11px !important; border: none !important; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important; }
+  .cyber-confirm-btn:hover { transform: translateY(-1px) !important; filter: brightness(1.1); }
+</style>
+
+<div class="home-theme-surface space-y-5 animate-fade-in w-full overflow-hidden" id="bug-report-center-v10">
+
+  {# ===== HERO TERTEMÄ°Z BAÅLIK ===== #}
+  <div class="glass-panel p-6 md:p-8">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+      
+      <div class="flex items-center gap-5">
+        <div class="w-14 h-14 rounded-[14px] bg-[color:var(--brand-primary)]/15 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]">
+          <i class="fa-solid fa-satellite-dish text-2xl text-[color:var(--brand-primary)] drop-shadow-sm"></i>
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-black text-white tracking-wide drop-shadow-md uppercase">
+            {{ t('bug.title') }}
+          </h1>
+          <p class="text-[11px] text-slate-400 mt-2 font-bold uppercase tracking-widest opacity-80">
+            {{ t('bug.subtitle') }}
+          </p>
+        </div>
+      </div>
+
+      <button class="w-full md:w-auto v10-btn primary px-8 py-3.5 text-[11px]" type="button" onclick="BugOpsV10.openDrawer()">
+        <i class="fa-solid fa-plus text-sm opacity-80"></i> {{ t('bug.new_report') }}
+      </button>
+    </div>
+  </div>
+
+  {# ===== STATUS BAR + SEARCH + SORT ===== #}
+  <div class="glass-panel p-5">
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-5 w-full">
+      
+      <div class="v10-tabs w-full lg:w-auto overflow-x-auto no-scrollbar">
+        <div class="v10-tab active" data-filter="all">{{ t('bug.filter.all') }}</div>
+        <div class="v10-tab" data-filter="0"><span class="v10-dot red"></span> {{ t('bug.filter.open') }} <span class="opacity-50 text-[10px] ml-1" id="cnt0">0</span></div>
+        <div class="v10-tab" data-filter="1"><span class="v10-dot amb"></span> {{ t('bug.filter.reviewing') }} <span class="opacity-50 text-[10px] ml-1" id="cnt1">0</span></div>
+        <div class="v10-tab" data-filter="2"><span class="v10-dot gre"></span> {{ t('bug.filter.resolved') }} <span class="opacity-50 text-[10px] ml-1" id="cnt2">0</span></div>
+        <div class="v10-tab" data-filter="3"><span class="v10-dot sla"></span> {{ t('bug.filter.rejected') }} <span class="opacity-50 text-[10px] ml-1" id="cnt3">0</span></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row w-full lg:w-auto gap-4 items-center">
+        <div class="v10-input-wrap lg:w-[280px]">
+          <i class="fa-solid fa-magnifying-glass icon-left opacity-60" style="color: var(--brand-primary);"></i>
+          <input id="searchBox" type="text" placeholder="{{ t('bug.search_placeholder') }}" class="v10-input has-icon-left">
+        </div>
+
+        <div class="v10-input-wrap lg:w-[220px] group">
+          <i class="fa-solid fa-sort icon-left opacity-60 transition-transform group-hover:scale-110" style="color: var(--brand-primary);"></i>
+          <select id="sortSelect" class="v10-input has-icon-left" aria-label="{{ t('bug.sort') }}">
+            <option value="newest" selected>{{ t('bug.sort.newest') }}</option>
+            <option value="oldest">{{ t('bug.sort.oldest') }}</option>
+            <option value="prio_critical">{{ t('bug.sort.critical') }}</option>
+            <option value="votes">{{ t('bug.sort.votes') }}</option>
+          </select>
+          <i class="fa-solid fa-chevron-down icon-right text-slate-500 opacity-60"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ===== REPORT LIST ===== #}
+  <div class="space-y-5" id="reportList">
+    {% set statusLabel = {0:t('bug.status.open'), 1:t('bug.status.reviewing'), 2:t('bug.status.resolved'), 3:t('bug.status.rejected')} %}
+
+    {% for r in reports %}
+      {% set leftBorder = '' %}
+      {% set badgeCls = 'bug-theme-chip border' %}
+      {% set icon = 'fa-bug bug-theme-text' %}
+
+      {% if r.status == 0 %}
+        {% set leftBorder = 'border-red-500/80' %}
+        {% set badgeCls = 'bg-red-900/30 text-red-400 border border-red-500/40 shadow-inner' %}
+        {% set icon = 'fa-triangle-exclamation text-red-400 opacity-80' %}
+      {% elseif r.status == 1 %}
+        {% set leftBorder = 'border-amber-500/80' %}
+        {% set badgeCls = 'bg-amber-900/30 text-amber-400 border border-amber-500/40 shadow-inner' %}
+        {% set icon = 'fa-spinner fa-spin-pulse text-amber-400 opacity-80' %}
+      {% elseif r.status == 2 %}
+        {% set leftBorder = 'border-emerald-500/80' %}
+        {% set badgeCls = 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/40 shadow-inner' %}
+        {% set icon = 'fa-check-double text-emerald-400 opacity-80' %}
+      {% elseif r.status == 3 %}
+        {% set leftBorder = 'border-slate-500/80' %}
+        {% set badgeCls = 'bg-slate-800/50 text-slate-300 border border-slate-600 shadow-inner' %}
+        {% set icon = 'fa-ban text-slate-400 opacity-80' %}
+      {% endif %}
+
+      {% set pr = r.priority ?? 'major' %}
+      {% if '[PRIORITY:critical]' in (r.description ?? '') %}{% set pr = 'critical' %}{% endif %}
+      {% if '[PRIORITY:minor]' in (r.description ?? '') %}{% set pr = 'minor' %}{% endif %}
+
+      {% set prCls = 'text-amber-400 bg-amber-900/20 border border-amber-500/30 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]' %}
+      {% if pr == 'critical' %}{% set prCls = 'text-red-400 bg-red-900/20 border border-red-500/30 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]' %}{% endif %}
+      {% if pr == 'minor' %}{% set prCls = 'text-slate-300 bg-slate-800/40 border border-slate-600/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]' %}{% endif %}
+
+      {% set votesCount = r.votes_count ?? 0 %}
+      {% set isVoted = r.is_voted ?? false %}
+
+      <div class="reportItem glass-panel border-l-[3px] {{ leftBorder }} p-6"
+           data-status="{{ r.status }}"
+           data-q="{{ (r.title ~ ' ' ~ r.category ~ ' ' ~ (r.error_code ?? '') ~ ' #' ~ r.id)|lower }}"
+           data-id="{{ r.id }}"
+           data-votes="{{ votesCount }}"
+           data-voted="{{ isVoted ? 1 : 0 }}"
+           data-pr="{{ pr }}"
+           data-created="{{ r.created_at ?? '' }}">
+
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-5">
+          <div class="flex items-start gap-5 min-w-0 w-full">
+            <div class="w-14 h-14 rounded-[14px] bg-black/60 border border-white/5 flex items-center justify-center shrink-0 shadow-[inset_0_2px_5px_rgba(0,0,0,0.6)]">
+              <i class="fa-solid {{ icon }} text-2xl drop-shadow-sm"></i>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2.5 mb-2 flex-wrap">
+                <span class="text-[10px] text-slate-400 font-black tracking-widest bg-black/50 px-2.5 py-1 rounded-md border border-white/5 shadow-inner">#{{ r.id }}</span>
+                <span class="text-[color:var(--brand-primary)] bg-[color:var(--brand-primary)]/10 border border-[color:var(--brand-primary)]/20 text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md shadow-inner">{{ r.category|e }}</span>
+                
+                {% if r.error_code %}
+                  <span class="text-[color:var(--brand-primary)] bg-[color:var(--brand-primary)]/10 border border-[color:var(--brand-primary)]/20 text-[10px] font-black tracking-wider px-2.5 py-1 rounded-md shadow-inner">{{ t('bug.code') }}: {{ r.error_code|e }}</span>
+                {% endif %}
+
+                <span class="text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md {{ prCls }}">
+                  {{ t('bug.priority') }}: {{ pr|upper }}
+                </span>
+
+                <span class="text-[color:var(--brand-primary)] bg-[color:var(--brand-primary)]/10 border border-[color:var(--brand-primary)]/20 text-[10px] font-black px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-inner">
+                  <i class="fa-solid fa-arrow-up text-[9px] opacity-70"></i> <span class="voteCount" data-for="{{ r.id }}">{{ votesCount }}</span>
+                </span>
+              </div>
+
+              <h3 class="text-[16px] font-black text-white pr-2 mt-1 truncate drop-shadow-sm">{{ r.title|e }}</h3>
+              <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1.5"><i class="fa-regular fa-clock mr-1 opacity-50"></i> {{ r.created_at ?? t('bug.unknown') }}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <span class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest {{ badgeCls }}">
+              {{ statusLabel[r.status] ?? t('bug.unknown') }}
+            </span>
+
+            <button class="v10-btn px-4 py-2" type="button" data-openbtn="{{ r.id }}" onclick="BugOpsV10.toggleReport('rep{{ r.id }}', this)">
+              <i class="fa-solid fa-chevron-down text-xs opacity-70"></i> <span class="txt hidden sm:inline">{{ t('bug.inspect') }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="rep{{ r.id }}" class="v10-acc">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 mt-4 border-t border-white/5">
+            <div class="lg:col-span-2 space-y-5">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 drop-shadow-sm">
+                  <i class="fa-solid fa-align-left text-[color:var(--brand-primary)] opacity-80"></i> {{ t('bug.report_content') }}
+                </div>
+                
+                <button class="v10-btn vote {{ isVoted ? 'primary' : '' }} px-5 py-2.5" type="button" data-report="{{ r.id }}" onclick="BugOpsV10.voteToggle(this)">
+                  <i class="fa-solid fa-arrow-up opacity-80 text-xs"></i>
+                  <span class="txt">{{ isVoted ? t('bug.voted') : t('bug.me_too') }}</span>
+                </button>
+              </div>
+
+              <div class="v10-md bg-black/40 border border-white/5 rounded-2xl p-6 shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]" data-md="1">
+                {{ r.description|default('')|e }}
+              </div>
+
+              {% if r.image_url %}
+                <div class="mt-3">
+                  <a href="{{ r.image_url|e }}" target="_blank" class="v10-btn px-5 py-2.5">
+                    <i class="fa-solid fa-image text-[color:var(--brand-primary)] opacity-80"></i> {{ t('bug.open_attachment') }} <i class="fa-solid fa-arrow-up-right-from-square ml-1 opacity-40 text-[10px]"></i>
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+
+            <div>
+              <div class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2 drop-shadow-sm">
+                <i class="fa-solid fa-user-shield text-[color:var(--brand-primary)] opacity-80"></i> {{ t('bug.admin_actions') }}
+              </div>
+              
+              {% if r.replies is empty %}
+                <div class="bg-black/30 border border-dashed border-slate-700/50 rounded-2xl p-6 text-[11px] text-slate-500 font-bold text-center flex flex-col items-center justify-center gap-3 shadow-inner">
+                  <i class="fa-solid fa-hourglass-half text-2xl opacity-40"></i>
+                  <span>{{ t('bug.no_admin_review') }}</span>
+                </div>
+              {% else %}
+                <div class="space-y-4">
+                  {% for rep in r.replies %}
+                    <div class="bg-black/50 border border-white/5 rounded-2xl p-5 border-l-[3px] shadow-[inset_0_2px_5px_rgba(0,0,0,0.5)]" style="border-left-color: color-mix(in srgb, var(--brand-primary) 60%, transparent);">
+                      <div class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-white/5 pb-2.5">
+                        <i class="fa-solid fa-check-circle text-[color:var(--brand-primary)] opacity-80"></i> {{ t('bug.system_officer') }} <span class="opacity-50 mx-1">•</span> {{ rep.created_at ?? '-' }}
+                      </div>
+                      <div class="text-[12px] text-slate-300 v10-md font-medium" data-md="1">{{ rep.message|default('')|e }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              {# ===== ADMIN PANEL ===== #}
+              {% if my.is_admin == 1 %}
+                <div class="mt-6 p-5 rounded-2xl bg-black/50 border border-slate-700/50 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]">
+                  <div class="text-[11px] text-[color:var(--brand-primary)] font-black uppercase tracking-[0.15em] mb-4 flex items-center gap-2 opacity-90">
+                    <i class="fa-solid fa-sliders"></i> {{ t('bug.admin_center') }}
+                  </div>
+                  <form class="admin-reply-form flex flex-col gap-4" onsubmit="BugOpsV10.submitReply(event, this)">
+                    <input type="hidden" name="report_id" value="{{ r.id }}">
+                    <textarea name="message" rows="4" required placeholder="{{ t('bug.admin_reply_placeholder') }}" class="v10-input resize-none"></textarea>
+                    
+                    <div class="flex flex-col sm:flex-row items-center gap-3">
+                      <div class="v10-input-wrap flex-1">
+                        <select name="status" class="v10-input">
+                          <option value="0" {% if r.status == 0 %}selected{% endif %}>{{ t('bug.admin_status_open') }}</option>
+                          <option value="1" {% if r.status == 1 %}selected{% endif %}>{{ t('bug.admin_status_reviewing') }}</option>
+                          <option value="2" {% if r.status == 2 %}selected{% endif %}>{{ t('bug.admin_status_resolved') }}</option>
+                          <option value="3" {% if r.status == 3 %}selected{% endif %}>{{ t('bug.admin_status_rejected') }}</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down icon-right text-slate-500 opacity-50"></i>
+                      </div>
+
+                      <button type="submit" class="v10-btn primary w-full sm:w-auto justify-center px-6">
+                        {{ t('bug.process') }} <i class="fa-solid fa-bolt ml-1.5 opacity-80 text-[11px]"></i>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="glass-panel p-12 text-center flex flex-col items-center justify-center gap-4 border-dashed border-white/5 bg-black/30 shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)]">
+        <div class="w-16 h-16 rounded-[14px] border border-[color:var(--brand-primary)]/30 flex items-center justify-center shadow-inner bg-[color:var(--brand-primary)]/10">
+          <i class="fa-solid fa-check-double text-3xl text-[color:var(--brand-primary)] opacity-70"></i>
+        </div>
+        <div class="text-slate-400 text-[13px] font-black uppercase tracking-widest drop-shadow-sm">{{ t('bug.empty') }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+{# ===== DRAWER (Wizard) V26.200 ===== #}
+<div id="drawerWrap" class="v10-drawer-wrap" onclick="BugOpsV10.drawerBackdrop(event)">
+  <div class="v10-drawer">
+    <div class="relative z-10 p-6 md:p-8 border-b border-white/5 bg-black/40 shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-white font-black text-[20px] tracking-[0.15em] uppercase drop-shadow-sm">{{ t('bug.drawer.title') }}</h2>
+          <p class="text-[10px] text-slate-500 mt-1.5 font-bold uppercase tracking-widest">{{ t('bug.drawer.subtitle') }}</p>
+        </div>
+        <button class="w-10 h-10 rounded-xl bg-black/60 hover:bg-red-500/20 text-slate-400 hover:text-red-400 flex items-center justify-center transition-colors border border-white/5 shadow-inner"
+                type="button" onclick="BugOpsV10.closeDrawer()" title="{{ t('bug.close') }}">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <span class="v10-step flex-1 justify-center" id="step1"><span class="dot"></span> {{ t('bug.step.category') }}</span>
+        <span class="v10-step flex-1 justify-center" id="step2"><span class="dot"></span> {{ t('bug.step.details') }}</span>
+        <span class="v10-step flex-1 justify-center" id="step3"><span class="dot"></span> {{ t('bug.step.confirm') }}</span>
+      </div>
+    </div>
+
+    <div class="relative z-10 p-6 md:p-8 flex-1 overflow-auto bg-transparent">
+
+      <form id="bugForm" autocomplete="off">
+        <input type="text" name="contact_me_by_fax_only" id="hpField" value="" tabindex="-1" autocomplete="off" style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;">
+        <input type="hidden" name="form_started_at" id="formStartedAt" value="">
+        <select name="category" id="catSelect" class="hidden">
+          <option value="economy">economy</option>
+          <option value="war">war</option>
+          <option value="politics">politics</option>
+          <option value="ui">ui</option>
+          <option value="performance">performance</option>
+          <option value="security">security</option>
+          <option value="other">other</option>
+        </select>
+
+        {# ===== PANEL 1 ===== #}
+        <div class="v10-panel" id="panel1">
+          <div class="text-[11px] text-[color:var(--brand-primary)] font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2 drop-shadow-sm"><i class="fa-solid fa-layer-group opacity-80"></i> {{ t('bug.module_selection') }}</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="catTiles">
+            <button type="button" class="v10-cat p-5 text-left flex flex-col sm:flex-row items-start sm:items-center gap-4 group" data-cat="economy" onclick="BugOpsV10.pickCat('economy', this)">
+              <div class="w-12 h-12 rounded-[12px] bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)] border border-[color:var(--brand-primary)]/20 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform shadow-inner"><i class="fa-solid fa-coins opacity-80"></i></div>
+              <div>
+                <div class="text-[13px] font-black text-white tracking-widest uppercase">{{ t('bug.category.economy') }}</div>
+                <div class="text-[9px] font-bold text-slate-500 mt-1 tracking-wider uppercase">{{ t('bug.category.economy_hint') }}</div>
+              </div>
+            </button>
+
+            <button type="button" class="v10-cat p-5 text-left flex flex-col sm:flex-row items-start sm:items-center gap-4 group" data-cat="war" onclick="BugOpsV10.pickCat('war', this)">
+              <div class="w-12 h-12 rounded-[12px] bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform shadow-inner"><i class="fa-solid fa-crosshairs opacity-80"></i></div>
+              <div>
+                <div class="text-[13px] font-black text-white tracking-widest uppercase">{{ t('bug.category.war') }}</div>
+                <div class="text-[9px] font-bold text-slate-500 mt-1 tracking-wider uppercase">{{ t('bug.category.war_hint') }}</div>
+              </div>
+            </button>
+
+            <button type="button" class="v10-cat p-5 text-left flex flex-col sm:flex-row items-start sm:items-center gap-4 group" data-cat="ui" onclick="BugOpsV10.pickCat('ui', this)">
+              <div class="w-12 h-12 rounded-[12px] bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)] border border-[color:var(--brand-primary)]/20 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform shadow-inner"><i class="fa-solid fa-layer-group opacity-80"></i></div>
+              <div>
+                <div class="text-[13px] font-black text-white tracking-widest uppercase">{{ t('bug.category.ui') }}</div>
+                <div class="text-[9px] font-bold text-slate-500 mt-1 tracking-wider uppercase">{{ t('bug.category.ui_hint') }}</div>
+              </div>
+            </button>
+
+            <button type="button" class="v10-cat p-5 text-left flex flex-col sm:flex-row items-start sm:items-center gap-4 group" data-cat="performance" onclick="BugOpsV10.pickCat('performance', this)">
+              <div class="w-12 h-12 rounded-[12px] bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)] border border-[color:var(--brand-primary)]/20 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform shadow-inner"><i class="fa-solid fa-gauge-high opacity-80"></i></div>
+              <div>
+                <div class="text-[13px] font-black text-white tracking-widest uppercase">{{ t('bug.category.performance') }}</div>
+                <div class="text-[9px] font-bold text-slate-500 mt-1 tracking-wider uppercase">{{ t('bug.category.performance_hint') }}</div>
+              </div>
+            </button>
+
+            <button type="button" class="v10-cat p-5 text-left flex flex-col sm:flex-row items-start sm:items-center gap-4 group" data-cat="politics" onclick="BugOpsV10.pickCat('politics', this)">
+              <div class="w-12 h-12 rounded-[12px] bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)] border border-[color:var(--brand-primary)]/20 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform shadow-inner"><i class="fa-solid fa-landmark opacity-80"></i></div>
+              <div>
+                <div class="text-[13px] font-black text-white tracking-widest uppercase">{{ t('bug.category.politics') }}</div>
+                <div class="text-[9px] font-bold text-slate-500 mt-1 tracking-wider uppercase">{{ t('bug.category.politics_hint') }}</div>
+              </div>
+            </button>
+
+            <button type="button" class="v10-cat p-5 text-left flex flex-col sm:flex-row items-start sm:items-center gap-4 group" data-cat="security" onclick="BugOpsV10.pickCat('security', this)">
+              <div class="w-12 h-12 rounded-[12px] bg-red-900/20 border border-red-500/20 text-red-500 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform shadow-inner"><i class="fa-solid fa-shield-halved opacity-80"></i></div>
+              <div>
+                <div class="text-[13px] font-black text-white tracking-widest uppercase">{{ t('bug.category.security') }}</div>
+                <div class="text-[9px] font-bold text-slate-500 mt-1 tracking-wider uppercase">{{ t('bug.category.security_hint') }}</div>
+              </div>
+            </button>
+          </div>
+          
+          <div class="mt-8 flex justify-end">
+            <button type="button" class="v10-btn primary px-10 py-3.5 text-[11px]" onclick="BugOpsV10.goStep(2)">{{ t('bug.continue') }} <i class="fa-solid fa-arrow-right ml-1.5 opacity-80"></i></button>
+          </div>
+        </div>
+
+        {# ===== PANEL 2 ===== #}
+        <div class="v10-panel" id="panel2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div>
+              <label class="block text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] mb-2 ml-1">{{ t('bug.priority_level') }}</label>
+              <div class="v10-input-wrap">
+                <select name="priority" class="v10-input">
+                  <option value="minor">{{ t('bug.priority.minor') }}</option>
+                  <option value="major" selected>{{ t('bug.priority.major') }}</option>
+                  <option value="critical">{{ t('bug.priority.critical') }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down icon-right text-slate-500 opacity-50"></i>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] mb-2 ml-1">{{ t('bug.error_code') }} <span class="text-slate-600 font-bold lowercase">{{ t('bug.optional') }}</span></label>
+              <input name="error_code" maxlength="64" placeholder="{{ t('bug.error_code_placeholder') }}" class="v10-input">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] mb-2 ml-1">{{ t('bug.report_title') }} <span class="text-red-500">*</span></label>
+              <input name="title" maxlength="120" required placeholder="{{ t('bug.report_title_placeholder') }}" class="v10-input text-[13px] font-black">
+            </div>
+
+            {# Åablon BarlarÄ± #}
+            <div class="md:col-span-2 bg-black/40 p-4 rounded-xl border border-white/5 flex flex-wrap items-center gap-2.5 shadow-inner">
+              <span class="text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] mr-2"><i class="fa-solid fa-wand-magic-sparkles text-[color:var(--brand-primary)] mr-1.5 opacity-80"></i> {{ t('bug.templates') }}:</span>
+              <button type="button" class="v10-btn px-4 py-2 text-[9px]" onclick="BugOpsV10.injectTemplate('steps')">{{ t('bug.template.general') }}</button>
+              <button type="button" class="v10-btn px-4 py-2 text-[9px]" onclick="BugOpsV10.injectTemplate('repro')">{{ t('bug.template.technical') }}</button>
+              <div class="flex-1"></div>
+              <button type="button" class="v10-btn text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500 px-4 py-2 text-[9px]" onclick="BugOpsV10.clearDraft()"><i class="fa-solid fa-trash-can opacity-80"></i> {{ t('bug.clear') }}</button>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] mb-2 ml-1">{{ t('bug.description') }} <span class="text-red-500">*</span></label>
+              <textarea id="descBox" name="description" rows="8" required placeholder="{{ t('bug.description_placeholder') }}" class="v10-input font-mono text-[13px] leading-relaxed transition-all duration-300 resize-none"></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-[10px] text-slate-500 font-black uppercase tracking-[0.15em] mb-2 ml-1">{{ t('bug.evidence') }} <span class="text-slate-600 font-bold lowercase">{{ t('bug.evidence_optional') }}</span></label>
+              <div class="v10-input-wrap">
+                <i class="fa-solid fa-link icon-left text-slate-500 opacity-60"></i>
+                <input name="image_url" placeholder="https://prnt.sc/... veya resim linki" class="v10-input has-icon-left">
+              </div>
+            </div>
+            
+            <input type="hidden" name="repro_rate" value="sometimes">
+            <div class="hidden">
+              <input type="checkbox" id="capLogs" checked>
+              <input type="checkbox" id="capSys" checked>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
+            <button type="button" class="v10-btn px-8 py-3.5 text-[10px]" onclick="BugOpsV10.goStep(1)"><i class="fa-solid fa-arrow-left opacity-80"></i> {{ t('bug.back') }}</button>
+            <button type="button" class="v10-btn primary px-10 py-3.5 text-[10px]" onclick="BugOpsV10.goStep(3)">{{ t('bug.preview_confirm') }} <i class="fa-solid fa-eye ml-2 opacity-80"></i></button>
+          </div>
+        </div>
+
+        {# ===== PANEL 3 ===== #}
+        <div class="v10-panel" id="panel3">
+          <div class="text-[11px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-[color:var(--brand-primary)] opacity-80"></i> {{ t('bug.review_submit') }}</div>
+          
+          <div class="bg-black/50 border border-white/5 rounded-2xl p-6 mb-8 shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)] relative overflow-hidden">
+            <div class="absolute -right-5 -top-5 opacity-[0.02] pointer-events-none"><i class="fa-solid fa-shield-halved text-9xl"></i></div>
+            
+            <div class="text-[16px] font-black text-white mb-5 border-b border-white/5 pb-4 relative z-10 drop-shadow-sm" id="pvTitle">-</div>
+            <div class="v10-md text-slate-300 relative z-10" id="pvDesc">-</div>
+          </div>
+
+          <div class="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
+            <button type="button" class="v10-btn px-8 py-3.5 text-[10px]" onclick="BugOpsV10.goStep(2)"><i class="fa-solid fa-pen mr-2 opacity-80"></i> {{ t('bug.edit') }}</button>
+            <button id="bugSubmitBtn" class="v10-btn primary px-10 py-3.5 text-[11px] shadow-[0_0_20px_color-mix(in srgb, var(--brand-primary) 30%, transparent)]" type="submit">
+              {{ t('bug.submit') }} <i class="fa-solid fa-paper-plane ml-2 opacity-80"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.BugOpsV10 = (() => {
+
+    const BASE_URL = window.location.pathname.replace('/bug-report', '');
+    
+    const API_CREATE = BASE_URL + '/ajax/bugs/create';
+    const API_VOTE   = BASE_URL + '/ajax/bugs/vote';
+    const API_SUB    = BASE_URL + '/ajax/bugs/subscribe';
+
+    function showCyberAlert(icon, title, text) {
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
+            buttonsStyling: false,
+            background: '#0a0c14',
+            color: '#f8fafc'
+        });
+    }
+
+    function toast(type, title, msg, ms=3000){
+      showCyberAlert(type === 'err' ? 'error' : 'success', title, msg);
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    function csrfToken(){ return ''; }
+
+    const drawerWrap = document.getElementById('drawerWrap');
+    let currentStep = 1;
+
+    function openDrawer(){
+      drawerWrap?.classList.add('open');
+      loadDraft();
+      if(!document.getElementById('formStartedAt')?.value){
+        document.getElementById('formStartedAt').value = String(Date.now());
+      }
+      goStep(currentStep || 1);
+    }
+    function closeDrawer(){ drawerWrap?.classList.remove('open'); }
+    function drawerBackdrop(e){ if(e.target === drawerWrap) closeDrawer(); }
+    window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && drawerWrap?.classList.contains('open')) closeDrawer(); });
+
+    function setStepUI(step){
+      const panels = { 1: document.getElementById('panel1'), 2: document.getElementById('panel2'), 3: document.getElementById('panel3') };
+      const steps  = { 1: document.getElementById('step1'), 2: document.getElementById('step2'), 3: document.getElementById('step3') };
+
+      Object.values(panels).forEach(p=>p?.classList.remove('show'));
+      if(panels[step]) {
+        void panels[step].offsetWidth; // trigger reflow
+        panels[step].classList.add('show');
+      }
+
+      Object.values(steps).forEach(s=>s?.classList.remove('active','done'));
+      for(let i=1;i<=3;i++){
+        if(i < step) steps[i]?.classList.add('done');
+        if(i === step) steps[i]?.classList.add('active');
+      }
+    }
+
+    function goStep(step){
+      step = Number(step || 1);
+      const selectedCat = document.getElementById('catSelect')?.value;
+
+      if(step >= 2 && !selectedCat){
+        toast('err','{{ t('bug.toast.warning') }}','{{ t('bug.toast.select_category') }}');
+        step = 1;
+      }
+
+      if(step === 3){
+        if(!validateRequired(false)){
+          toast('err','{{ t('bug.toast.missing_data') }}','{{ t('bug.toast.fill_required') }}');
+          step = 2;
+        } else {
+          fillPreview();
+        }
+      }
+
+      currentStep = step;
+      setStepUI(step);
+      saveDraft();
+    }
+
+    function toggleReport(id, btn){
+      const el = document.getElementById(id);
+      if(!el) return;
+      const isOpen = el.classList.contains('open');
+      el.classList.toggle('open');
+
+      if(btn){
+        btn.innerHTML = isOpen
+          ? '<i class="fa-solid fa-chevron-down text-sm opacity-70"></i> <span class="txt hidden sm:inline">{{ t('bug.inspect') }}</span>'
+          : '<i class="fa-solid fa-chevron-up text-sm opacity-70"></i> <span class="txt hidden sm:inline">{{ t('bug.hide') }}</span>';
+        btn.classList.toggle('bg-black/60', !isOpen);
+        btn.classList.toggle('text-white', !isOpen);
+      }
+
+      if(!isOpen){
+        setTimeout(()=>{ el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 120);
+      }
+    }
+
+    async function copyText(text){
+      try{ await navigator.clipboard.writeText(text); toast('ok','{{ t('bug.toast.clipboard') }}', '{{ t('bug.toast.copied') }}'.replace(':text', text)); }
+      catch(e){ toast('ok','{{ t('bug.toast.clipboard') }}', '{{ t('bug.toast.copied') }}'.replace(':text', text)); }
+    }
+
+    function escapeHtml(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+    function prScore(pr){ return pr === 'critical' ? 3 : (pr === 'major' ? 2 : (pr === 'minor' ? 1 : 0)); }
+    function parseCreatedTs(str){ return Date.parse(str) || 0; }
+
+    function renderMarkdownSafe(raw){
+      let s = String(raw ?? '');
+      s = s.replace(/^\s*\[PRIORITY:[^\]]+\]\s*\n?/i, '');
+      s = s.replace(/\n---\n\[CLIENT META\]\n([\s\S]*?)(?=\n---\n|\s*$)/g, '');
+      s = s.replace(/\n---\n\[CLIENT LOG\]\n([\s\S]*?)(?=\n---\n|\s*$)/g, '');
+      s = escapeHtml(s);
+      s = s.replace(/^\s*---\s*$/gm, '<hr>');
+      s = s.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${code.replace(/^\n+|\n+$/g,'')}</code></pre>`);
+      s = s.replace(/`([^`\n]+)`/g, (m, code) => `<code>${code}</code>`);
+      s = s.replace(/\*\*([^*\n]+)\*\*/g, (m, t) => `<strong>${t}</strong>`);
+      s = s.replace(/\n/g, '<br>');
+      return s;
+    }
+
+    function renderAllMarkdown(){
+      document.querySelectorAll('[data-md="1"]').forEach(el => { el.innerHTML = renderMarkdownSafe(el.textContent || ''); });
+    }
+
+    const searchBox = document.getElementById('searchBox');
+    const filterButtons = document.querySelectorAll('.v10-tab');
+    const reportItems = document.querySelectorAll('.reportItem');
+    let activeFilter = 'all';
+
+    function applyFilters(){
+      const q = (searchBox?.value || '').trim().toLowerCase();
+      reportItems.forEach(item => {
+        const st = item.getAttribute('data-status');
+        const hay = item.getAttribute('data-q') || '';
+        const okStatus = (activeFilter === 'all') || (st === String(activeFilter));
+        const okQuery = !q || hay.includes(q);
+        item.style.display = (okStatus && okQuery) ? '' : 'none';
+      });
+    }
+
+    filterButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeFilter = btn.getAttribute('data-filter');
+        applyFilters();
+        filterButtons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+    searchBox?.addEventListener('input', debounce(applyFilters, 200));
+
+    const sortSelect = document.getElementById('sortSelect');
+    let activeSort = sortSelect?.value || 'newest';
+    reportItems.forEach((it, idx) => it.setAttribute('data-idx', String(idx)));
+
+    function sortReports(mode){
+      activeSort = mode || activeSort;
+      const listWrap = document.getElementById('reportList');
+      if(!listWrap) return;
+      const items = Array.from(reportItems);
+
+      items.sort((a,b) => {
+        const av = Number(a.getAttribute('data-votes') || 0);
+        const bv = Number(b.getAttribute('data-votes') || 0);
+        const ap = prScore(a.getAttribute('data-pr') || 'major');
+        const bp = prScore(b.getAttribute('data-pr') || 'major');
+        const at = parseCreatedTs(a.getAttribute('data-created') || '');
+        const bt = parseCreatedTs(b.getAttribute('data-created') || '');
+        const ai = Number(a.getAttribute('data-idx') || 0);
+        const bi = Number(b.getAttribute('data-idx') || 0);
+
+        switch(activeSort){
+          case 'oldest': return at !== bt ? at - bt : ai - bi;
+          case 'prio_critical': return bp !== ap ? bp - ap : (bv !== av ? bv - av : bt - at);
+          case 'votes': return bv !== av ? bv - av : (bp !== ap ? bp - ap : bt - at);
+          case 'newest': default: return bt !== at ? bt - at : ai - bi;
+        }
+      });
+      items.forEach(it => listWrap.appendChild(it));
+    }
+    sortSelect?.addEventListener('change', () => { sortReports(sortSelect.value); applyFilters(); });
+
+    function refreshCounts(){
+      const counts = {0:0,1:0,2:0,3:0};
+      reportItems.forEach(item => {
+        const st = Number(item.getAttribute('data-status'));
+        if(counts[st] !== undefined) counts[st]++;
+      });
+      const setTxt = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+      for(let i=0; i<=3; i++){ setTxt(`cnt${i}`, counts[i]); }
+    }
+
+    function pickCat(value, btn){
+      document.getElementById('catSelect').value = value;
+      document.querySelectorAll('#catTiles .v10-cat').forEach(x=>x.classList.remove('active'));
+      btn?.classList.add('active');
+      saveDraft();
+    }
+
+    function injectTemplate(type){
+      const d = document.getElementById('descBox'); if(!d) return;
+      const t = {
+        steps: `{{ t('bug.template.steps') }}`,
+        repro: `{{ t('bug.template.repro') }}`
+      };
+      d.value = t[type] || t.steps;
+      
+      // Highlight effect
+      d.style.boxShadow = '0 0 15px color-mix(in srgb, var(--brand-primary) 50%, transparent)';
+      setTimeout(()=> d.style.boxShadow = 'inset 0 3px 8px rgba(0,0,0,0.6)', 500);
+
+      saveDraft();
+    }
+
+    const draftKey = 'bugops_v10_draft';
+    function saveDraft(){
+      const form = document.getElementById('bugForm'); if(!form) return;
+      localStorage.setItem(draftKey, JSON.stringify(Object.fromEntries(new FormData(form).entries())));
+    }
+    function loadDraft(){
+      try{
+        const data = JSON.parse(localStorage.getItem(draftKey));
+        if(data){
+          for(const [k,v] of Object.entries(data)){ const el = document.getElementById('bugForm').querySelector(`[name="${k}"]`); if(el) el.value = v; }
+          if(data.category){ document.querySelectorAll('#catTiles .v10-cat').forEach(x=>x.classList.toggle('active', x.getAttribute('data-cat') === data.category)); }
+        }
+      }catch(e){}
+    }
+    function clearDraft(){
+      localStorage.removeItem(draftKey); document.getElementById('bugForm')?.reset();
+      document.querySelectorAll('#catTiles .v10-cat').forEach(x=>x.classList.remove('active'));
+    }
+    document.getElementById('bugForm')?.addEventListener('input', debounce(saveDraft, 500));
+
+    function fillPreview(){
+      const data = Object.fromEntries(new FormData(document.getElementById('bugForm')).entries());
+      document.getElementById('pvTitle').textContent = (data.title || '-');
+      document.getElementById('pvDesc').innerHTML = renderMarkdownSafe(data.description || '-');
+    }
+
+    function validateRequired(showToast=true){
+      const t = document.querySelector('#bugForm [name="title"]')?.value?.trim(), d = document.getElementById('descBox')?.value?.trim();
+      const ok = !!(t && d);
+      if(!ok && showToast) toast('err','{{ t('bug.toast.missing_data') }}','{{ t('bug.toast.fill_required') }}');
+      return ok;
+    }
+
+    function getSysInfoText(){ return `RES: ${window.innerWidth}x${window.innerHeight}\nURL: ${location.pathname}\nUA: ${navigator.userAgent || ''}\nLANG: ${navigator.language || '-'}`; }
+
+    async function postForm(url, bodyObj){
+      const fd = new FormData();
+      Object.entries(bodyObj || {}).forEach(([k,v]) => fd.append(k, v));
+      const res = await fetch(url, { method:'POST', body: fd, credentials:'same-origin' });
+      const ct = (res.headers.get('content-type') || '').toLowerCase();
+      let data = null;
+      if(ct.includes('application/json')) data = await res.json(); else throw new Error(`{{ t('bug.server_error') }} (${res.status}).`);
+      if(!res.ok || (data && data.error)) throw new Error(data?.message || `{{ t('bug.request_denied') }}`);
+      return data;
+    }
+
+    async function voteToggle(btn){
+      const rid = btn?.getAttribute('data-report'); if(!rid) return;
+      btn.disabled = true; const oldTxt = btn.querySelector('.txt')?.textContent || '';
+      if(btn.querySelector('.txt')) btn.querySelector('.txt').textContent = '...';
+      try{
+        const data = await postForm(API_VOTE, { report_id: rid });
+        document.querySelectorAll(`.voteCount[data-for="${rid}"]`).forEach(el => el.textContent = String(data.votes || 0));
+        const item = document.querySelector(`.reportItem[data-id="${rid}"]`);
+        if(item){ item.setAttribute('data-votes', String(data.votes || 0)); item.setAttribute('data-voted', data.voted ? '1' : '0'); }
+        btn.classList.toggle('primary', !!data.voted);
+        if(btn.querySelector('.txt')) btn.querySelector('.txt').textContent = data.voted ? '{{ t('bug.voted') }}' : '{{ t('bug.me_too') }}';
+        toast('ok','{{ t('bug.toast.notice') }}', data.voted ? '{{ t('bug.toast.vote_added') }}' : '{{ t('bug.toast.vote_removed') }}');
+        refreshCounts(); sortReports(activeSort);
+      }catch(e){ toast('err','{{ t('bug.toast.denied') }}', e?.message || '{{ t('bug.toast.action_failed') }}'); if(btn.querySelector('.txt')) btn.querySelector('.txt').textContent = oldTxt; }
+      finally{ btn.disabled = false; }
+    }
+
+    document.getElementById('bugForm')?.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if(!validateRequired(true)){ goStep(2); return; }
+      
+      const submitBtn = document.getElementById('bugSubmitBtn');
+      if(submitBtn){ submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> {{ t('bug.submit_loading') }}'; }
+      try{
+        const form = document.getElementById('bugForm'), desc = document.getElementById('descBox'), pr = form.querySelector('[name="priority"]')?.value || 'major';
+        let originalDesc = desc.value;
+        if(desc && !desc.value.includes('[PRIORITY:')) desc.value = `[PRIORITY:${pr}]\n` + desc.value;
+        if(desc && !desc.value.includes('[CLIENT META]')) desc.value += `\n\n---\n[CLIENT META]\n${getSysInfoText()}`;
+        
+        const fd = new FormData(form); desc.value = originalDesc;
+        
+        const res = await fetch(API_CREATE, { method:'POST', body: fd, credentials:'same-origin' });
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        let data = null;
+        if(ct.includes('application/json')) data = await res.json(); else throw new Error(`{{ t('bug.server_error') }}.`);
+        if(!res.ok || (data && data.error)) throw new Error(data?.message || `{{ t('bug.toast.action_failed') }}`);
+        
+        toast('ok','{{ t('bug.toast.success') }}', '{{ t('bug.toast.report_sent') }}');
+        localStorage.removeItem(draftKey);
+        setTimeout(()=> window.location.reload(), 1500);
+      }catch(err){ toast('err','{{ t('bug.toast.error') }}', err?.message || '{{ t('bug.toast.generic_problem') }}'); }
+      finally{ if(submitBtn){ submitBtn.disabled = false; submitBtn.innerHTML = '{{ t('bug.submit') }} <i class="fa-solid fa-paper-plane ml-1 opacity-80"></i>'; } }
+    });
+
+    // -------- Admin Reply --------
+    async function submitReply(e, form){
+      e.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      const oldHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ t('bug.admin.loading') }}';
+
+      try {
+        const fd = new FormData(form);
+        const res = await fetch(BASE_URL + '/ajax/bugs/reply', { method:'POST', body: fd, credentials:'same-origin' });
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        let data = null;
+        if(ct.includes('application/json')) data = await res.json();
+        else throw new Error(`{{ t('bug.invalid_response') }}`);
+
+        if(!res.ok || (data && data.error)) throw new Error(data?.message || `{{ t('bug.request_denied') }}`);
+        
+        toast('ok', '{{ t('bug.admin.success') }}', data.message || '{{ t('bug.admin.updated') }}');
+        setTimeout(() => window.location.reload(), 1000);
+      } catch(err) {
+        toast('err', '{{ t('bug.toast.denied') }}', err?.message || '{{ t('bug.toast.error') }}');
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+      }
+    }
+
+    // Init
+    renderAllMarkdown(); refreshCounts(); sortReports(activeSort); applyFilters();
+    return { openDrawer, closeDrawer, drawerBackdrop, goStep, toggleReport, copyText, pickCat, injectTemplate, clearDraft, voteToggle, submitReply };
+  })();
+</script>
+{% endblock %}

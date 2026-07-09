@@ -1,0 +1,122 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in w-full overflow-hidden">
+    {% if marketStatus and marketMessage %}
+        <div class="glass-panel p-4 {% if marketStatus == 'success' %}border-l-4 border-emerald-500 bg-emerald-950/10{% else %}border-l-4 border-red-500 bg-red-950/10{% endif %}">
+            <div class="text-[10px] font-black text-white uppercase tracking-[0.18em]">{{ marketMessage }}</div>
+        </div>
+    {% endif %}
+    <div class="glass-panel p-5 border-l-4 border-cyan-500 flex justify-between items-center bg-cyan-950/10">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-cyan-600/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                <i class="fa-solid fa-truck-fast text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-black text-white uppercase tracking-[0.2em] leading-tight">Pazar İkmal Kataloğu</h1>
+                <p class="text-[9px] text-cyan-400 font-black uppercase tracking-widest mt-1 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span> Lojistik Veri Akışı: Aktif
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-5 bg-black/20 flex flex-col sm:flex-row items-center justify-between gap-4 border-t-2 border-slate-700">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-satellite-dish text-slate-500 text-lg"></i>
+            <span class="text-[10px] font-black text-white uppercase tracking-widest">Bölgesel Ticaret Filtresi</span>
+        </div>
+        <div class="w-full sm:w-1/3">
+            <div class="bg-black/60 border border-white/10 rounded-xl px-3 py-1 shadow-inner focus-within:border-cyan-500/50 transition-colors">
+                {% include 'widgets/countrySelector.html.twig' %}
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-6 border-t-2 border-cyan-500">
+        <h2 class="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
+            <i class="fa-solid fa-list-check text-cyan-500"></i> Mevcut Tedarik Teklifleri
+        </h2>
+
+        {% if offers|length > 0 %}
+            <div class="overflow-x-auto pb-4">
+                <table id="item-results" class="w-full text-left border-collapse" style="border-spacing: 0 8px; border-collapse: separate;">
+                    <thead class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <tr>
+                            <th class="p-3 bg-black/40 rounded-l-lg border-y border-l border-white/5">Ürün Modeli</th>
+                            <th class="p-3 bg-black/40 border-y border-white/5">Tedarikçi (Satıcı)</th>
+                            <th class="p-3 bg-black/40 border-y border-white/5 text-center">Stok Hacmi</th>
+                            <th class="p-3 bg-black/40 border-y border-white/5 text-center">Birim Fiyatı</th>
+                            <th class="p-3 bg-black/40 rounded-r-lg border-y border-r border-white/5 text-right">Tedarik Emri</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-[10px] font-bold text-white">
+                        {% for offer in offers %}
+                            <tr id="offer-{{ offer.id }}" class="bg-black/20 hover:bg-black/40 transition-colors group">
+                                
+                                <td class="p-3 rounded-l-lg flex items-center gap-4 border-y border-l border-white/5 group-hover:border-cyan-500/30">
+                                    <div class="w-12 h-12 bg-black/60 rounded-xl flex items-center justify-center border border-white/10 shadow-inner group-hover:border-cyan-500/50 transition-colors">
+                                        <img src="img/products/{{ offer.item }}.png" class="w-8 h-8 opacity-90 drop-shadow-md group-hover:scale-110 transition-transform">
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="uppercase tracking-widest text-[11px] text-slate-200">Birim #{{ offer.item }}</span>
+                                        <span class="text-cyan-400 text-[8px] font-black mt-0.5 tracking-widest">LOJİSTİK ONAYLI</span>
+                                    </div>
+                                </td>
+
+                                <td class="p-3 border-y border-white/5 group-hover:border-cyan-500/30">
+                                    <a href="#" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                                        <div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_5px_#10b981]"></div>
+                                        <span class="uppercase tracking-widest">{{ offer.seller.nick }}</span>
+                                    </a>
+                                </td>
+
+                                <td class="p-3 text-center border-y border-white/5 group-hover:border-cyan-500/30">
+                                    <div class="flex items-center justify-center gap-2 bg-black/40 py-1.5 px-3 rounded-lg border border-white/10 w-fit mx-auto">
+                                        <span class="font-mono text-xs font-black text-white">{{ offer.quantity }}</span>
+                                        <span class="text-[8px] text-slate-500 uppercase tracking-widest">Adet</span>
+                                    </div>
+                                </td>
+
+                                <td class="p-3 text-center border-y border-white/5 group-hover:border-cyan-500/30">
+                                    <div class="flex items-center justify-center gap-1.5 text-yellow-500 bg-yellow-950/20 py-2 px-3 rounded-lg border border-yellow-500/20 w-fit mx-auto shadow-inner">
+                                        <span class="font-mono text-sm font-black">{{ offer.price }}</span>
+                                        <span class="text-[9px] font-black uppercase tracking-widest text-yellow-500/70 ml-1">{% filter upper %}{{ offer.country.currency }}{% endfilter %}</span>
+                                    </div>
+                                </td>
+
+                                <td class="p-3 text-right rounded-r-lg border-y border-r border-white/5 group-hover:border-cyan-500/30 pr-4">
+                                    <form action="{{ path_for('marketBuyPage') }}" method="post" class="flex items-center justify-end gap-3">
+                                        <input type="hidden" name="id" value="{{ offer.id }}">
+                                        <input name="quantity" type="number" value="1" min="1" max="{{ offer.quantity }}"
+                                               class="w-16 bg-black/80 border border-white/10 text-white p-2.5 rounded-lg text-[11px] font-mono font-bold outline-none focus:border-cyan-500 transition shadow-inner text-center">
+                                        <button type="submit" title="Satin Al" aria-label="Satin Al"
+                                                class="bg-cyan-600 hover:bg-cyan-500 text-white w-11 h-11 rounded-xl transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 border border-cyan-400/30 inline-flex items-center justify-center group-hover:scale-105 relative z-10 cursor-pointer pointer-events-auto text-sm">
+                                            <i class="fa-solid fa-cart-arrow-down"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="py-16 text-center bg-black/20 rounded-2xl border border-dashed border-white/10">
+                <div class="w-16 h-16 bg-red-950/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                    <i class="fa-solid fa-radar text-2xl text-red-500/50"></i>
+                </div>
+                <div class="text-slate-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-2">
+                    ! Bu ülkede aktif teklif yok !
+                </div>
+                <p class="text-[9px] text-slate-500 uppercase tracking-widest">
+                    İstihbarat uyarısı: Seçili bölgede aktif satış emri bulunmamaktadır.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block bottomJS %}{% endblock %}

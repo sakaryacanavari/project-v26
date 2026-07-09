@@ -1,0 +1,1091 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<meta name="csrf-token" content="{{ csrf_token|default('') }}">
+
+<div class="space-y-6 animate-fade-in w-full">
+    
+    {# MİLLİ SEFERBERLİK PANELİ #}
+    {% if isMobilizationActive %}
+    <div class="bg-blue-950/60 border-2 border-blue-500 p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-pulse shadow-[0_0_30px_rgba(59,130,246,0.4)] relative">
+        <div class="flex items-center gap-4">
+            <i class="fa-solid fa-jet-fighter text-blue-500 text-4xl drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]"></i>
+            <div class="text-center md:text-left">
+                <div class="text-blue-400 font-black uppercase tracking-[0.2em] text-lg">MİLLİ SEFERBERLİK AKTİF!</div>
+                <div class="text-blue-200 text-[10px] font-bold mt-1 uppercase tracking-widest">Tüm savaş hasarları +%20 artırıldı. Vatandaşların tüketimi +%10 yükseldi.</div>
+            </div>
+        </div>
+        {# BAŞKAN İÇİN İPTAL BUTONU #}
+        {% if isPresident %}
+            <button onclick="revokeEmergencyState('mobilization')" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex-shrink-0">
+                <i class="fa-solid fa-power-off mr-1"></i> Seferberliği Sonlandır
+            </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# SINIRLAR KAPATILDI PANELİ #}
+    {% if isBordersClosed %}
+    <div class="bg-zinc-950/60 border-2 border-zinc-500 p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-pulse shadow-[0_0_30px_rgba(113,113,122,0.4)] relative">
+        <div class="flex items-center gap-4">
+            <i class="fa-solid fa-passport text-zinc-500 text-4xl drop-shadow-[0_0_15px_rgba(113,113,122,0.8)]"></i>
+            <div class="text-center md:text-left">
+                <div class="text-zinc-400 font-black uppercase tracking-[0.2em] text-lg">{{ t('congress.banner.borders_title') }}</div>
+                <div class="text-zinc-300 text-[10px] font-bold mt-1 uppercase tracking-widest">Meclis kararıyla ülkeye yeni vatandaş alımı geçici olarak durdurulmuştur.</div>
+            </div>
+        </div>
+        {# BAŞKAN İÇİN İPTAL BUTONU #}
+        {% if isPresident %}
+            <button onclick="revokeEmergencyState('borders')" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex-shrink-0">
+                <i class="fa-solid fa-lock-open mr-1"></i> Sınırları Aç
+            </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ACİL DURUM PANELİ #}
+    {% if isEmergencySession %}
+    <div class="bg-orange-950/60 border-2 border-orange-500 p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-pulse shadow-[0_0_30px_rgba(249,115,22,0.4)] relative">
+        <div class="flex items-center gap-4">
+            <i class="fa-solid fa-bolt text-orange-500 text-4xl drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]"></i>
+            <div class="text-center md:text-left">
+                <div class="text-orange-400 font-black uppercase tracking-[0.2em] text-lg">ACİL DURUM OTURUMU AKTİF!</div>
+                <div class="text-orange-200 text-[10px] font-bold tracking-widest mt-1">Tüm yasaların geçme barajı %15 düşürülmüştür.</div>
+                <div class="text-orange-500 text-[9px] font-black uppercase mt-1 bg-black/40 inline-block px-2 py-0.5 rounded border border-orange-900/50">Bitiş: {{ emergencyUntil }}</div>
+            </div>
+        </div>
+        {# BAŞKAN İÇİN İPTAL BUTONU #}
+        {% if isPresident %}
+            <button onclick="revokeEmergencyState('emergency')" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex-shrink-0">
+                <i class="fa-solid fa-power-off mr-1"></i> Oturumu İptal Et
+            </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# OHAL PANELİ #}
+    {% if isOhalActive %}
+    <div class="bg-red-950/60 border-2 border-red-500 p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.4)] relative">
+        <div class="flex items-center gap-4">
+            <i class="fa-solid fa-triangle-exclamation text-red-500 text-4xl drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]"></i>
+            <div class="text-center md:text-left">
+                <div class="text-red-400 font-black uppercase tracking-[0.2em] text-lg">DİKKAT: ÜLKE GENELİNDE OHAL İLAN EDİLDİ!</div>
+                <div class="text-red-200 text-[10px] font-bold mt-1 uppercase tracking-widest">Sadece Başkan yasa sunabilir. Oylamalar askıya alınmıştır, kararlar anında geçer.</div>
+            </div>
+        </div>
+        {# BAŞKAN İÇİN İPTAL BUTONU #}
+        {% if isPresident %}
+            <button onclick="revokeEmergencyState('ohal')" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex-shrink-0">
+                <i class="fa-solid fa-power-off mr-1"></i> OHAL'i Kaldır
+            </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-panel p-6 border-t-2 border-amber-500 bg-gradient-to-br from-black/80 to-amber-950/30 shadow-lg relative">
+            <h2 class="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] mb-4 flex items-center justify-between">
+                <span><i class="fa-solid fa-crown text-amber-400"></i> Başkomutanlık Makamı</span>
+                {% if isPresident and not isEmergencySession %}
+                    <button onclick="callEmergency()" class="bg-orange-600/20 hover:bg-orange-500/40 text-orange-400 px-3 py-1 rounded border border-orange-500/30 text-[8px] font-bold transition-all animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.3)]">Acil Oturum Başlat</button>
+                {% endif %}
+            </h2>
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 overflow-hidden">
+                    {% if presidentUser %}
+                        <img src="{{ presidentUser.avatar ?: (base_url() ~ '/img/avatars/' ~ presidentUser.id ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover" alt="{{ presidentUser.nick }}">
+                    {% else %}
+                        <i class="fa-solid fa-user-tie text-2xl"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="text-lg font-black text-white uppercase tracking-widest">{{ presidentUser ? presidentUser.nick : 'Makam Boş' }}</div>
+                    <div class="text-[9px] text-amber-200/70 font-bold uppercase tracking-widest">Devlet Başkanı / Başkomutan</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel p-6 border-t-2 border-cyan-500 bg-gradient-to-br from-black/80 to-cyan-950/30 shadow-lg">
+            <h2 class="text-[10px] font-black text-cyan-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-gavel text-cyan-400"></i> Meclis Başkanlığı (Speaker)
+            </h2>
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center text-cyan-400 overflow-hidden">
+                    {% if speakerUser %}
+                        <img src="{{ speakerUser.avatar ?: (base_url() ~ '/img/avatars/' ~ speakerUser.id ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover" alt="{{ speakerUser.nick }}">
+                    {% else %}
+                        <i class="fa-solid fa-landmark text-2xl"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="text-lg font-black text-white uppercase tracking-widest">{{ speakerUser ? speakerUser.nick : t('congress.speaker.waiting') }}</div>
+                    <div class="text-[9px] text-cyan-200/70 font-bold uppercase tracking-widest">Meclis Başkanı (Başkan Vekili)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if false %}
+    <div class="glass-panel p-6 border-t-2 border-sky-500 relative overflow-hidden bg-black/40 shadow-xl">
+        <div class="flex flex-col gap-4 border-b border-white/5 pb-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                    <i class="fa-solid fa-flag text-sky-400"></i> Cumhurbaskanligi Secimi
+                </h2>
+                <div class="mt-1 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                    {{ presidentialElection.phase_note }}
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-950/20 text-[9px] font-black uppercase tracking-widest text-sky-300">
+                    Faz: <span class="text-[10px] text-white">{{ presidentialElection.phase_label }}</span>
+                </div>
+                <div class="px-3 py-1.5 rounded-lg border border-white/10 bg-black/40 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Kalan: <span class="text-[10px] text-white">{{ presidentialElection.remaining_label }}</span>
+                </div>
+                <div class="px-3 py-1.5 rounded-lg border border-white/10 bg-black/40 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Toplam Oy: <span class="text-[10px] text-sky-300">{{ presidentialElection.total_votes }}</span>
+                </div>
+                {% if presidentialElection.can_apply %}
+                    <button type="button" onclick="submitPresidentialApplication()" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(14,165,233,0.25)] transition-all">
+                        <i class="fa-solid fa-user-plus mr-1"></i> Aday Ol
+                    </button>
+                {% endif %}
+                {% if presidentialElection.my_candidate and presidentialElection.phase == 'candidacy' %}
+                    <button type="button" onclick="resignPresidentialApplication()" class="bg-red-600/20 hover:bg-red-500/35 border border-red-500/30 text-red-300 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Adayliktan Cekil
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="bg-black/35 border border-white/5 rounded-2xl p-4">
+                <div class="text-[9px] font-black uppercase tracking-widest text-sky-300 mb-3">Adaylik Sartlari</div>
+                <div class="space-y-2">
+                    {% for item in presidentialElection.requirements %}
+                        <div class="flex items-center justify-between gap-3 rounded-xl border {{ item.ok ? 'border-emerald-500/20 bg-emerald-950/10 text-emerald-300' : 'border-red-500/20 bg-red-950/10 text-red-300' }} px-3 py-2">
+                            <span class="text-[9px] font-black uppercase tracking-widest">{{ item.label }}</span>
+                            <span class="text-[8px] font-black uppercase tracking-widest">{{ item.ok ? 'Tamam' : 'Eksik' }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="bg-black/35 border border-white/5 rounded-2xl p-4">
+                <div class="text-[9px] font-black uppercase tracking-widest text-sky-300 mb-3">Secim Gecmisi</div>
+                {% if presidentialElection.history|length > 0 %}
+                    <div class="space-y-2">
+                        {% for item in presidentialElection.history %}
+                            <div class="rounded-xl border border-white/5 bg-black/40 px-3 py-2">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="text-[10px] font-black text-white uppercase tracking-wider">{{ item.winner_nick }}</div>
+                                    <div class="text-[8px] font-black uppercase tracking-widest text-slate-500">{{ item.finished_at }}</div>
+                                </div>
+                                <div class="mt-1 text-[8px] font-bold uppercase tracking-widest text-slate-500">
+                                    {{ item.candidate_count }} aday · {{ item.total_votes }} oy · kazanan {{ item.winner_votes }} oy
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Kayitli secim gecmisi yok.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if presidentialElection.candidates|length > 0 %}
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-5">
+                {% for candidate in presidentialElection.candidates %}
+                    <div class="bg-black/45 border border-white/5 rounded-2xl p-4 shadow-inner flex flex-col gap-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center overflow-hidden">
+                                    <img src="{{ candidate.avatar ?: (base_url() ~ '/img/avatars/' ~ candidate.uid ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover" alt="{{ candidate.nick }}">
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[12px] font-black text-white uppercase tracking-wider truncate">{{ candidate.nick }}</div>
+                                    <div class="mt-1 text-[8px] font-bold uppercase tracking-widest text-slate-500 truncate">{{ candidate.party_name }}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[18px] font-black text-white">{{ candidate.votes }}</div>
+                                <div class="text-[8px] font-bold uppercase tracking-widest text-slate-500">Oy</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-sky-300 mb-1">
+                                <span>Halk Destegi</span>
+                                <span>%{{ candidate.vote_percentage }}</span>
+                            </div>
+                            <div class="h-2 rounded-full bg-black/50 overflow-hidden border border-white/5">
+                                <div class="h-full bg-sky-500" style="width: {{ candidate.vote_percentage }}%;"></div>
+                            </div>
+                        </div>
+
+                        {% if candidate.campaign_title or candidate.campaign_message %}
+                            <div class="rounded-2xl border border-sky-500/15 bg-sky-950/10 px-4 py-3">
+                                {% if candidate.campaign_title %}
+                                    <div class="text-[10px] font-black text-sky-300 uppercase tracking-widest">{{ candidate.campaign_title }}</div>
+                                {% endif %}
+                                {% if candidate.campaign_message %}
+                                    <div class="mt-2 text-[11px] font-bold text-slate-200 leading-relaxed">{{ candidate.campaign_message }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                            {% if candidate.is_me %}
+                                <div class="px-3 py-2 rounded-lg border border-sky-500/20 bg-sky-950/20 text-[8px] font-black uppercase tracking-widest text-sky-300">
+                                    Bu adaylik senin
+                                </div>
+                            {% elseif candidate.has_voted %}
+                                <div class="px-3 py-2 rounded-lg border border-sky-500/20 bg-sky-950/20 text-[8px] font-black uppercase tracking-widest text-sky-300">
+                                    Oyun bu adaya kayitli
+                                </div>
+                            {% elseif presidentialElection.can_vote %}
+                                <button type="button" onclick="votePresidentialCandidate({{ candidate.uid }})" class="bg-sky-600/20 hover:bg-sky-500/35 border border-sky-500/30 text-sky-300 px-3 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all">
+                                    <i class="fa-solid fa-check-to-slot mr-1"></i> Oy Ver
+                                </button>
+                            {% else %}
+                                <div class="px-3 py-2 rounded-lg border border-white/10 bg-black/40 text-[8px] font-black uppercase tracking-widest text-slate-400">
+                                    Oylama bekleniyor
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="py-10 text-center text-slate-500 opacity-80">
+                <i class="fa-solid fa-landmark-dome text-4xl mb-4"></i>
+                <div class="text-[11px] font-black uppercase tracking-widest text-slate-400">Aktif baskanlik adayi yok</div>
+                <div class="text-[9px] font-bold uppercase tracking-widest mt-2">Ilk adaylik basvurusuyla halk secim turu acilir.</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="glass-panel p-6 border-t-2 border-fuchsia-500 relative overflow-hidden bg-black/40 shadow-xl">
+        <div class="flex flex-col gap-4 border-b border-white/5 pb-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                    <i class="fa-solid fa-check-to-slot text-fuchsia-400"></i> Kongre Secim Hatti
+                </h2>
+                <div class="mt-1 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                    Adaylik suresi {{ election.duration_hours }} saat. Sure sonunda destek oylarin red oylarindan fazla ise kongreye girersin.
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="px-3 py-1.5 rounded-lg border border-white/10 bg-black/40 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Aktif Aday: <span class="text-fuchsia-400 text-[11px]">{{ election.active_count }}</span>
+                </div>
+                {% if election.my_candidate %}
+                    <div class="px-3 py-1.5 rounded-lg border border-fuchsia-500/30 bg-fuchsia-950/30 text-[9px] font-black uppercase tracking-widest text-fuchsia-300">
+                        Adayligin aktif
+                    </div>
+                {% elseif election.is_congress_member %}
+                    <div class="px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/30 text-[9px] font-black uppercase tracking-widest text-emerald-300">
+                        Aktif kongre uyesi
+                    </div>
+                {% endif %}
+                {% if election.can_apply %}
+                    <button type="button" onclick="submitCongressApplication()" class="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(217,70,239,0.25)] transition-all">
+                        <i class="fa-solid fa-user-plus mr-1"></i> Aday Ol
+                    </button>
+                {% endif %}
+                {% if election.my_candidate or election.is_congress_member %}
+                    <button type="button" onclick="resignCongressSeat()" class="bg-red-600/20 hover:bg-red-500/35 border border-red-500/30 text-red-300 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Ayril
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if election.candidates|length > 0 %}
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-5">
+                {% for candidate in election.candidates %}
+                    <div class="bg-black/45 border border-white/5 rounded-2xl p-4 shadow-inner flex flex-col gap-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center overflow-hidden">
+                                    <img src="{{ candidate.avatar ?: (base_url() ~ '/img/avatars/' ~ candidate.uid ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover" alt="{{ candidate.nick }}">
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[12px] font-black text-white uppercase tracking-wider truncate">{{ candidate.nick }}</div>
+                                    <div class="mt-1 text-[8px] font-bold uppercase tracking-widest text-slate-500 truncate">{{ candidate.party_name }}</div>
+                                    <div class="mt-1 text-[8px] font-black uppercase tracking-widest text-fuchsia-300">Kalan sure: {{ candidate.remaining_label }}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[18px] font-black text-white">{{ candidate.total_votes }}</div>
+                                <div class="text-[8px] font-bold uppercase tracking-widest text-slate-500">Toplam oy</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div>
+                                <div class="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-emerald-300 mb-1">
+                                    <span>Destek</span>
+                                    <span>%{{ candidate.yes_percentage }}</span>
+                                </div>
+                                <div class="h-2 rounded-full bg-black/50 overflow-hidden border border-white/5">
+                                    <div class="h-full bg-emerald-500" style="width: {{ candidate.yes_percentage }}%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-rose-300 mb-1">
+                                    <span>Red</span>
+                                    <span>%{{ candidate.no_percentage }}</span>
+                                </div>
+                                <div class="h-2 rounded-full bg-black/50 overflow-hidden border border-white/5">
+                                    <div class="h-full bg-rose-500" style="width: {{ candidate.no_percentage }}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                            {% if candidate.is_me %}
+                                <div class="px-3 py-2 rounded-lg border border-fuchsia-500/20 bg-fuchsia-950/20 text-[8px] font-black uppercase tracking-widest text-fuchsia-300">
+                                    Bu adaylik senin
+                                </div>
+                            {% elseif candidate.has_voted %}
+                                <div class="px-3 py-2 rounded-lg border border-white/10 bg-black/40 text-[8px] font-black uppercase tracking-widest text-slate-400">
+                                    Bu adaya oy kullandin
+                                </div>
+                            {% else %}
+                                <button type="button" onclick="voteCongressCandidate({{ candidate.uid }}, 1)" class="bg-emerald-600/20 hover:bg-emerald-500/35 border border-emerald-500/30 text-emerald-300 px-3 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all">
+                                    <i class="fa-solid fa-thumbs-up mr-1"></i> Destekle
+                                </button>
+                                <button type="button" onclick="voteCongressCandidate({{ candidate.uid }}, 0)" class="bg-rose-600/20 hover:bg-rose-500/35 border border-rose-500/30 text-rose-300 px-3 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all">
+                                    <i class="fa-solid fa-thumbs-down mr-1"></i> Reddet
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="py-10 text-center text-slate-500 opacity-80">
+                <i class="fa-solid fa-box-ballot text-4xl mb-4"></i>
+                <div class="text-[11px] font-black uppercase tracking-widest text-slate-400">Aktif adaylik yok</div>
+                <div class="text-[9px] font-bold uppercase tracking-widest mt-2">Secim hattini baslatmak icin ilk adayligi sen acabilirsin.</div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% endif %}
+    <div class="glass-panel p-6 border-t-2 border-indigo-500 relative overflow-hidden bg-black/40 shadow-xl">
+        <div class="flex justify-between items-end mb-6 border-b border-white/5 pb-4 relative z-10">
+            <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                <i class="fa-solid fa-users-viewfinder text-indigo-500"></i> Meclis Kompozisyonu
+            </h2>
+            <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 shadow-inner">
+                Toplam <span class="text-indigo-400 text-[11px]">{{ totalSeats }}</span> Koltuk
+            </div>
+        </div>
+        {% if totalSeats > 0 %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 relative z-10">
+                {% for party in partySeats %}
+                    <div class="relative bg-black/60 border border-white/10 rounded-2xl p-5 hover:scale-[1.02] transition-all duration-300 group overflow-hidden shadow-lg flex flex-col justify-between" style="border-bottom: 3px solid {{ party.color|default('#6B7280') }}; min-height: 100px;">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-10 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none" style="background-color: {{ party.color|default('#6B7280') }};"></div>
+                        <div class="relative z-10 flex justify-between items-start gap-2">
+                            <div class="flex-1">
+                                <div class="flex items-start gap-2 mb-3">
+                                    <span class="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] group-hover:animate-pulse mt-1 flex-shrink-0" style="background-color: {{ party.color|default('#6B7280') }};"></span>
+                                    <h3 class="text-[11px] font-black text-white uppercase tracking-widest leading-snug break-words">{{ party.name }}</h3>
+                                </div>
+                                <div class="text-2xl font-black text-white drop-shadow-md flex items-end gap-1.5">
+                                    {{ party.count }} <span class="text-[8px] text-slate-500 uppercase tracking-widest mb-1.5">Milletvekili</span>
+                                </div>
+                            </div>
+                            <div class="relative flex-shrink-0 w-14 h-14 rounded-full border border-white/5 bg-black/50 shadow-inner flex items-center justify-center self-center">
+                                <div class="absolute inset-0 rounded-full opacity-80" style="background: conic-gradient({{ party.color|default('#6B7280') }} {{ party.percentage }}%, transparent 0);"></div>
+                                <div class="absolute inset-1.5 bg-slate-900 rounded-full flex items-center justify-center border border-black/50 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"><span class="text-[9px] font-black text-white">%{{ party.percentage|round(1) }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12 text-slate-500 opacity-70"><i class="fa-solid fa-ghost text-5xl mb-4"></i><div class="text-[12px] font-black uppercase tracking-widest text-slate-400">Meclis Henüz Kurulmadı</div></div>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
+        <aside class="xl:col-span-5 space-y-6 relative z-[50]">
+            <div class="glass-panel p-6 border-t-2 border-indigo-500 relative z-[60]" style="overflow: visible !important;">
+                
+                {# YENİ VE ŞIK OHAL KİLİDİ (EĞER BAŞKAN DEĞİLSE) #}
+                {% if isOhalActive and not isPresident %}
+                    <div class="absolute inset-0 z-[150] rounded-xl overflow-hidden flex flex-col items-center justify-center backdrop-blur-[4px] bg-black/60 border border-red-500/20">
+                        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(220,38,38,0.15),transparent_70%)] pointer-events-none"></div>
+                        <div class="relative z-10 flex flex-col items-center bg-black/90 border border-red-500/40 px-6 py-5 rounded-2xl shadow-[0_0_40px_rgba(220,38,38,0.4)] text-center transform hover:scale-105 transition-transform duration-500">
+                            <div class="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mb-3 border border-red-500/30 shadow-[inset_0_0_15px_rgba(220,38,38,0.3)]">
+                                <i class="fa-solid fa-lock text-2xl text-red-500 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse"></i>
+                            </div>
+                            <h2 class="text-[13px] font-black text-white uppercase tracking-[0.2em] mb-1">{{ t('congress.locked.title') }}</h2>
+                            <p class="text-[9px] text-red-300/80 font-bold uppercase tracking-widest">Yetki Sadece Başkanda</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="mb-6 border-b border-white/5 pb-4 flex items-center justify-between relative z-10">
+                    <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="fa-solid fa-gavel text-indigo-500"></i> Yeni Tasarı Sun
+                    </h2>
+                    <div class="px-3 py-1.5 rounded-lg border {{ isOhalActive and isPresident ? 'bg-fuchsia-900/30 border-fuchsia-500/30 text-fuchsia-400 animate-pulse' : (remainingQuota > 0 ? 'bg-indigo-900/20 border-indigo-500/30 text-indigo-400' : 'bg-red-900/30 border-red-500/30 text-red-400 animate-pulse') }} text-[9px] font-black uppercase">
+                        KOTA: {% if isOhalActive and isPresident %}<i class="fa-solid fa-infinity"></i> SINIRSIZ{% else %}{{ remainingQuota }} / {{ maxQuota }}{% endif %}
+                    </div>
+                </div>
+                
+                {# EĞER OHAL VARSA FORM OPACITY DÜŞECEK VE TIKLANAMAZ OLACAK #}
+                <div id="propose-law-box" class="space-y-4 relative z-[70] {% if (isOhalActive and not isPresident) or not canUseProposalBox %}opacity-30 grayscale-[50%] pointer-events-none select-none{% endif %}" style="overflow: visible !important;">
+                    <div class="space-y-1.5 custom-dropdown-container relative z-[100]">
+                        <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Yasama Protokolü (Tür)</label>
+                        <button type="button" onclick="toggleLawDropdown()" class="w-full bg-black/80 border border-indigo-500/50 hover:border-indigo-400 text-white p-4 rounded-xl text-[11px] font-bold outline-none flex justify-between items-center transition-all shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                            <span id="selected-law-text" class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Yasa Türünü Seçin...</span>
+                            <i class="fa-solid fa-chevron-down text-indigo-400 text-[10px]"></i>
+                        </button>
+
+                        <div id="custom-law-dropdown" class="hidden relative mt-2 w-full bg-slate-900/95 border border-indigo-500/50 rounded-xl shadow-inner z-[1000] max-h-[350px] overflow-y-auto custom-scrollbar">
+                            
+                            {% if isPresident %}
+                            <div class="px-4 py-2 bg-black/60 text-[9px] font-black text-indigo-400 uppercase tracking-widest border-b border-indigo-500/30">🌍 DİPLOMASİ (Başkan)</div>
+                            {% endif %}
+                            <div class="p-2 space-y-0.5">
+                                <div class="law-option p-2.5 rounded-lg hover:bg-indigo-600/20 cursor-pointer text-[11px] font-bold text-slate-200 {% if not isPresident %}hidden{% endif %}" data-value="1"><i class="fa-solid fa-crosshairs text-red-400 w-4"></i> Doğal Düşman İlanı</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-indigo-600/20 cursor-pointer text-[11px] font-bold text-slate-200 {% if not isPresident %}hidden{% endif %}" data-value="2"><i class="fa-solid fa-shield-halved text-blue-400 w-4"></i> MPP (İttifak Anlaşması)</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-indigo-600/20 cursor-pointer text-[11px] font-bold text-slate-200 {% if not isPresident %}hidden{% endif %}" data-value="7"><i class="fa-solid fa-handshake text-green-400 w-4"></i> Ateşkes Anlaşması</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-red-900/40 cursor-pointer text-[11px] font-bold text-red-300 {% if not isPresident %}hidden{% endif %}" data-value="19"><i class="fa-solid fa-ban text-red-500 w-4"></i> Ticari Ambargo İlanı</div>
+                            </div>
+
+                            {% if isCongressist or isPresident %}
+                            <div class="px-4 py-2 bg-black/60 text-[9px] font-black text-emerald-400 uppercase tracking-widest border-y border-indigo-500/30 mt-1">💰 EKONOMİ</div>
+                            {% endif %}
+                            <div class="p-2 space-y-0.5">
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-slate-200 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-emerald-950/10 border border-emerald-500/20{% else %}hover:bg-emerald-600/20 cursor-pointer{% endif %}" data-value="3" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-briefcase text-emerald-500 w-4"></i> Çalışma Vergisi</div>
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-slate-200 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-emerald-950/10 border border-emerald-500/20{% else %}hover:bg-emerald-600/20 cursor-pointer{% endif %}" data-value="4" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-building text-emerald-500 w-4"></i> Yönetici Vergisi</div>
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-slate-200 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-emerald-950/10 border border-emerald-500/20{% else %}hover:bg-emerald-600/20 cursor-pointer{% endif %}" data-value="13" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-truck-fast text-emerald-500 w-4"></i> Gümrük Vergisi Belirle</div>
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-slate-200 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-emerald-950/10 border border-emerald-500/20{% else %}hover:bg-emerald-600/20 cursor-pointer{% endif %}" data-value="8" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-money-bill-wave text-emerald-500 w-4"></i> Asgari Ücret</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-emerald-600/20 cursor-pointer text-[11px] font-bold text-slate-200 {% if not isPresident %}hidden{% endif %}" data-value="6"><i class="fa-solid fa-money-bill-transfer text-emerald-500 w-4"></i> Fon Transferi</div>
+                            </div>
+
+                            {% if isCongressist or isPresident %}
+                            <div class="px-4 py-2 bg-black/60 text-[9px] font-black text-amber-400 uppercase tracking-widest border-y border-indigo-500/30 mt-1">🏛️ YÖNETİM & ANAYASA</div>
+                            {% endif %}
+                            <div class="p-2 space-y-0.5">
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-cyan-400 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-cyan-950/10 border border-cyan-500/20{% else %}hover:bg-amber-600/20 cursor-pointer{% endif %}" data-value="16" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-crown w-4"></i> Ülke Başkanı Seçimi</div>
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-amber-400 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-amber-950/10 border border-amber-500/20{% else %}hover:bg-amber-600/20 cursor-pointer{% endif %}" data-value="11" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-landmark w-4"></i> Meclis Başkanı Seçimi</div>
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-red-400 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-red-950/10 border border-red-500/20{% else %}hover:bg-red-600/20 cursor-pointer{% endif %}" data-value="5" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-user-xmark w-4"></i> Başkan Azli</div>
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-red-500 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-red-950/10 border border-red-500/20{% else %}hover:bg-red-600/20 cursor-pointer{% endif %}" data-value="14" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-triangle-exclamation w-4"></i> Meclisi Feshet / Erken Seçim</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-zinc-600/20 cursor-pointer text-[11px] font-bold text-zinc-300 {% if not isPresident %}hidden{% endif %}" data-value="20"><i class="fa-solid fa-passport text-zinc-400 w-4"></i> Sınırları Kapat (Göç Yasağı)</div>
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-orange-400 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-orange-950/10 border border-orange-500/20{% else %}hover:bg-amber-600/20 cursor-pointer{% endif %}" data-value="15" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-scale-unbalanced w-4"></i> Vekil Dokunulmazlığını Kaldır</div>
+                            </div>
+                            
+                            {% if isCongressist or isPresident %}
+                            <div class="px-4 py-2 bg-fuchsia-950/40 text-[9px] font-black text-fuchsia-400 uppercase tracking-widest border-y border-fuchsia-500/30 mt-1">📜 ÖZEL YASALAR & SAVAŞ</div>
+                            {% endif %}
+                            <div class="p-2 space-y-0.5 mb-2">
+                                <div class="law-option p-2.5 rounded-lg text-[11px] font-bold text-fuchsia-400 {% if not (isCongressist or isPresident) %}hidden{% endif %} {% if isPresident and not isCongressist %}opacity-60 cursor-not-allowed bg-fuchsia-950/10 border border-fuchsia-500/20{% else %}hover:bg-fuchsia-600/20 cursor-pointer{% endif %}" data-value="17" {% if isPresident and not isCongressist %}data-role-lock="congress"{% endif %}><i class="fa-solid fa-box-open w-4"></i> 📦 Torba Yasa (Çoklu Reform)</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-blue-600/20 cursor-pointer text-[11px] font-bold text-blue-400 {% if not isPresident %}hidden{% endif %}" data-value="21"><i class="fa-solid fa-jet-fighter w-4"></i> ⚔️ Milli Seferberlik İlanı (Hasar Buff)</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-red-600/20 cursor-pointer text-[11px] font-bold text-red-300 {% if not isPresident %}hidden{% endif %}" data-value="22"><i class="fa-solid fa-volume-xmark w-4"></i> 🤫 Shout Karartması (1 Gün / 100 Gold)</div>
+                                <div class="law-option p-2.5 rounded-lg hover:bg-red-600/20 cursor-pointer text-[11px] font-bold text-red-500 {% if not isPresident %}hidden{% endif %}" data-value="9"><i class="fa-solid fa-radiation w-4"></i> 🚨 OHAL İlanı (Oylamasız Geçiş)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="law_type_input" value="">
+                    
+                    <div id="law_uid_wrapper" class="hidden animate-fade-in relative z-10">
+                        <input id="law_uid_input" type="number" placeholder="Hedef Kişi ID" class="w-full bg-black/60 border border-white/10 text-white p-3.5 rounded-xl text-[11px] outline-none focus:border-indigo-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                    </div>
+                    <div id="law_country_wrapper" class="hidden animate-fade-in relative z-10">
+                        <input id="law_country_input" type="number" placeholder="Hedef Ülke ID" class="w-full bg-black/60 border border-white/10 text-white p-3.5 rounded-xl text-[11px] outline-none focus:border-indigo-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                    </div>
+                    <div id="law_region_wrapper" class="hidden animate-fade-in relative z-10 mt-2">
+                        <input id="law_region_input" type="number" placeholder="Hedef Bölge ID (Savaş İçin)" class="w-full bg-black/60 border border-white/10 text-white p-3.5 rounded-xl text-[11px] outline-none focus:border-red-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                    </div>
+                    <div id="law_amount_wrapper" class="hidden animate-fade-in relative z-10">
+                        <input id="law_amount_input" type="number" placeholder="{{ t('congress.proposal.amount') }}" class="w-full bg-black/60 border border-white/10 text-white p-3.5 rounded-xl text-[11px] outline-none focus:border-indigo-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                    </div>
+
+                    <div id="torba_wrapper" class="hidden animate-fade-in space-y-2 bg-fuchsia-950/20 border border-fuchsia-500/30 p-4 rounded-xl shadow-inner relative z-10">
+                        <div class="text-[9px] font-black text-fuchsia-400 uppercase tracking-widest mb-3 border-b border-fuchsia-500/30 pb-2"><i class="fa-solid fa-boxes-packing"></i> {{ t('congress.proposal.reform_title') }}</div>
+                        <input id="torba_w_input" type="number" step="0.1" placeholder="Yeni Çalışma Vergisi (%)" class="w-full bg-black/80 border border-white/10 text-white p-3 rounded-lg text-[11px] outline-none focus:border-fuchsia-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                        <input id="torba_m_input" type="number" step="0.1" placeholder="Yeni Yönetici Vergisi (%)" class="w-full bg-black/80 border border-white/10 text-white p-3 rounded-lg text-[11px] outline-none focus:border-fuchsia-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                        <input id="torba_mw_input" type="number" placeholder="Yeni Asgari Ücret Miktarı" class="w-full bg-black/80 border border-white/10 text-white p-3 rounded-lg text-[11px] outline-none focus:border-fuchsia-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                    </div>
+
+                    <input id="law_reason_input" type="text" placeholder="Stratejik Gerekçenizi Yazın..." class="w-full bg-black/60 border border-white/10 text-white p-3.5 rounded-xl text-[11px] outline-none relative z-10" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                    
+                    {# BURADAKİ BUTON ARTIK disabled KODU İÇERİYOR #}
+                    <button type="button" onclick="submitCustomLaw()" id="btn-submit-law" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-black text-[10px] uppercase shadow-[0_0_15px_rgba(99,102,241,0.3)] relative z-10 disabled:opacity-50 disabled:cursor-not-allowed" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>MECLİS GÜNDEMİNE GÖNDER</button>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 border-t-2 border-indigo-500 relative overflow-hidden z-10">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-white/5 pb-4 relative z-10"><i class="fa-solid fa-user-tie text-indigo-500"></i> Aktif Meclis Üyeleri</h2>
+                <div class="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 relative z-10">
+                    {% if congressMembers|length > 0 %}
+                        {% for member in congressMembers %}
+                            <div class="flex items-center gap-3 bg-black/40 border border-white/5 p-2.5 rounded-xl transition-colors shadow-inner group" style="border-left: 3px solid {{ member.color }};">
+                                <div class="w-9 h-9 rounded-full flex flex-shrink-0 items-center justify-center border" style="background-color: {{ member.color }}20; border-color: {{ member.color }}50; color: {{ member.color }};"><i class="fa-solid fa-user-tie text-xs"></i></div>
+                                <div class="overflow-hidden">
+                                    <div class="text-[11px] font-black text-white uppercase tracking-wider mb-0.5 truncate">{{ member.nick }}</div>
+                                    <div class="text-[8px] font-bold uppercase tracking-widest flex items-start gap-1 break-words leading-tight" style="color: {{ member.color }}90;"><i class="fa-solid fa-flag mt-0.5"></i> {{ member.party_name }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-6 text-slate-500 opacity-70"><i class="fa-solid fa-ghost text-3xl mb-2"></i><div class="text-[10px] font-black uppercase tracking-widest">Meclis Boş</div></div>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+
+        <section class="xl:col-span-7">
+            <div class="glass-panel min-h-[500px] flex flex-col">
+                <div class="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-black/20">
+                    <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2"><i class="fa-solid fa-box-archive text-slate-500"></i> Son Yasa Tasarıları & Oylamalar</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="flex bg-black/40 p-1 rounded-lg border border-white/5 hidden sm:flex">
+                            <button onclick="filterLaws('all')" class="law-tab active px-3 py-1.5 rounded text-[9px] font-black uppercase text-white bg-indigo-600/50">Tümü</button>
+                            <button onclick="filterLaws('active')" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Aktif</button>
+                            <button onclick="filterLaws('accepted')" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Kabul</button>
+                            <button onclick="filterLaws('rejected')" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Red</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 flex-1 bg-black/10">
+                    {% if latestLaws|length > 0 %}
+                        <div class="space-y-3" id="law-list-container">
+                            {% for law in latestLaws %}
+                                {% set isFinished = law.finished %}
+                                {% set totalVotes = law.yes + law.no %}
+                                {% set yesRatio = totalVotes > 0 ? (law.yes / totalVotes) * 100 : 0 %}
+                                {% set isAccepted = isFinished and yesRatio >= law.required_majority and law.yes > law.no %}
+                                {% set isRejected = isFinished and not isAccepted %}
+                                {% set lawStatus = isAccepted ? 'accepted' : (isRejected ? 'rejected' : 'active') %}
+                                
+                                <div class="relative group block law-card" data-status="{{ lawStatus }}">
+                                    <div class="bg-black/40 border {% if law.is_vetoed %} border-red-500/80 shadow-[0_0_15px_rgba(220,38,38,0.4)] {% elseif isAccepted %} border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)] {% elseif isRejected %} border-red-900/50 bg-red-950/20 {% else %} border-white/5 {% endif %} p-4 rounded-xl flex items-center justify-between transition-all group-hover:bg-black/60">
+                                        <a href="{{ path_for('congressLaw', {id : law.id}) }}" class="flex items-center gap-4 flex-1">
+                                            <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center border transition-colors flex-shrink-0 {% if law.is_vetoed %} border-red-500/80 text-red-500 animate-pulse {% elseif isAccepted %} border-green-500/30 text-green-500 {% elseif isRejected %} border-red-900/50 text-red-500 {% else %} border-white/5 text-slate-400 group-hover:text-white {% endif %}">
+                                                <i class="fa-solid {% if law.type == 17 %}fa-box-open{% elseif law.type == 19 %}fa-ban{% elseif law.type == 20 %}fa-passport{% elseif law.type == 21 %}fa-jet-fighter{% elseif law.is_vetoed %}fa-ban{% elseif isAccepted %}fa-check-double{% elseif isRejected %}fa-xmark{% else %}fa-file-contract{% endif %}"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-[11px] font-black uppercase tracking-widest leading-snug mb-1 flex items-center gap-2 truncate {% if law.type == 17 %}text-fuchsia-300{% elseif law.type == 21 %}text-blue-300{% elseif isAccepted %}text-green-100{% elseif isRejected %}text-red-200{% else %}text-slate-300{% endif %}">
+                                                    {{ law.phrase }}
+                                                    {% if law.is_vetoed %}<span class="bg-red-600 text-white text-[8px] px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(220,38,38,0.8)]"><i class="fa-solid fa-gavel"></i> VETO EDİLDİ</span>{% endif %}
+                                                    {% if isAccepted %} <span class="bg-green-500/20 text-green-400 text-[8px] px-1.5 py-0.5 rounded">KABUL</span>{% elseif isRejected %} <span class="bg-red-900/40 text-red-400 text-[8px] px-1.5 py-0.5 rounded">RED</span>{% endif %}
+                                                </div>
+                                                <div class="text-[8px] font-bold uppercase text-slate-500 flex items-center gap-2">
+                                                    <span class="text-cyan-400 border border-cyan-500/30 bg-cyan-950/30 px-1.5 py-0.5 rounded" title="Geçmesi için gereken oran">%{{ law.required_majority }} Gerekli</span>
+                                                    <span>|</span>
+                                                    {% if isFinished %} <span class="text-slate-400">{{ law.yes }} EVET - {{ law.no }} HAYIR</span> 
+                                                    {% else %} <span class="text-orange-400 animate-pulse"><i class="fa-solid fa-hourglass-half"></i> {{ law.expires_at_formatted }} Bitiş</span> {% endif %}
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <div class="flex items-center gap-3">
+                                            {% if isPresident and not isFinished and not law.is_vetoed %}
+                                                <button onclick="vetoLawByPresident({{ law.id }})" class="bg-red-900/40 hover:bg-red-600 border border-red-500/50 text-red-500 hover:text-white px-3 py-1.5 rounded text-[8px] font-black uppercase tracking-widest transition-all z-20 relative"><i class="fa-solid fa-ban"></i> VETO ET</button>
+                                            {% endif %}
+                                            <a href="{{ path_for('congressLaw', {id : law.id}) }}" class="text-slate-600 hover:text-indigo-400"><i class="fa-solid fa-chevron-right text-sm transition-transform"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="h-full flex flex-col items-center justify-center py-20 text-center opacity-70"><i class="fa-solid fa-folder-open text-4xl text-slate-600 mb-4"></i><div class="text-[11px] font-black text-slate-400 uppercase">Aktif Tasarı Yok</div></div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+$.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+
+const congressUiI18n = {
+    mobilizationTitle: {{ t('congress.banner.mobilization_title')|json_encode|raw }},
+    mobilizationCopy: {{ t('congress.banner.mobilization_copy')|json_encode|raw }},
+    mobilizationEnd: {{ t('congress.banner.mobilization_end')|json_encode|raw }},
+    bordersTitle: {{ t('congress.banner.borders_title')|json_encode|raw }},
+    bordersCopy: {{ t('congress.banner.borders_copy')|json_encode|raw }},
+    bordersEnd: {{ t('congress.banner.borders_end')|json_encode|raw }},
+    emergencyTitle: {{ t('congress.banner.emergency_title')|json_encode|raw }},
+    emergencyCopy: {{ t('congress.banner.emergency_copy')|json_encode|raw }},
+    emergencyUntil: {{ t('congress.banner.emergency_until')|json_encode|raw }},
+    emergencyEnd: {{ t('congress.banner.emergency_end')|json_encode|raw }},
+    ohalTitle: {{ t('congress.banner.ohal_title')|json_encode|raw }},
+    ohalCopy: {{ t('congress.banner.ohal_copy')|json_encode|raw }},
+    ohalEnd: {{ t('congress.banner.ohal_end')|json_encode|raw }},
+    commandTitle: {{ t('congress.command.title')|json_encode|raw }},
+    commandStartEmergency: {{ t('congress.command.start_emergency')|json_encode|raw }},
+    commandSubtitle: {{ t('congress.command.subtitle')|json_encode|raw }},
+    speakerTitle: {{ t('congress.speaker.title')|json_encode|raw }},
+    speakerSubtitle: {{ t('congress.speaker.subtitle')|json_encode|raw }},
+    lockedTitle: {{ t('congress.locked.title')|json_encode|raw }},
+    lockedSubtitle: {{ t('congress.locked.subtitle')|json_encode|raw }},
+    proposalTitle: {{ t('congress.proposal.title')|json_encode|raw }},
+    quota: {{ t('congress.proposal.quota')|json_encode|raw }},
+    unlimited: {{ t('congress.proposal.unlimited')|json_encode|raw }},
+    protocol: {{ t('congress.proposal.protocol')|json_encode|raw }},
+    selectType: {{ t('congress.proposal.select_type')|json_encode|raw }},
+    sectionDiplomacy: {{ t('congress.proposal.section.diplomacy')|json_encode|raw }},
+    sectionEconomy: {{ t('congress.proposal.section.economy')|json_encode|raw }},
+    sectionConstitution: {{ t('congress.proposal.section.constitution')|json_encode|raw }},
+    sectionSpecial: {{ t('congress.proposal.section.special')|json_encode|raw }},
+    targetUid: {{ t('congress.proposal.target_uid')|json_encode|raw }},
+    targetCountry: {{ t('congress.proposal.target_country')|json_encode|raw }},
+    targetRegion: {{ t('congress.proposal.target_region')|json_encode|raw }},
+    amount: {{ t('congress.proposal.amount')|json_encode|raw }},
+    reformTitle: {{ t('congress.proposal.reform_title')|json_encode|raw }},
+    reformWorkTax: {{ t('congress.proposal.reform_work_tax')|json_encode|raw }},
+    reformManagerTax: {{ t('congress.proposal.reform_manager_tax')|json_encode|raw }},
+    reformMinWage: {{ t('congress.proposal.reform_min_wage')|json_encode|raw }},
+    reason: {{ t('congress.proposal.reason')|json_encode|raw }},
+    proposalSubmit: {{ t('congress.proposal.submit')|json_encode|raw }},
+    membersTitle: {{ t('congress.members.title')|json_encode|raw }},
+    membersEmpty: {{ t('congress.members.empty')|json_encode|raw }},
+    lawsTitle: {{ t('congress.laws.title')|json_encode|raw }},
+    filterAll: {{ t('congress.laws.filter.all')|json_encode|raw }},
+    filterActive: {{ t('congress.laws.filter.active')|json_encode|raw }},
+    filterAccepted: {{ t('congress.laws.filter.accepted')|json_encode|raw }},
+    filterRejected: {{ t('congress.laws.filter.rejected')|json_encode|raw }},
+    lawsEmpty: {{ t('congress.laws.empty')|json_encode|raw }},
+    lawsRequired: {{ t('congress.laws.required')|json_encode|raw }},
+    lawsEnds: {{ t('congress.laws.ends')|json_encode|raw }},
+    lawsVetoed: {{ t('congress.laws.vetoed')|json_encode|raw }},
+    lawsAccepted: {{ t('congress.laws.accepted')|json_encode|raw }},
+    lawsRejected: {{ t('congress.laws.rejected')|json_encode|raw }},
+    lawsVeto: {{ t('congress.laws.veto')|json_encode|raw }},
+    lawNaturalEnemy: {{ t('congress.proposal.law.natural_enemy')|json_encode|raw }},
+    lawMpp: {{ t('congress.proposal.law.mpp')|json_encode|raw }},
+    lawCeasefire: {{ t('congress.proposal.law.ceasefire')|json_encode|raw }},
+    lawEmbargo: {{ t('congress.proposal.law.embargo')|json_encode|raw }},
+    lawWorkTax: {{ t('congress.proposal.law.work_tax')|json_encode|raw }},
+    lawManagerTax: {{ t('congress.proposal.law.manager_tax')|json_encode|raw }},
+    lawCustomsTax: {{ t('congress.proposal.law.customs_tax')|json_encode|raw }},
+    lawMinimumWage: {{ t('congress.proposal.law.minimum_wage')|json_encode|raw }},
+    lawFundTransfer: {{ t('congress.proposal.law.fund_transfer')|json_encode|raw }},
+    lawElectPresident: {{ t('congress.proposal.law.elect_president')|json_encode|raw }},
+    lawElectSpeaker: {{ t('congress.proposal.law.elect_speaker')|json_encode|raw }},
+    lawImpeachment: {{ t('congress.proposal.law.impeachment')|json_encode|raw }},
+    lawEarlyElection: {{ t('congress.proposal.law.early_election')|json_encode|raw }},
+    lawCloseBorders: {{ t('congress.proposal.law.close_borders')|json_encode|raw }},
+    lawRemoveImmunity: {{ t('congress.proposal.law.remove_immunity')|json_encode|raw }},
+    lawBagBill: {{ t('congress.proposal.law.bag_bill')|json_encode|raw }},
+    lawMobilization: {{ t('congress.proposal.law.mobilization')|json_encode|raw }},
+    lawBlackout: {{ t('congress.proposal.law.blackout')|json_encode|raw }},
+    lawOhal: {{ t('congress.proposal.law.ohal')|json_encode|raw }}
+};
+
+function setupCongressLocalization() {
+    const replaceText = (selector, text) => {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = text;
+    };
+
+    replaceText('.bg-blue-950\\/60 .text-blue-400.font-black', congressUiI18n.mobilizationTitle);
+    replaceText('.bg-blue-950\\/60 .text-blue-200', congressUiI18n.mobilizationCopy);
+    replaceText('button[onclick=\"revokeEmergencyState(\\'mobilization\\')\"]', congressUiI18n.mobilizationEnd);
+    replaceText('.bg-zinc-950\\/60 .text-zinc-400.font-black', congressUiI18n.bordersTitle);
+    replaceText('.bg-zinc-950\\/60 .text-zinc-300', congressUiI18n.bordersCopy);
+    replaceText('button[onclick=\"revokeEmergencyState(\\'borders\\')\"]', congressUiI18n.bordersEnd);
+    replaceText('.bg-orange-950\\/60 .text-orange-400.font-black', congressUiI18n.emergencyTitle);
+    replaceText('.bg-orange-950\\/60 .text-orange-200', congressUiI18n.emergencyCopy);
+    const emergencyUntil = document.querySelector('.bg-orange-950\\/60 .text-orange-500');
+    if (emergencyUntil && emergencyUntil.textContent.includes(':')) {
+        emergencyUntil.textContent = `${congressUiI18n.emergencyUntil}: ${emergencyUntil.textContent.split(':').slice(1).join(':').trim()}`;
+    }
+    replaceText('button[onclick=\"revokeEmergencyState(\\'emergency\\')\"]', congressUiI18n.emergencyEnd);
+    replaceText('.bg-red-950\\/60 .text-red-400.font-black', congressUiI18n.ohalTitle);
+    replaceText('.bg-red-950\\/60 .text-red-200', congressUiI18n.ohalCopy);
+    replaceText('button[onclick=\"revokeEmergencyState(\\'ohal\\')\"]', congressUiI18n.ohalEnd);
+    replaceText('.border-amber-500 h2 span', congressUiI18n.commandTitle);
+    replaceText('button[onclick=\"callEmergency()\"]', congressUiI18n.commandStartEmergency);
+    replaceText('.border-amber-500 .text-amber-200\\/70', congressUiI18n.commandSubtitle);
+    replaceText('.border-cyan-500 h2', congressUiI18n.speakerTitle);
+    replaceText('.border-cyan-500 .text-cyan-200\\/70', congressUiI18n.speakerSubtitle);
+    replaceText('.backdrop-blur-\\[4px\\] h2', congressUiI18n.lockedTitle);
+    replaceText('.backdrop-blur-\\[4px\\] p', congressUiI18n.lockedSubtitle);
+    const proposalTitle = document.querySelector('#propose-law-box')?.closest('.glass-panel')?.querySelector('.mb-6 h2');
+    if (proposalTitle) proposalTitle.textContent = congressUiI18n.proposalTitle;
+    const proposalLabel = document.querySelector('label[for], #propose-law-box .custom-dropdown-container label');
+    if (proposalLabel) proposalLabel.textContent = congressUiI18n.protocol;
+    const selectedLawText = document.getElementById('selected-law-text');
+    if (selectedLawText && selectedLawText.textContent.includes('Yasa')) selectedLawText.textContent = congressUiI18n.selectType;
+    const proposalSubmit = document.getElementById('btn-submit-law');
+    if (proposalSubmit) proposalSubmit.textContent = congressUiI18n.proposalSubmit;
+    const uidInput = document.getElementById('law_uid_input');
+    if (uidInput) uidInput.placeholder = congressUiI18n.targetUid;
+    const countryInput = document.getElementById('law_country_input');
+    if (countryInput) countryInput.placeholder = congressUiI18n.targetCountry;
+    const regionInput = document.getElementById('law_region_input');
+    if (regionInput) regionInput.placeholder = congressUiI18n.targetRegion;
+    const amountInput = document.getElementById('law_amount_input');
+    if (amountInput) amountInput.placeholder = congressUiI18n.amount;
+    const reasonInput = document.getElementById('law_reason_input');
+    if (reasonInput) reasonInput.placeholder = congressUiI18n.reason;
+    const torbaTitle = document.querySelector('#torba_wrapper .text-fuchsia-400');
+    if (torbaTitle) torbaTitle.textContent = congressUiI18n.reformTitle;
+    const torbaW = document.getElementById('torba_w_input');
+    if (torbaW) torbaW.placeholder = congressUiI18n.reformWorkTax;
+    const torbaM = document.getElementById('torba_m_input');
+    if (torbaM) torbaM.placeholder = congressUiI18n.reformManagerTax;
+    const torbaMw = document.getElementById('torba_mw_input');
+    if (torbaMw) torbaMw.placeholder = congressUiI18n.reformMinWage;
+    replaceText('.border-indigo-500 h2', congressUiI18n.membersTitle);
+    replaceText('.text-slate-400.uppercase', congressUiI18n.membersEmpty);
+    const lawsPanelTitle = document.querySelector('section.xl\\:col-span-7 h2');
+    if (lawsPanelTitle) lawsPanelTitle.textContent = congressUiI18n.lawsTitle;
+    document.querySelectorAll('.law-tab').forEach((tab) => {
+        const action = tab.getAttribute('onclick') || '';
+        if (action.includes(\"'all'\")) tab.textContent = congressUiI18n.filterAll;
+        if (action.includes(\"'active'\")) tab.textContent = congressUiI18n.filterActive;
+        if (action.includes(\"'accepted'\")) tab.textContent = congressUiI18n.filterAccepted;
+        if (action.includes(\"'rejected'\")) tab.textContent = congressUiI18n.filterRejected;
+    });
+    document.querySelectorAll('.law-option').forEach((option) => {
+        const value = option.dataset.value;
+        const icon = option.querySelector('i');
+        const iconHtml = icon ? icon.outerHTML + ' ' : '';
+        const map = {
+            '1': congressUiI18n.lawNaturalEnemy,
+            '2': congressUiI18n.lawMpp,
+            '3': congressUiI18n.lawWorkTax,
+            '4': congressUiI18n.lawManagerTax,
+            '5': congressUiI18n.lawImpeachment,
+            '6': congressUiI18n.lawFundTransfer,
+            '7': congressUiI18n.lawCeasefire,
+            '8': congressUiI18n.lawMinimumWage,
+            '11': congressUiI18n.lawElectSpeaker,
+            '13': congressUiI18n.lawCustomsTax,
+            '14': congressUiI18n.lawEarlyElection,
+            '15': congressUiI18n.lawRemoveImmunity,
+            '16': congressUiI18n.lawElectPresident,
+            '17': congressUiI18n.lawBagBill,
+            '19': congressUiI18n.lawEmbargo,
+            '20': congressUiI18n.lawCloseBorders,
+            '21': congressUiI18n.lawMobilization,
+            '22': congressUiI18n.lawBlackout,
+            '9': congressUiI18n.lawOhal
+        };
+        if (map[value]) option.innerHTML = iconHtml + map[value];
+    });
+}
+
+setupCongressLocalization();
+
+window.submitPresidentialApplication = function() {
+    Swal.fire({
+        title: 'Baskanliga Aday Ol',
+        html: `
+            <div class="space-y-3 text-left">
+                <input id="swal-campaign-title" class="swal2-input" placeholder="Kampanya basligi">
+                <textarea id="swal-campaign-message" class="swal2-textarea" placeholder="Kisa propaganda metni"></textarea>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Aday Ol',
+        cancelButtonText: 'Iptal',
+        background: '#0f172a',
+        color: '#fff',
+        preConfirm: () => {
+            const campaignTitle = document.getElementById('swal-campaign-title').value.trim();
+            const campaignMessage = document.getElementById('swal-campaign-message').value.trim();
+            if (campaignTitle.length < 3) {
+                Swal.showValidationMessage('Kampanya basligi en az 3 karakter olmali.');
+                return false;
+            }
+            if (campaignMessage.length < 12) {
+                Swal.showValidationMessage('Propaganda metni en az 12 karakter olmali.');
+                return false;
+            }
+            return { campaignTitle, campaignMessage };
+        }
+    }).then((result) => {
+        if (!result.isConfirmed || !result.value) return;
+        $.post("{{ base_url() }}/api/congress/presidential/apply", {
+            campaign_title: result.value.campaignTitle,
+            campaign_message: result.value.campaignMessage,
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
+        }, function(res) {
+            if (res && res.error) {
+                Swal.fire('Hata', res.message || 'Adaylik kaydedilemedi.', 'error');
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Adaylik basladi', text: 'Halk secimi listesine girdin.', background: '#1e1e2f', color: '#fff', timer: 1800, showConfirmButton: false }).then(() => location.reload());
+        });
+    });
+};
+
+window.votePresidentialCandidate = function(candidateId) {
+    Swal.fire({
+        title: 'Cumhurbaskanligi Oyu',
+        text: 'Bu adaya tek oyunu vereceksin. Onayliyor musun?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Oy Ver',
+        cancelButtonText: 'Iptal',
+        background: '#0f172a',
+        color: '#fff'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        $.post("{{ base_url() }}/api/congress/presidential/vote", {
+            candidate: candidateId,
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
+        }, function(res) {
+            if (res && res.error) {
+                Swal.fire('Hata', res.message || 'Oy kaydedilemedi.', 'error');
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Oy kaydedildi', text: 'Halk oylamasindaki tercihin alindi.', background: '#1e1e2f', color: '#fff', timer: 1600, showConfirmButton: false }).then(() => location.reload());
+        });
+    });
+};
+
+window.resignPresidentialApplication = function() {
+    Swal.fire({
+        title: 'Adayliktan Cekil',
+        text: 'Bu secim turundaki baskanlik adayligin kaldirilacak. Emin misin?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Cekil',
+        cancelButtonText: 'Iptal',
+        background: '#0f172a',
+        color: '#fff'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        $.post("{{ base_url() }}/api/congress/presidential/resign", {
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
+        }, function(res) {
+            if (res && res.error) {
+                Swal.fire('Hata', res.message || 'Adaylik cekilemedi.', 'error');
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Adaylik sonlandi', text: 'Baskanlik secimi listesinden ayrildin.', background: '#1e1e2f', color: '#fff', timer: 1600, showConfirmButton: false }).then(() => location.reload());
+        });
+    });
+};
+
+window.toggleLawDropdown = function() { 
+    if ($('#custom-law-dropdown').hasClass('hidden')) {
+        $('#custom-law-dropdown').hide().removeClass('hidden').slideDown(200);
+    } else {
+        $('#custom-law-dropdown').slideUp(200, function(){ $(this).addClass('hidden'); });
+    }
+};
+$(document).on('click', function(e) { 
+    if (!$(e.target).closest('.custom-dropdown-container').length) { 
+        if (!$('#custom-law-dropdown').hasClass('hidden')) {
+            $('#custom-law-dropdown').slideUp(200, function(){ $(this).addClass('hidden'); });
+        }
+    } 
+});
+
+$('.law-option').on('click', function() {
+    if ($(this).data('roleLock') === 'congress') {
+        Swal.fire('Bilgi', 'Bu yasa turu sadece aktif milletvekilleri tarafindan sunulabilir.', 'info');
+        return;
+    }
+    var val = $(this).data('value');
+    $('#law_type_input').val(val);
+    $('#selected-law-text').html($(this).html()).removeClass('text-slate-400').addClass('text-white');
+    $('#custom-law-dropdown').addClass('hidden');
+    
+    // YENİ DÜZENLEME: Tüm kutuları gizle ve sıfırla (law_region eklendi)
+    $('#law_uid_wrapper, #law_country_wrapper, #law_amount_wrapper, #torba_wrapper, #law_region_wrapper').addClass('hidden');
+    $('#law_uid_input, #law_country_input, #law_amount_input, #law_region_input').val('');
+    
+    var v = val.toString();
+    if(['3', '4', '6', '8', '13'].includes(v)) $('#law_amount_wrapper').removeClass('hidden');
+    if(['1', '2', '7', '13', '19'].includes(v)) $('#law_country_wrapper').removeClass('hidden');
+    if(['5', '6', '11', '15', '16'].includes(v)) $('#law_uid_wrapper').removeClass('hidden');
+    if(v === '17') $('#torba_wrapper').removeClass('hidden');
+    if(v === '1') $('#law_region_wrapper').removeClass('hidden'); // SADECE SAVAŞ İLANINDA AÇILIR!
+});
+
+window.filterLaws = function(status) {
+    $('.law-tab').removeClass('active bg-indigo-600/50 text-white').addClass('text-slate-400');
+    $(event.currentTarget).removeClass('text-slate-400').addClass('active bg-indigo-600/50 text-white');
+    if (status === 'all') { $('.law-card').fadeIn(300); } else { $('.law-card').hide(); $('.law-card[data-status="' + status + '"]').fadeIn(300); }
+};
+
+window.submitCustomLaw = function() {
+    var $btn = $('#btn-submit-law'); var originalHtml = $btn.html();
+    var typeVal = $('#law_type_input').val(); var reasonVal = $('#law_reason_input').val().trim();
+    if(!typeVal || reasonVal.length < 5) { Swal.fire('Hata', 'Tür seçin ve geçerli gerekçe yazın.', 'warning'); return; }
+    
+    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> İŞLENİYOR...');
+
+    $.ajax({
+        url: "{{ base_url() }}/api/congress/law/propose",
+        type: 'POST',
+        data: {
+            type: typeVal, reason: reasonVal, amount: $('#law_amount_input').val() || 0,
+            currency: 'local', country: $('#law_country_input').val() || 0, uid: $('#law_uid_input').val() || 0,
+            region_id: $('#law_region_input').val() || null, // YENİ VERİ EKLENDİ
+            torba_w: $('#torba_w_input').val() || 0, torba_m: $('#torba_m_input').val() || 0, torba_mw: $('#torba_mw_input').val() || 0,
+            csrf_token: $('meta[name="csrf-token"]').attr('content') 
+        },
+        success: function(res) {
+            if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+            if (res && res.error) {
+                Swal.fire({ icon: 'error', title: 'İşlem Reddedildi', html: '<div class="text-red-400 font-bold">' + (res.message || "Hata") + '</div>', background: '#1e1e2f', color: '#fff' });
+                $btn.prop('disabled', false).html(originalHtml);
+            } else {
+                Swal.fire({ icon: 'success', title: 'Başarılı!', text: 'Yasa sunuldu.', background: '#1e1e2f', color: '#fff', timer: 2000, showConfirmButton: false }).then(() => location.reload());
+            }
+        },
+        error: function(xhr) {
+            console.error("AJAX Hatası:", xhr.responseText); 
+            Swal.fire({ icon: 'error', title: 'Sistem Hatası', text: 'Bağlantı koptu veya sunucu isteği reddetti.', background: '#1e1e2f', color: '#fff' });
+            $btn.prop('disabled', false).html(originalHtml);
+        }
+    });
+};
+
+window.submitCongressApplication = function() {
+    Swal.fire({
+        title: 'Kongre Adayligi',
+        text: 'Adayligini secim listesine gondermek istiyor musun? Oylama 48 saat acik kalacak.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Aday Ol',
+        cancelButtonText: 'Iptal',
+        background: '#0f172a',
+        color: '#fff'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        $.post("{{ base_url() }}/api/congress/candidate/apply", {
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
+        }, function(res) {
+            if (res && res.error) {
+                Swal.fire('Hata', res.message || 'Adaylik gonderilemedi.', 'error');
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Adaylik kaydedildi', text: 'Secim listesine eklendin.', background: '#1e1e2f', color: '#fff', timer: 1800, showConfirmButton: false }).then(() => location.reload());
+        });
+    });
+};
+
+window.voteCongressCandidate = function(candidateId, voteValue) {
+    Swal.fire({
+        title: voteValue ? 'Adaya Destek Ver' : 'Adayi Reddet',
+        text: voteValue ? 'Bu adayin kongreye girmesini destekliyorsun.' : 'Bu adayliga red oyu veriyorsun.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: voteValue ? 'Destekle' : 'Reddet',
+        cancelButtonText: 'Iptal',
+        background: '#0f172a',
+        color: '#fff'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        $.post("{{ base_url() }}/api/congress/candidate/vote", {
+            candidate: candidateId,
+            vote: voteValue ? 1 : 0,
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
+        }, function(res) {
+            if (res && res.error) {
+                Swal.fire('Hata', res.message || 'Oy kaydedilemedi.', 'error');
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Oy kaydedildi', text: voteValue ? 'Destek oyun alindi.' : 'Red oyun alindi.', background: '#1e1e2f', color: '#fff', timer: 1600, showConfirmButton: false }).then(() => location.reload());
+        });
+    });
+};
+
+window.resignCongressSeat = function() {
+    Swal.fire({
+        title: 'Kongre Pozisyonundan Ayril',
+        text: 'Aktif adayligin veya kongre uyeligin varsa sonlandirilacak. Emin misin?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Ayril',
+        cancelButtonText: 'Iptal',
+        background: '#0f172a',
+        color: '#fff'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        $.post("{{ base_url() }}/api/congress/candidate/resign", {
+            csrf_token: $('meta[name="csrf-token"]').attr('content')
+        }, function(res) {
+            if (res && res.error) {
+                Swal.fire('Hata', res.message || 'Ayrilma islemi basarisiz.', 'error');
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Ayrilma tamamlandi', text: 'Secim pozisyonun sonlandirildi.', background: '#1e1e2f', color: '#fff', timer: 1600, showConfirmButton: false }).then(() => location.reload());
+        });
+    });
+};
+
+window.vetoLawByPresident = function(lawId) {
+    Swal.fire({
+        title: 'Başkanlık Vetosu', text: "Yasayı veto ederseniz süre sıfırlanır ve %66 mutlak oy gerekir! Onaylıyor musunuz?",
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Evet, VETO ET!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post("{{ base_url() }}/api/congress/law/veto", { law_id: lawId, csrf_token: $('meta[name="csrf-token"]').attr('content') }, function(res) {
+                if (res.error) Swal.fire('Hata', res.message, 'error'); else location.reload();
+            });
+        }
+    });
+};
+
+window.callEmergency = function() {
+    Swal.fire({
+        title: 'Acil Durum İlanı', text: "Ülkede 48 saatlik Acil Durum ilan edilecek. Tüm barajlar %15 düşecek. Onaylıyor musunuz?",
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'Başlat'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post("{{ base_url() }}/api/congress/emergency", { csrf_token: $('meta[name="csrf-token"]').attr('content') }, function(res) {
+                if (res.error) Swal.fire('Hata', res.message, 'error'); else location.reload();
+            });
+        }
+    });
+};
+
+window.revokeEmergencyState = function(type) {
+    let title = ''; let text = '';
+    
+    if(type === 'mobilization') { title = 'SEFERBERLİĞİ BİTİR'; text = 'Milli Seferberlik durumu anında iptal edilecek. Savaş hasarı ve tüketim normale dönecek. Emin misiniz?'; }
+    else if(type === 'borders') { title = 'SINIRLARI AÇ'; text = 'Ülke sınırları tekrar açılacak ve yeni vatandaş alımı başlayacak. Emin misiniz?'; }
+    else if(type === 'emergency') { title = 'ACİL DURUMU İPTAL ET'; text = 'Acil durum oturumu sona erecek ve yasa geçme barajları eski haline dönecek. Emin misiniz?'; }
+    else if(type === 'ohal') { title = 'OHALİ KALDIR'; text = 'Olağanüstü Hal durumu sona erecek. Meclis yetkileri tekrar aktif olacak. Emin misiniz?'; }
+
+    Swal.fire({
+        title: title, text: text, icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'EVET, SONLANDIR', cancelButtonText: 'İPTAL',
+        background: '#0f172a', color: '#fff'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'İŞLENİYOR...', background: '#020617', color: '#fff', showConfirmButton: false, didOpen: () => { Swal.showLoading(); } });
+            
+            $.post("{{ base_url() }}/api/congress/revoke_state", { 
+                type: type, 
+                csrf_token: $('meta[name="csrf-token"]').attr('content') 
+            }, function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: 'ERİŞİM REDDEDİLDİ', text: res.message, background: '#020617', color: '#fff' });
+                } else {
+                    location.reload();
+                }
+            }).fail(function() {
+                Swal.fire({ icon: 'error', title: 'SİSTEM HATASI', text: 'Karargah veritabanına bağlanılamadı.', background: '#020617', color: '#fff' });
+            });
+        }
+    });
+};
+</script>
+{% endblock %}
+

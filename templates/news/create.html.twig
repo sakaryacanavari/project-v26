@@ -1,0 +1,139 @@
+{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* KARARGAH TEMATİK MODAL & FORM STİLLERİ */
+    .cyber-modal-popup {
+        background: linear-gradient(145deg, #0f0518, #1a0b2e) !important;
+        border: 1px solid rgba(217, 70, 239, 0.5) !important;
+        box-shadow: 0 0 50px rgba(217, 70, 239, 0.2), inset 0 0 20px rgba(0,0,0,0.8) !important;
+        border-radius: 20px !important;
+        padding: 2rem !important;
+    }
+    .cyber-modal-title {
+        color: #d946ef !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 900 !important; text-shadow: 0 0 15px rgba(217, 70, 239, 0.6) !important; font-size: 20px !important; border-bottom: 1px solid rgba(217, 70, 239, 0.2); padding-bottom: 15px !important; margin-bottom: 20px !important;
+    }
+    .title-amber { color: #f59e0b !important; text-shadow: 0 0 15px rgba(245, 158, 11, 0.6) !important; border-color: rgba(245, 158, 11, 0.2) !important; }
+    .title-red { color: #ef4444 !important; text-shadow: 0 0 15px rgba(239, 68, 68, 0.6) !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+    .cyber-modal-content { color: #cbd5e1 !important; font-size: 13px !important; }
+    .cyber-confirm-btn {
+        background: linear-gradient(45deg, #d946ef, #a21caf) !important; color: #fff !important; font-weight: 900 !important; text-transform: uppercase !important; border-radius: 10px !important; padding: 12px 30px !important; box-shadow: 0 0 20px rgba(217, 70, 239, 0.4) !important; border: none !important; transition: all 0.3s ease;
+    }
+    .btn-amber { background: linear-gradient(45deg, #f59e0b, #b45309) !important; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4) !important; }
+    .btn-red { background: linear-gradient(45deg, #ef4444, #991b1b) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4) !important; }
+    
+    /* İNPUT & TEXTAREA CUSTOM FOCUS EFEKTİ */
+    .cyber-input-field:focus {
+        border-color: #d946ef !important;
+        box-shadow: 0 0 20px rgba(217, 70, 239, 0.3), inset 0 0 10px rgba(0,0,0,0.5) !important;
+        background-color: rgba(0, 0, 0, 0.8) !important;
+    }
+</style>
+
+<div class="glass-panel p-8 md:p-12 border-t-4 border-fuchsia-500 w-full max-w-5xl mx-auto shadow-[0_0_30px_rgba(217,70,239,0.15)] bg-gradient-to-b from-fuchsia-950/20 to-transparent relative overflow-hidden animate-fade-in">
+    
+    {# Arka Plan Süslemesi #}
+    <i class="fa-solid fa-satellite-dish absolute -right-10 -top-10 text-[150px] text-fuchsia-500/5 rotate-12 pointer-events-none"></i>
+
+    <div class="relative z-10">
+        <h1 class="text-xl md:text-2xl font-black text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-3" style="text-shadow: 0 0 15px rgba(217, 70, 239, 0.5);">
+            <i class="fa-solid fa-pen-nib text-fuchsia-400"></i> Yeni Makale Yayını
+        </h1>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-8 border-l-2 border-fuchsia-500/50 pl-3">
+            Analizlerini ve haberlerini tüm küresel ağa duyur.
+        </p>
+
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest ml-1 drop-shadow-md">Makale Başlığı</label>
+                    <input id="article_title" type="text" placeholder="Gündemi sarsacak bir başlık..." required class="cyber-input-field w-full bg-black/60 border border-fuchsia-500/30 text-white p-4 rounded-xl outline-none transition-all mt-2 font-black tracking-wide shadow-inner">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest ml-1 drop-shadow-md">Haber Kategorisi</label>
+                    <div class="relative mt-2">
+                        <select id="article_category" class="cyber-input-field w-full bg-black/60 border border-fuchsia-500/30 text-white p-4 rounded-xl outline-none transition-all appearance-none cursor-pointer shadow-inner font-bold tracking-wide">
+                            <option value="1" class="text-red-400 bg-slate-900 font-bold">⚔️ Askeri / Savaş Raporu</option>
+                            <option value="2" class="text-emerald-400 bg-slate-900 font-bold">💰 Ekonomi Piyasaları</option>
+                            <option value="3" class="text-sky-400 bg-slate-900 font-bold">🌍 Sosyal & Siyaset</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-fuchsia-500 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest ml-1 drop-shadow-md flex items-center gap-2">
+                    Makale İçeriği (Ana Gövde) <span class="text-[8px] text-slate-500 font-bold bg-black/50 px-2 py-0.5 rounded">Minimum 10 Karakter</span>
+                </label>
+                <textarea id="article_text" placeholder="Bağımsız yayın metnini buraya gir..." required class="cyber-input-field w-full bg-black/60 border border-fuchsia-500/30 text-slate-200 p-5 rounded-xl outline-none transition-all mt-2 h-[400px] font-mono text-sm leading-relaxed shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] resize-y"></textarea>
+            </div>
+
+            <div class="pt-4 border-t border-white/5 flex flex-col sm:flex-row justify-end gap-4">
+                <a href="{{ path_for('newspaperList') }}" class="bg-transparent border border-slate-600 text-slate-400 hover:bg-slate-800 hover:text-white py-4 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all text-center">
+                    İptal Et
+                </a>
+                <button type="button" onclick="publishMyArticle()" id="btn-publish-article" class="bg-fuchsia-600 hover:bg-fuchsia-500 text-white py-4 px-10 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(217,70,239,0.4)] hover:shadow-[0_0_30px_rgba(217,70,239,0.6)] hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i> Ağa Aktar ve Yayınla
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.publishMyArticle = function() {
+        var titleVal = $('#article_title').val().trim();
+        var categoryVal = $('#article_category').val();
+        var textVal = $('#article_text').val().trim();
+        var $btn = $('#btn-publish-article');
+        var originalHtml = $btn.html();
+
+        if(titleVal.length < 4 || textVal.length < 10) {
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'EKSİK VERİ', 
+                text: 'Başlık en az 4, içerik en az 10 karakter olmalıdır.', 
+                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-amber', confirmButton: 'cyber-confirm-btn btn-amber' }
+            });
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> SİSTEME YÜKLENİYOR...');
+
+        $.ajax({
+            url: "{{ base_url() }}/api/article/create",
+            type: 'POST',
+            data: { title: titleVal, category: categoryVal, text: textVal },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function(res) {
+                if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
+                
+                if (res && res.error) {
+                    Swal.fire({ icon: 'error', title: 'İŞLEM REDDEDİLDİ', text: res.message || 'Gazeteniz bulunamadı veya yetkiniz yok.', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' }});
+                    $btn.prop('disabled', false).html(originalHtml);
+                } else {
+                    // API genelde yeni oluşturulan makalenin ID'sini (res) döndürür.
+                    var newArticleId = res.id ? res.id : res; 
+                    
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'YAYINDA!', 
+                        text: 'Makaleniz tüm veri ağına duyuruldu.', 
+                        timer: 2000, 
+                        showConfirmButton: false, 
+                        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' } 
+                    }).then(() => {
+                        window.location.href = "{{ base_url() }}/news/article/" + newArticleId;
+                    });
+                }
+            },
+            error: function(xhr) {
+                Swal.fire({ icon: 'error', title: 'SİSTEM HATASI', text: 'Karargah ile bağlantı koptu.', customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title title-red', confirmButton: 'cyber-confirm-btn btn-red' }});
+                $btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,431 @@
+﻿{% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<meta name="csrf-token" content="{{ csrf_token|default('') }}">
+
+<style>
+    /* PROJECT 26 - V4.1 TRUE DYNAMIC HUD */
+    :root {
+        --p26-dark: color-mix(in srgb, var(--brand-primary) 4%, rgba(5, 8, 12, 0.95));
+        --p26-surface: color-mix(in srgb, var(--brand-primary) 6%, rgba(12, 16, 24, 0.6));
+        --p26-surface-hover: color-mix(in srgb, var(--brand-primary) 12%, rgba(16, 22, 32, 0.8));
+    }
+
+    @keyframes pulse-radar {
+        0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-primary) 50%, transparent); }
+        70% { box-shadow: 0 0 0 20px color-mix(in srgb, var(--brand-primary) 0%, transparent); }
+        100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    @keyframes blink-led { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes data-flow { 0% { background-position: 0 0; } 100% { background-position: 20px 0; } }
+
+    .text-glow { text-shadow: 0 0 12px color-mix(in srgb, var(--brand-primary) 70%, transparent); }
+    .box-glow { box-shadow: 0 0 20px color-mix(in srgb, var(--brand-primary) 25%, transparent); }
+    .font-telemetry { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+    .e-shell {
+        background-color: var(--p26-dark);
+        background-image: radial-gradient(color-mix(in srgb, var(--brand-primary) 12%, transparent) 1px, transparent 1px);
+        background-size: 20px 20px;
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-radius: 14px;
+        box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 20px 40px -10px rgba(0,0,0,0.9);
+        border: 1px solid rgba(255,255,255,0.03);
+        border-left: 3px solid var(--brand-primary);
+        position: relative;
+        overflow: hidden; 
+    }
+    .e-shell > * { position: relative; z-index: 10; }
+    
+    .e-card {
+        background: var(--p26-surface);
+        backdrop-filter: blur(4px);
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255,255,255,0.02);
+        border-left: 3px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+    .e-card::before {
+        content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent); opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+    }
+    .e-card:hover {
+        background: var(--p26-surface-hover);
+        border-left-color: var(--brand-primary);
+        transform: translateX(4px) scale(1.005);
+        box-shadow: -6px 0 20px color-mix(in srgb, var(--brand-primary) 15%, transparent), inset 0 0 15px rgba(255,255,255,0.02);
+    }
+    .e-card:hover::before { opacity: 1; }
+    
+    .e-chip {
+        display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 4px;
+        background: rgba(0, 0, 0, 0.5);
+        color: #94a3b8; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+        border: 1px solid rgba(255,255,255,0.03);
+    }
+    .e-chip-primary {
+        background: color-mix(in srgb, var(--brand-primary) 10%, transparent); 
+        color: var(--brand-primary); 
+        border-color: color-mix(in srgb, var(--brand-primary) 25%, transparent);
+    }
+    .status-led {
+        width: 6px; height: 6px; border-radius: 50%; background-color: var(--brand-primary);
+        box-shadow: 0 0 6px var(--brand-primary); animation: blink-led 1.5s infinite;
+    }
+
+    .e-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px; border-radius: 6px; border: 0;
+        background: var(--brand-primary);
+        color: #000; font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase;
+        box-shadow: 0 0 15px color-mix(in srgb, var(--brand-primary) 40%, transparent); 
+        transition: all 0.2s ease; cursor: pointer; text-shadow: none;
+    }
+    .e-btn:hover { box-shadow: 0 0 25px color-mix(in srgb, var(--brand-primary) 70%, transparent); transform: translateY(-2px); filter: brightness(1.2); }
+    
+    .e-btn-alt {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 15px; border-radius: 6px; 
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent); 
+        background: rgba(0,0,0,0.4); 
+        color: var(--brand-primary); font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; transition: all 0.2s ease; cursor: pointer;
+    }
+    .e-btn-alt:hover { background: color-mix(in srgb, var(--brand-primary) 15%, transparent); box-shadow: inset 0 0 15px color-mix(in srgb, var(--brand-primary) 20%, transparent); }
+
+    .e-bar {height: 8px; border-radius: 2px; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05); overflow: hidden; position: relative;}
+    .e-fill { 
+        height: 100%; 
+        background-color: var(--brand-primary);
+        background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.3) 4px, rgba(0,0,0,0.3) 8px);
+        background-size: 20px 20px;
+        box-shadow: 0 0 12px color-mix(in srgb, var(--brand-primary) 70%, transparent); 
+        border-right: 2px solid #fff;
+        animation: data-flow 1s linear infinite;
+    }
+    
+    .e-avatar {width: 44px; height: 44px; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,.8); border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent); flex-shrink: 0; position: relative;}
+    .e-avatar::before { content:''; position: absolute; inset:0; box-shadow: inset 0 0 12px rgba(0,0,0,0.9); pointer-events: none; z-index: 5;}
+    .e-avatar-crown {position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#fde68a,#f59e0b); color: #2b1600; font-size: 10px; box-shadow: 0 2px 8px rgba(245,158,11,.6); border: 1px solid rgba(255,255,255,0.5); transform: rotate(5deg); z-index: 10;}
+
+    .e-standby {
+        background: 
+            linear-gradient(var(--p26-surface), var(--p26-dark)),
+            repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);
+        border: 1px dashed color-mix(in srgb, var(--brand-primary) 25%, transparent);
+        border-radius: 8px;
+    }
+    .e-radar-icon { animation: pulse-radar 2s infinite cubic-bezier(0.1, 0.8, 0.3, 1); }
+</style>
+
+{# --- MACROS --- #}
+
+{# YENİ: AKTİF PERSONEL KİMLİK KARTI (GÜNCEL SAĞ ÜST) #}
+{% macro person_card(user, fallback, role, icon) %}
+<div class="relative p-3.5 flex items-center justify-between bg-[color-mix(in_srgb,var(--brand-primary)_4%,transparent)] border border-[color-mix(in_srgb,var(--brand-primary)_15%,transparent)] rounded-xl overflow-hidden group hover:bg-[color-mix(in_srgb,var(--brand-primary)_8%,transparent)] transition-all duration-300">
+    {# Ajan/HUD Tarama Efekti #}
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[color-mix(in_srgb,var(--brand-primary)_5%,transparent)] to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[data-flow_2s_linear_infinite] pointer-events-none"></div>
+    
+    <div class="flex items-center gap-3.5 relative z-10">
+        <div class="relative w-11 h-11 rounded-lg overflow-hidden border border-[color-mix(in_srgb,var(--brand-primary)_30%,transparent)] shrink-0 bg-black/60 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]">
+            {% if user %}
+                <img src="{{ user.avatar ?: (base_url() ~ '/img/avatars/' ~ user.id ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover">
+                {# Aktif Yeşil Led #}
+                <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#10b981] rounded-full border-2 border-[#04070d] shadow-[0_0_8px_#10b981]"></div>
+            {% else %}
+                <div class="w-full h-full flex items-center justify-center text-[color:var(--brand-primary)] opacity-40"><i class="fa-solid fa-user text-sm"></i></div>
+                {# Boş (Kırmızı) Led #}
+                <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#f43f5e] rounded-full border-2 border-[#04070d] opacity-60"></div>
+            {% endif %}
+        </div>
+        <div class="min-w-0">
+            <div class="flex items-center gap-1.5 mb-1">
+                <i class="fa-solid {{ icon }} text-[8px] text-[color:var(--brand-primary)] text-glow opacity-80"></i>
+                <div class="text-[9px] font-black uppercase tracking-[0.2em] text-[color:var(--brand-primary)] text-glow truncate">{{ role }}</div>
+            </div>
+            <div class="text-xs font-black uppercase tracking-[0.1em] text-white truncate {{ user ? 'text-glow' : 'opacity-40' }}">{{ user ? user.nick : fallback }}</div>
+        </div>
+    </div>
+    
+    {# Telemetri Durum Alanı (Sağ Kısım) #}
+    {% if user %}
+        <div class="hidden sm:flex flex-col items-end justify-center relative z-10 pl-4 border-l border-white/5">
+            <div class="text-[7px] font-bold uppercase tracking-[0.2em] text-[#10b981] mb-0.5">STATUS</div>
+            <div class="text-[10px] font-black tracking-widest text-white font-telemetry drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">ACTIVE</div>
+        </div>
+    {% else %}
+        <div class="hidden sm:flex flex-col items-end justify-center relative z-10 pl-4 border-l border-white/5 opacity-40">
+            <div class="text-[7px] font-bold uppercase tracking-[0.2em] text-[#f43f5e] mb-0.5">STATUS</div>
+            <div class="text-[10px] font-black tracking-widest text-white font-telemetry">VACANT</div>
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro candidate_row(candidate, actionType, canVote, canRemove) %}
+<div class="e-card p-3.5 flex flex-col md:flex-row md:items-center gap-4 {{ candidate.is_recent_winner is defined and candidate.is_recent_winner ? 'bg-[#f59e0b]/5 !border-l-[#f59e0b]' : '' }} {{ candidate.is_current_officeholder is defined and candidate.is_current_officeholder ? 'bg-[color-mix(in_srgb,var(--brand-primary)_5%,transparent)] !border-l-[var(--brand-primary)]' : '' }}">
+    
+    <div class="flex items-center gap-3 w-full md:w-[240px] shrink-0 z-10">
+        <div class="e-avatar">
+            <img src="{{ candidate.avatar ?: (base_url() ~ '/img/avatars/' ~ candidate.uid ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover relative z-0">
+            {% if candidate.is_recent_winner is defined and candidate.is_recent_winner %}
+                <span class="e-avatar-crown"><i class="fa-solid fa-crown"></i></span>
+            {% endif %}
+        </div>
+        <div class="min-w-0">
+            <div class="flex items-center gap-2">
+                <div class="text-sm font-black uppercase tracking-[0.08em] text-white truncate">{{ candidate.nick }}</div>
+                {% if candidate.is_current_officeholder is defined and candidate.is_current_officeholder %}
+                    <i class="fa-solid fa-shield-halved text-[color:var(--brand-primary)] text-[10px] text-glow" title="{{ t('elections.candidate.in_office') }}"></i>
+                {% endif %}
+            </div>
+            {% if candidate.party_name is defined %}
+                <div class="text-[9px] font-bold uppercase tracking-[0.1em] text-[color:var(--brand-primary)] mt-0.5 truncate">{{ candidate.party_name }}</div>
+            {% endif %}
+            {% if candidate.campaign_title is defined and candidate.campaign_title %}
+                <div class="text-[9px] font-medium text-slate-400 mt-1 truncate">{{ candidate.campaign_title }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="flex-1 w-full flex flex-col justify-center z-10">
+        <div class="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400 mb-1.5">
+            <span>{{ t('elections.candidate.support') }}</span>
+            <span class="text-[color:var(--brand-primary)] text-glow font-black font-telemetry text-[11px]">%{{ candidate.vote_percentage }}</span>
+        </div>
+        <div class="e-bar mb-1.5"><div class="e-fill" style="width: {{ candidate.vote_percentage }}%;"></div></div>
+        
+        {% if candidate.campaign_message is defined and candidate.campaign_message %}
+            <div class="text-[10px] text-slate-400 truncate italic">"{{ candidate.campaign_message }}"</div>
+        {% endif %}
+    </div>
+
+    <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-[220px] shrink-0 z-10">
+        <div class="text-right">
+            <div class="text-2xl font-black text-white leading-none text-glow font-telemetry">{{ candidate.votes }}</div>
+            <div class="text-[8px] font-bold uppercase tracking-[0.15em] text-slate-500 mt-1">{{ t('elections.candidate.votes') }}</div>
+        </div>
+        
+        <div class="flex gap-2">
+            {% if candidate.is_me %}
+                <div class="e-chip e-chip-primary"><span class="status-led"></span>{{ t('elections.candidate.is_me') }}</div>
+            {% elseif candidate.has_voted %}
+                <div class="e-chip" style="background: color-mix(in srgb, var(--brand-primary) 15%, transparent); border-color: transparent; color: white;">
+                    <i class="fa-solid fa-check text-[color:var(--brand-primary)]"></i> {{ t('elections.candidate.voted') }}
+                </div>
+            {% elseif canVote %}
+                <button type="button" class="e-btn" onclick="{{ actionType }}({{ candidate.uid }})"><i class="fa-solid fa-fingerprint"></i> {{ t('elections.candidate.vote') }}</button>
+            {% else %}
+                <div class="e-chip"><i class="fa-solid fa-lock text-slate-600"></i> {{ t('elections.candidate.closed') }}</div>
+            {% endif %}
+            
+            {% if canRemove %}
+                <button type="button" class="e-btn-alt !px-3 bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/20" onclick="removeCongressCandidate({{ candidate.uid }})" title="{{ t('elections.candidate.remove') }}"><i class="fa-solid fa-trash"></i></button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<div class="home-theme-surface space-y-6 w-full max-w-[1450px] mx-auto relative z-10">
+    
+    {# GÜNCEL ÜST BİLGİ VE YENİ KİMLİK KARTLARI #}
+    <div class="e-shell p-4 md:p-6 flex flex-col xl:flex-row gap-6 justify-between items-center">
+        <div class="text-center xl:text-left shrink-0">
+            <div class="text-[9px] font-black uppercase tracking-[0.4em] text-[color:var(--brand-primary)] text-glow mb-1">{{ t('elections.hero.badge') }}</div>
+            <h1 class="text-2xl md:text-3xl font-black uppercase tracking-[0.15em] text-white">{{ t('elections.hero.title') }}</h1>
+        </div>
+        <div class="flex w-full xl:w-auto gap-4 flex-col sm:flex-row flex-1 xl:justify-end">
+            {# Macro'ya dördüncü parametre olarak ikon class'ı eklendi #}
+            <div class="flex-1 sm:max-w-[320px]">{{ _self.person_card(presidentUser, t('elections.person.empty_office'), t('elections.person.president'), 'fa-crown') }}</div>
+            <div class="flex-1 sm:max-w-[320px]">{{ _self.person_card(speakerUser, t('elections.person.pending'), t('elections.person.speaker'), 'fa-gavel') }}</div>
+        </div>
+    </div>
+
+    {% set panels = [
+        { key: 'presidential', title: t('elections.panel.presidential'), icon: 'fa-crown', data: presidentialElection, primaryAction: presidentialElection.can_apply ? {label:t('elections.panel.apply'), fn:'submitPresidentialApplication'} : null, secondaryAction: presidentialElection.my_candidate and presidentialElection.phase == 'candidacy' ? {label:t('elections.panel.withdraw'), fn:'resignPresidentialApplication'} : null },
+        { key: 'party', title: t('elections.panel.party'), icon: 'fa-people-group', data: partyElection, primaryAction: partyElection.can_apply ? {label:t('elections.panel.apply'), fn:'submitPartyLeaderApplication'} : null, secondaryAction: partyElection.my_candidate and partyElection.phase == 'candidacy' ? {label:t('elections.panel.withdraw'), fn:'resignPartyLeaderApplication'} : null },
+        { key: 'congress', title: t('elections.panel.congress'), icon: 'fa-landmark', data: election, primaryAction: election.can_apply ? {label:t('elections.panel.apply'), fn:'submitCongressApplication'} : null, secondaryAction: election.my_candidate and election.phase == 'candidacy' ? {label:t('elections.panel.withdraw'), fn:'resignCongressSeat'} : null }
+    ] %}
+
+    {% for panel in panels %}
+        <section class="e-shell flex flex-col">
+            
+            <div class="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-[color-mix(in_srgb,var(--brand-primary)_5%,transparent)] transition-colors duration-300" onclick="togglePanel('{{ panel.key }}')">
+                
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-[color:var(--brand-primary)] box-glow" style="background: color-mix(in srgb, var(--brand-primary) 15%, transparent); border: 1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent);">
+                        <i class="fa-solid {{ panel.icon }} text-lg text-glow"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-black uppercase tracking-[0.15em] text-white">{{ panel.title }}</h2>
+                        <div class="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-500 mt-1">{{ panel.data.schedule_note }}</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center flex-wrap gap-3">
+                    <span class="e-chip">{{ t('elections.panel.phase_chip') }} <strong class="text-white ml-1">{{ panel.data.phase_label }}</strong></span>
+                    <span class="e-chip e-chip-primary"><span class="status-led"></span> <strong>{{ panel.data.remaining_label }}</strong></span>
+                    
+                    {% if panel.primaryAction %}
+                        <button type="button" class="e-btn" onclick="event.stopPropagation(); {{ panel.primaryAction.fn }}()">{{ panel.primaryAction.label }}</button>
+                    {% endif %}
+                    {% if panel.secondaryAction %}
+                        <button type="button" class="e-btn-alt" onclick="event.stopPropagation(); {{ panel.secondaryAction.fn }}()">{{ panel.secondaryAction.label }}</button>
+                    {% endif %}
+
+                    <div class="ml-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-[color:var(--brand-primary)]">
+                        <i id="icon-{{ panel.key }}" class="fa-solid fa-chevron-down transition-transform duration-300" style="transform: {{ loop.first ? 'rotate(180deg)' : 'rotate(0deg)' }}"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div id="body-{{ panel.key }}" style="display: {{ loop.first ? 'block' : 'none' }};">
+                <div class="px-5 md:px-6 pb-5 md:pb-6 pt-4 border-t border-white/5 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--brand-primary)_15%,transparent)]">
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6 flex-1">
+                        
+                        <div class="space-y-4">
+                            {% if panel.data.result_notice %}
+                                <div class="e-card p-4 !border-l-[var(--brand-primary)]" style="background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 15%, transparent), rgba(0,0,0,0.5));">
+                                    <div class="text-[9px] font-black uppercase tracking-[0.1em] text-[color:var(--brand-primary)] text-glow mb-1">{{ panel.data.result_notice.title }}</div>
+                                    <div class="text-sm font-bold text-white">{{ panel.data.result_notice.winner_nick }}</div>
+                                </div>
+                            {% endif %}
+
+                            <div class="e-card p-4 !border-none !transform-none hover:bg-black/20">
+                                <div class="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mb-3">{{ t('elections.sidebar.title') }}</div>
+                                <div class="flex flex-wrap gap-2">
+                                    {% for item in panel.data.requirements %}
+                                        <div class="e-chip !border-none {{ item.ok ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400' }}" title="{{ item.hint }}">
+                                            <i class="fa-solid {{ item.ok ? 'fa-check' : 'fa-xmark' }}"></i> {{ item.label }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            {% if panel.data.history|length > 0 %}
+                            <div class="e-card p-4 !border-none !transform-none hover:bg-black/20">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">{{ t('elections.sidebar.archive') }}</div>
+                                    <a href="{{ base_url() }}/elections/archive/{{ panel.key }}" class="text-[color:var(--brand-primary)] text-[10px] text-glow hover:underline"><i class="fa-solid fa-arrow-right"></i></a>
+                                </div>
+                                <div class="space-y-2">
+                                    {% for item in panel.data.history|slice(0, 2) %}
+                                        <div class="bg-black/50 rounded border border-white/5 p-2.5 text-[10px]">
+                                            <div class="font-bold text-white flex justify-between">
+                                                <span>{{ item.winner_nick|default(item.finished_at) }}</span>
+                                                <span class="text-slate-500 font-telemetry">{{ item.finished_at }}</span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex flex-col h-full space-y-3">
+                            {% for candidate in panel.data.candidates %}
+                                {{ _self.candidate_row(candidate, panel.key == 'presidential' ? 'votePresidentialCandidate' : (panel.key == 'party' ? 'votePartyLeaderCandidate' : 'voteCongressCandidate'), panel.data.can_vote, panel.key == 'congress' and candidate.can_remove) }}
+                            {% else %}
+                                <div class="e-standby flex-1 w-full min-h-[250px] p-8 text-center flex flex-col items-center justify-center relative overflow-hidden">
+                                    <div class="e-radar-icon w-14 h-14 rounded-full flex items-center justify-center mb-5" style="background: color-mix(in srgb, var(--brand-primary) 20%, transparent); border: 1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent);">
+                                        <i class="fa-solid fa-satellite-dish text-[color:var(--brand-primary)] text-2xl text-glow"></i>
+                                    </div>
+                                    <div class="text-xs font-black uppercase tracking-[0.2em] text-white text-glow z-10">{{ t('elections.empty.title') }}</div>
+                                    <div class="text-[10px] text-[color:var(--brand-primary)] mt-2 font-bold tracking-widest z-10 opacity-70">_ {{ panel.data.phase_note }} _</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+    {% endfor %}
+</div>
+
+<script>
+window.togglePanel = function(key) {
+    const body = $('#body-' + key);
+    const icon = $('#icon-' + key);
+    if(body.is(':hidden')) {
+        body.slideDown(300);
+        icon.css('transform', 'rotate(180deg)');
+    } else {
+        body.slideUp(300);
+        icon.css('transform', 'rotate(0deg)');
+    }
+}
+
+const getDynamicBrandColor = () => {
+    return getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim() || '#0ea5e9';
+};
+
+$.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+const electionsI18n = {
+    error: '{{ t('elections.js.error') }}', failed: '{{ t('elections.js.failed') }}', applyTitle: '{{ t('elections.js.apply_title') }}', campaignTitle: '{{ t('elections.js.campaign_title') }}', campaignMessage: '{{ t('elections.js.campaign_message') }}', applyConfirm: '{{ t('elections.js.apply_confirm') }}', cancel: '{{ t('elections.js.cancel') }}', validationTitle: '{{ t('elections.js.validation_title') }}', validationMessage: '{{ t('elections.js.validation_message') }}', presidentialApplyDoneTitle: '{{ t('elections.js.presidential_apply_done_title') }}', presidentialApplyDoneText: '{{ t('elections.js.presidential_apply_done_text') }}', voteDoneTitle: '{{ t('elections.js.vote_done_title') }}', presidentialVoteDoneText: '{{ t('elections.js.presidential_vote_done_text') }}', presidentialResignDoneTitle: '{{ t('elections.js.presidential_resign_done_title') }}', presidentialResignDoneText: '{{ t('elections.js.presidential_resign_done_text') }}', partyApplyDoneText: '{{ t('elections.js.party_apply_done_text') }}', partyVoteDoneText: '{{ t('elections.js.party_vote_done_text') }}', partyResignDoneText: '{{ t('elections.js.party_resign_done_text') }}', congressApplyDoneText: '{{ t('elections.js.congress_apply_done_text') }}', congressVoteDoneText: '{{ t('elections.js.congress_vote_done_text') }}', congressResignDoneTitle: '{{ t('elections.js.congress_resign_done_title') }}', congressResignDoneText: '{{ t('elections.js.congress_resign_done_text') }}', congressRemoveDoneTitle: '{{ t('elections.js.congress_remove_done_title') }}', congressRemoveDoneText: '{{ t('elections.js.congress_remove_done_text') }}'
+};
+
+function electionAlert(icon, title, text){
+    return Swal.fire({
+        icon: icon, 
+        title: title, 
+        text: text, 
+        background: '#04070d', 
+        color: '#f8fafc', 
+        confirmButtonColor: getDynamicBrandColor(), 
+        customClass: { popup: 'border border-white/5 shadow-[0_0_40px_rgba(0,0,0,0.9)]' }
+    });
+}
+
+function postElection(url, data, successTitle, successText){
+    return $.post(url, Object.assign({csrf_token:$('meta[name=\"csrf-token\"]').attr('content')}, data||{}))
+    .done(function(res){
+        if(res && res.error) { electionAlert('error', electionsI18n.error, res.message || electionsI18n.failed); return; }
+        electionAlert('success', successTitle, successText).then(function(){ location.reload(); });
+    }).fail(function(xhr){
+        const response = xhr.responseJSON || {};
+        electionAlert('error', electionsI18n.error, response.message || electionsI18n.failed);
+    });
+}
+
+window.submitPresidentialApplication = function(){
+    Swal.fire({
+        title: electionsI18n.applyTitle,
+        html: '<div class=\"space-y-3 text-left\">' +
+              '<input id=\"campaign-title\" class=\"w-full rounded-lg bg-black/60 border border-white/10 px-3.5 py-2.5 text-white outline-none focus:border-[color:var(--brand-primary)] focus:ring-1 focus:ring-[color:var(--brand-primary)] text-sm transition-all\" placeholder=\"'+electionsI18n.campaignTitle+'\">' +
+              '<textarea id=\"campaign-message\" class=\"w-full rounded-lg bg-black/60 border border-white/10 px-3.5 py-2.5 text-white outline-none resize-none h-28 focus:border-[color:var(--brand-primary)] focus:ring-1 focus:ring-[color:var(--brand-primary)] text-sm transition-all\" placeholder=\"'+electionsI18n.campaignMessage+'\"></textarea>' +
+              '</div>',
+        showCancelButton: true,
+        confirmButtonText: electionsI18n.applyConfirm,
+        cancelButtonText: electionsI18n.cancel,
+        background: '#04070d',
+        color: '#f8fafc',
+        confirmButtonColor: getDynamicBrandColor(),
+        customClass: { popup: 'border border-white/5 shadow-[0_0_40px_rgba(0,0,0,0.9)]' },
+        preConfirm: function(){
+            const campaignTitle = document.getElementById('campaign-title').value.trim();
+            const campaignMessage = document.getElementById('campaign-message').value.trim();
+            if(campaignTitle.length < 3) { Swal.showValidationMessage(electionsI18n.validationTitle); return false; }
+            if(campaignMessage.length < 12) { Swal.showValidationMessage(electionsI18n.validationMessage); return false; }
+            return { campaign_title: campaignTitle, campaign_message: campaignMessage };
+        }
+    }).then(function(result){
+        if(!result.isConfirmed || !result.value) return;
+        postElection('{{ base_url() }}/api/congress/presidential/apply', result.value, electionsI18n.presidentialApplyDoneTitle, electionsI18n.presidentialApplyDoneText);
+    });
+};
+
+window.votePresidentialCandidate = function(candidateId){ postElection('{{ base_url() }}/api/congress/presidential/vote', {candidate: candidateId}, electionsI18n.voteDoneTitle, electionsI18n.presidentialVoteDoneText); };
+window.resignPresidentialApplication = function(){ postElection('{{ base_url() }}/api/congress/presidential/resign', {}, electionsI18n.presidentialResignDoneTitle, electionsI18n.presidentialResignDoneText); };
+window.submitPartyLeaderApplication = function(){ postElection('{{ base_url() }}/api/congress/party-election/apply', {}, electionsI18n.presidentialApplyDoneTitle, electionsI18n.partyApplyDoneText); };
+window.votePartyLeaderCandidate = function(candidateId){ postElection('{{ base_url() }}/api/congress/party-election/vote', {candidate: candidateId}, electionsI18n.voteDoneTitle, electionsI18n.partyVoteDoneText); };
+window.resignPartyLeaderApplication = function(){ postElection('{{ base_url() }}/api/congress/party-election/resign', {}, electionsI18n.presidentialResignDoneTitle, electionsI18n.partyResignDoneText); };
+window.submitCongressApplication = function(){ postElection('{{ base_url() }}/api/congress/candidate/apply', {}, electionsI18n.presidentialApplyDoneTitle, electionsI18n.congressApplyDoneText); };
+window.voteCongressCandidate = function(candidateId){ postElection('{{ base_url() }}/api/congress/candidate/vote', {candidate: candidateId}, electionsI18n.voteDoneTitle, electionsI18n.congressVoteDoneText); };
+window.resignCongressSeat = function(){ postElection('{{ base_url() }}/api/congress/candidate/resign', {}, electionsI18n.congressResignDoneTitle, electionsI18n.congressResignDoneText); };
+window.removeCongressCandidate = function(candidateId){ postElection('{{ base_url() }}/api/congress/candidate/remove', {candidate: candidateId}, electionsI18n.congressRemoveDoneTitle, electionsI18n.congressRemoveDoneText); };
+</script>
+{% endblock %}
