@@ -1,5 +1,9 @@
 # Project V26
 
+![Status](https://img.shields.io/badge/status-active%20development-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Stack](https://img.shields.io/badge/stack-PHP%20%7C%20Slim%20%7C%20Twig%20%7C%20Docker-purple)
+
 Project V26 is a browser-based political strategy and social simulation game built with PHP, Slim and Twig. The project focuses on a public, playable web experience where players manage identity, resources, communication, news and community-driven progression.
 
 > Public build note: this repository is prepared for open source review and contribution. Private production secrets, local database dumps and runtime files must not be committed.
