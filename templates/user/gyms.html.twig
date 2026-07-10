@@ -89,6 +89,19 @@
         transform: translateY(0);
     }
     .btn-create-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .game-action-hero { padding: 22px; }
+    .game-action-title { color: var(--text-main, #fff); }
+    .game-action-copy { color: color-mix(in srgb, var(--text-muted, #94a3b8) 86%, #fff); line-height: 1.45; }
+    .game-action-panel { padding: 18px; }
+    .game-status-note { color: color-mix(in srgb, var(--text-muted, #94a3b8) 82%, #fff); }
+
+    @media (max-width: 768px) {
+        .game-action-hero { padding: 18px; }
+        .game-action-panel { padding: 14px; }
+        .btn-create-primary { min-height: 42px; width: 100%; justify-content: center; }
+        .v2-table-row td { padding: 10px 12px; }
+        .tech-badge { width: auto !important; min-width: 82px; }
+    }
 
     /* SweetAlert V26 Sharp */
     .cyber-modal-popup { background: rgba(12, 16, 24, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; border-radius: 16px !important; padding: 2rem 1.5rem !important; }
@@ -100,7 +113,7 @@
 <div class="home-theme-surface space-y-6 animate-fade-in w-full max-w-[1400px] mx-auto overflow-hidden">
     
     {# ===== HERO PANEL ===== #}
-    <div class="glass-panel p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
+    <div class="glass-panel game-action-hero flex flex-col md:flex-row justify-between items-start md:items-center gap-5 relative">
         <i class="fa-solid fa-dumbbell absolute -right-6 -bottom-6 text-[100px] text-[color:var(--brand-primary)] opacity-[0.03] pointer-events-none rotate-[-15deg]"></i>
 
         <div class="flex items-center gap-4 relative z-10">
@@ -108,13 +121,13 @@
                 <i class="fa-solid fa-dumbbell text-2xl text-[color:var(--brand-primary)]"></i>
             </div>
             <div>
-                <h1 class="text-xl font-black text-white uppercase tracking-wider leading-tight">
+                <h1 class="game-action-title text-xl font-black uppercase tracking-wider leading-tight">
                     {{ t('gyms.hero.title') }}
                 </h1>
                 <p class="text-[10px] text-[color:var(--brand-primary)] font-bold uppercase tracking-[0.15em] mt-1.5 flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-[color:var(--brand-primary)] rounded-full animate-pulse shadow-[0_0_5px_var(--brand-primary)]"></span> {{ t('gyms.hero.subtitle') }}
                 </p>
-                <p class="text-[9px] text-slate-500 font-bold tracking-widest mt-1.5 uppercase">
+                <p class="game-action-copy text-[10px] font-bold tracking-widest mt-1.5 uppercase">
                     {{ t('gyms.hero.limit') }}
                 </p>
             </div>
@@ -132,8 +145,8 @@
     </div>
 
     {# ===== TABLE PANEL ===== #}
-    <div class="glass-panel p-5">
-        <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 mb-5 border-b border-white/5 pb-4">
+    <div class="glass-panel game-action-panel">
+        <h2 class="text-[11px] font-black text-[color:var(--text-main,#fff)] uppercase tracking-[0.18em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
             <i class="fa-solid fa-server text-[color:var(--brand-primary)] opacity-80"></i> {{ t('gyms.panel.title') }}
         </h2>
 
@@ -193,11 +206,11 @@
                             <td class="p-3 text-right pr-5">
                                 {% if gym.hasTrainedToday %}
                                     {% if gym.trainedQualityToday %}
-                                        <span class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest">
+                                        <span class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest" title="{{ t('gyms.table.done') }}">
                                             <i class="fa-solid fa-check"></i> {{ t('gyms.table.done') }}
                                         </span>
                                     {% else %}
-                                        <span class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest">
+                                        <span class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest" title="{{ t('gyms.table.limit_full') }}">
                                             <i class="fa-solid fa-lock"></i> {{ t('gyms.table.limit_full') }}
                                         </span>
                                     {% endif %}
@@ -215,9 +228,9 @@
     </div>
 
     {# ===== WARNING PANEL ===== #}
-    <div class="glass-panel p-4 bg-red-950/20 border-t-2 border-red-500/50 flex items-center justify-center gap-3">
+    <div class="glass-panel p-4 bg-red-950/20 border-t-2 border-red-500/40 flex items-center justify-center gap-3">
         <i class="fa-solid fa-triangle-exclamation text-red-500 text-lg animate-pulse"></i>
-        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-[0.15em]">
+        <p class="game-status-note text-[10px] font-bold uppercase tracking-[0.12em] leading-relaxed">
             <span class="text-white font-black">{{ t('gyms.warning.title') }}</span> {{ t('gyms.warning.copy') }}
         </p>
     </div>

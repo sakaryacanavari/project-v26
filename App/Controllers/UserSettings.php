@@ -23,25 +23,26 @@ class UserSettings extends Controller
     {
         return [
             'modes' => [
-                'dark'   => ['name' => 'Gece', 'icon' => 'fa-solid fa-moon text-indigo-400'],
-                'oled'   => ['name' => 'OLED', 'icon' => 'fa-solid fa-circle-half-stroke text-slate-300'],
-                'dim'    => ['name' => 'Los', 'icon' => 'fa-solid fa-cloud-moon text-slate-400'],
-                'magma'  => ['name' => 'Magma', 'icon' => 'fa-solid fa-meteor text-orange-500'],
-                'aurora' => ['name' => 'Aurora', 'icon' => 'fa-solid fa-star text-pink-400'],
+                'dark'    => ['name' => 'Koyu', 'description' => 'Dengeli koyu gorunum', 'icon' => 'fa-solid fa-moon text-indigo-400'],
+                'command' => ['name' => 'Gece Mavisi', 'description' => 'Lacivert tonlarda sakin gorunum', 'icon' => 'fa-solid fa-circle-half-stroke text-blue-300'],
+                'neon'    => ['name' => 'Mor', 'description' => 'Mor/mavi modern gorunum', 'icon' => 'fa-solid fa-gem text-purple-300'],
+                'war'     => ['name' => 'Kontrast', 'description' => 'Daha belirgin ve okunakli gorunum', 'icon' => 'fa-solid fa-border-all text-slate-200'],
+                'archive' => ['name' => 'Göz Konforu Modu', 'description' => 'Daha sıcak tonlar ve azaltılmış parlaklıkla uzun kullanım için rahat görünüm', 'icon' => 'fa-solid fa-eye text-slate-400'],
             ],
             'colors' => [
-                'cyan'      => ['name' => 'Camgobegi', 'icon' => 'fa-solid fa-bolt'],
-                'diamond'   => ['name' => 'Turkuaz', 'icon' => 'fa-solid fa-gem'],
-                'blue'      => ['name' => 'Mavi', 'icon' => 'fa-solid fa-satellite-dish'],
-                'mono'      => ['name' => 'Gri', 'icon' => 'fa-solid fa-user-ninja'],
-                'red'       => ['name' => 'Kirmizi', 'icon' => 'fa-solid fa-triangle-exclamation'],
-                'amber'     => ['name' => 'Turuncu', 'icon' => 'fa-solid fa-building-columns'],
-                'purple'    => ['name' => 'Mor', 'icon' => 'fa-solid fa-vr-cardboard'],
-                'pink'      => ['name' => 'Pembe', 'icon' => 'fa-solid fa-compact-disc'],
-                'overdrive' => ['name' => 'Sari', 'icon' => 'fa-solid fa-bolt-lightning'],
-                'blood'     => ['name' => 'Bordo', 'icon' => 'fa-solid fa-droplet'],
-                'matrix'    => ['name' => 'Lime', 'icon' => 'fa-solid fa-code'],
-                'lavender'  => ['name' => 'Lavanta', 'icon' => 'fa-solid fa-star'],
+                'purple'   => ['name' => 'Mor', 'icon' => 'fa-solid fa-vr-cardboard'],
+                'blue'     => ['name' => 'Mavi', 'icon' => 'fa-solid fa-bolt'],
+                'diamond'  => ['name' => 'Turkuaz', 'icon' => 'fa-solid fa-gem'],
+                'amber'    => ['name' => 'Amber', 'icon' => 'fa-solid fa-building-columns'],
+                'red'      => ['name' => 'Kirmizi', 'icon' => 'fa-solid fa-triangle-exclamation'],
+                'matrix'   => ['name' => 'Yesil', 'icon' => 'fa-solid fa-circle-check'],
+                'mono'     => ['name' => 'Gri', 'icon' => 'fa-solid fa-shield'],
+                'lavender' => ['name' => 'Lavanta', 'icon' => 'fa-solid fa-star'],
+            ],
+            'eyeComfortLevels' => [
+                'light' => ['name' => 'Hafif', 'description' => 'Hafif sicak ton, minimum parlaklik azaltimi'],
+                'balanced' => ['name' => 'Dengeli', 'description' => 'Sicak ton ve azaltilmis parlaklik dengesi'],
+                'intense' => ['name' => 'Yogun', 'description' => 'Daha sicak gorunum, daha belirgin mavi isik azaltimi'],
             ],
         ];
     }
@@ -50,8 +51,9 @@ class UserSettings extends Controller
     {
         return [
             'mode' => 'dark',
-            'color' => 'cyan',
-            'combined' => 'dark_cyan',
+            'color' => 'purple',
+            'eye_comfort_level' => 'balanced',
+            'combined' => 'dark_purple_balanced',
         ];
     }
 
@@ -65,9 +67,31 @@ class UserSettings extends Controller
             return $default;
         }
 
-        $parts = explode('_', $themeString, 2);
+        $parts = explode('_', $themeString);
         $mode = isset($parts[0]) ? trim($parts[0]) : $default['mode'];
         $color = isset($parts[1]) ? trim($parts[1]) : $default['color'];
+        $eyeComfortLevel = isset($parts[2]) ? trim($parts[2]) : $default['eye_comfort_level'];
+
+        $legacyModes = [
+            'oled' => 'command',
+            'dim' => 'archive',
+            'magma' => 'war',
+            'aurora' => 'neon',
+        ];
+        $legacyColors = [
+            'cyan' => 'blue',
+            'pink' => 'lavender',
+            'overdrive' => 'amber',
+            'blood' => 'red',
+        ];
+
+        if (isset($legacyModes[$mode])) {
+            $mode = $legacyModes[$mode];
+        }
+
+        if (isset($legacyColors[$color])) {
+            $color = $legacyColors[$color];
+        }
 
         if (!isset($config['modes'][$mode])) {
             $mode = $default['mode'];
@@ -77,10 +101,19 @@ class UserSettings extends Controller
             $color = $default['color'];
         }
 
+        if ($mode === 'archive') {
+            $color = 'amber';
+        }
+
+        if (!isset($config['eyeComfortLevels'][$eyeComfortLevel])) {
+            $eyeComfortLevel = $default['eye_comfort_level'];
+        }
+
         return [
             'mode' => $mode,
             'color' => $color,
-            'combined' => $mode . '_' . $color,
+            'eye_comfort_level' => $eyeComfortLevel,
+            'combined' => $mode . '_' . $color . '_' . $eyeComfortLevel,
         ];
     }
 
@@ -256,15 +289,26 @@ class UserSettings extends Controller
 
             $uid = App::user()->getUid();
             $mode = trim(strip_tags($_POST['mode'] ?? 'dark'));
-            $color = trim(strip_tags($_POST['color'] ?? 'cyan'));
+            $color = trim(strip_tags($_POST['color'] ?? 'purple'));
+            $eyeComfortLevel = trim(strip_tags($_POST['eye_comfort_level'] ?? 'balanced'));
 
             $config = self::getThemeConfig();
 
-            if (!isset($config['modes'][$mode]) || !isset($config['colors'][$color])) {
+            if (!isset($config['modes'][$mode])) {
                 return ['error' => true, 'message' => 'Yetkisiz tema!'];
             }
 
-            $combined = $mode . '_' . $color;
+            if (!isset($config['eyeComfortLevels'][$eyeComfortLevel])) {
+                $eyeComfortLevel = 'balanced';
+            }
+
+            if ($mode === 'archive') {
+                $color = 'amber';
+            } elseif (!isset($config['colors'][$color])) {
+                return ['error' => true, 'message' => 'Yetkisiz tema!'];
+            }
+
+            $combined = $mode . '_' . $color . '_' . $eyeComfortLevel;
 
             DB::table('users')
                 ->where('id', $uid)
@@ -276,6 +320,7 @@ class UserSettings extends Controller
                 'theme' => [
                     'mode' => $mode,
                     'color' => $color,
+                    'eye_comfort_level' => $eyeComfortLevel,
                     'combined' => $combined,
                 ],
             ];

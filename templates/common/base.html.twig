@@ -43,24 +43,29 @@
             background: rgba(10, 15, 20, 0.35);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 20px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 32px 64px -12px rgba(0,0,0,0.8);
-            backdrop-filter: blur(24px) saturate(160%);
-            -webkit-backdrop-filter: blur(24px) saturate(160%);
-            transition: all 0.4s ease;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 20px 44px -18px rgba(0,0,0,0.72);
+            backdrop-filter: blur(16px) saturate(130%);
+            -webkit-backdrop-filter: blur(16px) saturate(130%);
+            transition: background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
         }
 
         .main-container { width: 100%; max-width: 1550px; margin: 0 auto; display: flex; padding: 24px 24px 8px; gap: 24px; }
         @media (min-width: 1920px) { .main-container { max-width: 1840px; } }
-        .hud-stack.gx-hud-compact { width: 17rem; gap: 10px; }
+        .hud-stack.gx-hud-compact { width: 17rem; gap: 8px; }
         .hud-stack.gx-hud-compact .hud-panel { padding: 11px !important; border-radius: 14px; }
         .hud-stack.gx-hud-compact .avatar-box { width: 64px; height: 64px; border-radius: 18px; }
         .hud-stack.gx-hud-compact .avatar-box img { border-radius: 16px; }
         .hud-stack.gx-hud-compact .hud-stat-card { padding: 8px !important; min-width: 0; }
         .hud-stack.gx-hud-compact .hud-kicker { font-size: 8px; }
+        .hud-stack.gx-hud-compact .hud-meta { font-size: 9px; }
         .hud-stack.gx-hud-compact .hud-value { font-size: 13px; }
         .hud-stack.gx-hud-compact .hud-row { gap: 8px; }
         .hud-stack.gx-hud-compact .hud-chip { padding: 5px 8px; font-size: 9px; }
         .hud-stack.gx-hud-compact .hud-icon { width: 28px; height: 28px; flex: 0 0 28px; }
+        .hud-stack.gx-hud-compact .hud-resource-row,
+        .hud-stack.gx-hud-compact .hud-money-row { min-height: 34px; padding: 8px; }
+        .hud-stack.gx-hud-compact .hud-resource-label,
+        .hud-stack.gx-hud-compact .hud-money-label { font-size: 9px; gap: 6px; }
         .hud-stack.gx-hud-compact .hud-stat-card span,
         .hud-stack.gx-hud-compact .hud-row > span,
         .hud-stack.gx-hud-compact .hud-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -105,7 +110,7 @@
             left: 0;
             width: 240px;
             background: rgba(10, 15, 30, 0.95);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(12px);
             border: 1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent);
             border-top: none;
             border-radius: 0 0 16px 16px;
@@ -114,7 +119,7 @@
             opacity: 0;
             visibility: hidden;
             transform: translateY(10px);
-            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
         }
         .nav-item:hover .dropdown-v6 { opacity: 1; visibility: visible; transform: translateY(0); }
 
@@ -145,11 +150,11 @@
             padding: 4px;
             background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.3) 100%);
             box-shadow: inset 0 2px 15px rgba(255,255,255,0.05), 0 15px 30px -5px rgba(0,0,0,0.5);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
         }
         .avatar-box:hover {
-            transform: translateY(-4px);
-            box-shadow: inset 0 2px 15px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.6), 0 0 20px color-mix(in srgb, var(--brand-primary) 30%, transparent);
+            transform: translateY(-2px);
+            box-shadow: inset 0 2px 15px rgba(255,255,255,0.1), 0 14px 28px -14px rgba(0,0,0,0.54), 0 0 14px color-mix(in srgb, var(--brand-primary) 22%, transparent);
             border-color: rgba(255,255,255,0.3);
         }
         .avatar-box img { width: 100%; height: 100%; border-radius: 22px; object-fit: cover; }
@@ -165,15 +170,15 @@
             border-top: 1px solid rgba(255,255,255,0.12);
             border-radius: 12px;
             box-shadow: inset 0 2px 20px rgba(0,0,0,0.5), 0 4px 15px rgba(0,0,0,0.3);
-            backdrop-filter: blur(8px);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(4px);
+            transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
         }
         .glass-inset:hover {
             border-color: rgba(255,255,255,0.2);
             border-top-color: rgba(255,255,255,0.3);
             background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.5) 100%);
-            box-shadow: inset 0 2px 10px rgba(255,255,255,0.05), 0 8px 25px rgba(0,0,0,0.5);
-            transform: translateY(-2px);
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.05), 0 6px 16px rgba(0,0,0,0.4);
+            transform: translateY(-1px);
         }
 
         .bar-container { height: 6px; border-radius: 99px; background: rgba(0,0,0,0.5); overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
@@ -184,18 +189,18 @@
             position: sticky;
             top: 96px;
             max-height: calc(100vh - 140px);
-            gap: 10px;
+            gap: 9px;
             overflow-y: auto;
             overflow-x: hidden;
-            padding-right: 3px;
+            padding-right: 5px;
             padding-bottom: 12px;
             scrollbar-width: thin;
-            scrollbar-color: color-mix(in srgb, var(--brand-primary) 45%, transparent) transparent;
+            scrollbar-color: color-mix(in srgb, var(--brand-primary) 24%, rgba(148,163,184,.18)) transparent;
         }
-        .hud-stack::-webkit-scrollbar { width: 5px; }
+        .hud-stack::-webkit-scrollbar { width: 4px; }
         .hud-stack::-webkit-scrollbar-thumb {
             border-radius: 999px;
-            background: color-mix(in srgb, var(--brand-primary) 35%, transparent);
+            background: color-mix(in srgb, var(--brand-primary) 22%, rgba(148,163,184,.2));
         }
         .hud-panel {
             position: relative;
@@ -205,8 +210,8 @@
                 radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--brand-primary) 12%, transparent), transparent 42%),
                 linear-gradient(180deg, rgba(255,255,255,0.052), rgba(0,0,0,0.26)),
                 rgba(10, 15, 24, 0.48);
-            border-color: rgba(255,255,255,0.085);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 18px 42px -24px rgba(0,0,0,0.9);
+            border-color: rgba(255,255,255,0.078);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.085), 0 14px 32px -24px rgba(0,0,0,0.9);
         }
         .hud-panel::before {
             content: "";
@@ -218,8 +223,9 @@
             opacity: 0.75;
         }
         .hud-panel > * { position: relative; z-index: 1; }
-        .hud-kicker { font-size: 9px; font-weight: 950; letter-spacing: .16em; text-transform: uppercase; color: #64748b; }
-        .hud-value { font-family: 'JetBrains Mono', monospace; font-weight: 950; color: #fff; }
+        .hud-kicker { font-size: 9px; font-weight: 950; letter-spacing: .14em; text-transform: uppercase; color: color-mix(in srgb, var(--text-muted, #94a3b8) 88%, #fff); }
+        .hud-meta { font-size: 10px; font-weight: 800; line-height: 1.35; color: color-mix(in srgb, var(--text-muted, #94a3b8) 82%, #fff); }
+        .hud-value { font-family: 'JetBrains Mono', monospace; font-weight: 950; color: var(--text-main, #fff); font-variant-numeric: tabular-nums; }
         .hud-row {
             display: flex;
             align-items: center;
@@ -245,7 +251,7 @@
         }
         .hud-stat-card {
             min-width: 0;
-            border-radius: 12px;
+            border-radius: 11px;
             border: 1px solid rgba(255,255,255,0.065);
             background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.2));
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
@@ -256,7 +262,7 @@
             border-radius: 20px;
         }
         .hud-progress {
-            height: 6px;
+            height: 7px;
             border-radius: 999px;
             overflow: hidden;
             background: rgba(0,0,0,.58);
@@ -284,6 +290,35 @@
             border: 1px solid rgba(255,255,255,.08);
             color: var(--brand-primary);
             flex: 0 0 auto;
+        }
+        .hud-resource-row,
+        .hud-money-row {
+            min-height: 36px;
+            border-radius: 11px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: linear-gradient(180deg, rgba(255,255,255,.028), rgba(2,6,23,.20));
+            padding: 9px 10px;
+        }
+        .hud-resource-label,
+        .hud-money-label {
+            display: inline-flex;
+            align-items: center;
+            min-width: 0;
+            gap: 8px;
+            color: color-mix(in srgb, var(--text-main, #e5e7eb) 84%, var(--text-muted, #94a3b8));
+            font-size: 10px;
+            font-weight: 950;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .hud-section-tight { padding: 12px !important; }
+        .hud-logout-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 38px;
+            letter-spacing: .12em;
         }
 
         .ticker-v6 {
@@ -360,11 +395,11 @@
             border-radius: 18px;
             overflow: hidden;
             background: linear-gradient(180deg, rgba(10, 15, 28, 0.98) 0%, rgba(3, 7, 18, 0.99) 100%);
-            backdrop-filter: blur(18px);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(148,163,184,0.14);
             display: none;
             z-index: 10000;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 26px 58px -18px rgba(0,0,0,0.85);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 18px 40px -20px rgba(0,0,0,0.78);
             transform-origin: top right;
             animation: omniPop .2s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
@@ -846,9 +881,6 @@
         {% set hudMoney = hud.money|default({}) %}
 
         <div class="glass-panel hud-panel p-4 group">
-            <a href="{{ path_for('settings') }}" class="absolute top-4 right-4 hud-chip hover:text-white" title="{{ t('base.sidebar.system_settings') }}">
-                <i class="fa-solid fa-gear"></i>
-            </a>
 
             <div class="flex items-center gap-3">
                 <div class="avatar-box hud-avatar relative overflow-hidden transition-colors" style="border-color: var(--brand-primary); box-shadow: 0 0 14px var(--brand-glow);">
@@ -860,7 +892,7 @@
                 </div>
                 <div class="min-w-0 flex-1">
                     <div class="hud-kicker">{{ t('base.sidebar.operator') }}</div>
-                    <div class="mt-1 truncate text-[15px] font-black text-white">{{ hudUser.nick|default(t('base.sidebar.citizen')) }}</div>
+                    <div class="mt-1 truncate text-[15px] font-black text-[color:var(--text-main,#fff)]">{{ hudUser.nick|default(t('base.sidebar.citizen')) }}</div>
                     <div class="mt-2 flex flex-wrap gap-1.5">
                         <span class="hud-chip"><span class="status-dot"></span> Lv {{ hudUser.level|default(1) }}</span>
                         <span class="hud-chip">XP {{ hudUser.xp|default(0) }}</span>
@@ -870,14 +902,14 @@
 
             <div class="mt-4 space-y-2.5">
                 <div>
-                    <div class="hud-row text-[9px] font-black uppercase tracking-widest text-slate-500">
+                    <div class="hud-row hud-meta uppercase tracking-widest">
                         <span>{{ t('base.sidebar.energy') }}</span>
                         <span>{{ hudUser.energy|default(0) }} / 100</span>
                     </div>
                     <div class="hud-progress energy mt-1.5" style="--hud-progress: {{ hudUser.energyPercent|default(0) }}%"><span></span></div>
                 </div>
                 <div>
-                    <div class="hud-row text-[9px] font-black uppercase tracking-widest text-slate-500">
+                    <div class="hud-row hud-meta uppercase tracking-widest">
                         <span>{{ t('base.sidebar.economic_xp') }}</span>
                         <span>{{ hudUser.economicXp|default(0) }} / {{ hudUser.economicRequiredXp|default(1) }}</span>
                     </div>
@@ -886,11 +918,11 @@
             </div>
         </div>
 
-        <div class="glass-panel hud-panel p-3.5">
+        <div class="glass-panel hud-panel hud-section-tight">
             <div class="hud-row">
                 <div>
                     <div class="hud-kicker">{{ t('base.sidebar.daily_reward') }}</div>
-                    <div class="mt-1 text-[12px] font-black uppercase text-white">{{ hudDaily.completed|default(0) }} / {{ hudDaily.total|default(2) }}</div>
+                    <div class="mt-1 text-[12px] font-black uppercase text-[color:var(--text-main,#fff)]">{{ hudDaily.completed|default(0) }} / {{ hudDaily.total|default(2) }}</div>
                 </div>
                 <div class="hud-chip">{{ hudDaily.percent|default(0) }}%</div>
             </div>
@@ -899,19 +931,19 @@
                 <div class="hud-stat-card p-2.5">
                     <div class="hud-row">
                         <span class="hud-icon"><i class="fa-solid fa-dumbbell"></i></span>
-                        <span class="text-[9px] font-black uppercase {{ hudDaily.trained|default(false) ? 'text-emerald-300' : 'text-slate-500' }}">{{ hudDaily.trained|default(false) ? 'Tamam' : t('base.sidebar.pending') }}</span>
+                        <span class="hud-meta font-black uppercase {{ hudDaily.trained|default(false) ? 'text-emerald-300' : '' }}">{{ hudDaily.trained|default(false) ? 'Tamam' : t('base.sidebar.pending') }}</span>
                     </div>
                 </div>
                 <div class="hud-stat-card p-2.5">
                     <div class="hud-row">
                         <span class="hud-icon"><i class="fa-solid fa-briefcase"></i></span>
-                        <span class="text-[9px] font-black uppercase {{ hudDaily.worked|default(false) ? 'text-emerald-300' : 'text-slate-500' }}">{{ hudDaily.worked|default(false) ? 'Tamam' : t('base.sidebar.pending') }}</span>
+                        <span class="hud-meta font-black uppercase {{ hudDaily.worked|default(false) ? 'text-emerald-300' : '' }}">{{ hudDaily.worked|default(false) ? 'Tamam' : t('base.sidebar.pending') }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="glass-panel hud-panel p-3.5">
+        <div class="glass-panel hud-panel hud-section-tight">
             <div class="grid grid-cols-2 gap-2">
                 <div class="hud-stat-card p-2.5">
                     <div class="hud-kicker">{{ t('base.sidebar.power') }}</div>
@@ -921,27 +953,27 @@
                     <div class="hud-kicker">Eko Skill</div>
                     <div class="hud-value mt-1 text-[15px]">{{ hudUser.economicSkill|default(1) }}</div>
                 </div>
-                <div class="hud-stat-card col-span-2 p-2.5">
+                <div class="hud-stat-card hud-resource-row col-span-2">
                     <div class="hud-row">
-                        <span class="text-[10px] font-black uppercase text-slate-300"><i class="fa-solid fa-utensils mr-2 text-yellow-400"></i>{{ t('base.sidebar.bread') }}</span>
+                        <span class="hud-resource-label"><i class="fa-solid fa-utensils text-yellow-400"></i>{{ t('base.sidebar.bread') }}</span>
                         <span class="hud-value">{{ hudInventory.bread|default(0) }}</span>
                     </div>
                 </div>
-                <div class="hud-stat-card col-span-2 p-2.5">
+                <div class="hud-stat-card hud-resource-row col-span-2">
                     <div class="hud-row">
-                        <span class="text-[10px] font-black uppercase text-slate-300"><i class="fa-solid fa-gun mr-2 text-rose-400"></i>{{ t('base.sidebar.weapon') }}</span>
+                        <span class="hud-resource-label"><i class="fa-solid fa-gun text-rose-400"></i>{{ t('base.sidebar.weapon') }}</span>
                         <span class="hud-value">{{ hudInventory.weapons|default(0) }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="glass-panel hud-panel p-3.5">
+        <div class="glass-panel hud-panel hud-section-tight">
             <div class="hud-row">
                 <div class="min-w-0">
                     <div class="hud-kicker">{{ t('base.sidebar.location') }}</div>
-                    <div class="mt-1 truncate text-[12px] font-black uppercase text-white">{{ hudLocation.country|default('') ?: '-' }}</div>
-                    <div class="mt-1 truncate text-[10px] font-bold uppercase text-slate-400">{{ t('base.sidebar.region') }}: {{ hudLocation.region|default('') ?: '-' }}</div>
+                    <div class="mt-1 truncate text-[12px] font-black uppercase text-[color:var(--text-main,#fff)]">{{ hudLocation.country|default('') ?: '-' }}</div>
+                    <div class="hud-meta mt-1 truncate uppercase">{{ t('base.sidebar.region') }}: {{ hudLocation.region|default('') ?: '-' }}</div>
                 </div>
                 {% if hudLocation.countryId|default(0) %}
                     <img src="img/flags/{{ hudLocation.countryId }}.png" class="h-8 w-12 rounded-md border border-white/10 object-cover shadow-lg" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -951,39 +983,42 @@
             </div>
         </div>
 
-        <div class="glass-panel hud-panel p-3.5">
+        {# Çalışma durumu HUD kartı kaldırıldı. #}
+        {#
+        <div class="glass-panel hud-panel hud-section-tight">
             <div class="hud-kicker">{{ t('base.sidebar.work_status') }}</div>
             <div class="mt-2.5 flex items-start gap-3">
                 <span class="hud-icon"><i class="fa-solid fa-briefcase"></i></span>
                 <div class="min-w-0 flex-1">
-                    <div class="truncate text-[12px] font-black uppercase text-white">{{ hudJob.title|default(t('base.sidebar.active_contract_missing')) }}</div>
-                    <div class="mt-1 truncate text-[10px] font-bold uppercase text-slate-400">{{ hudJob.company|default(t('base.sidebar.company_info_missing')) }}</div>
+                    <div class="truncate text-[12px] font-black uppercase text-[color:var(--text-main,#fff)]">{{ hudJob.title|default(t('base.sidebar.active_contract_missing')) }}</div>
+                    <div class="hud-meta mt-1 truncate uppercase">{{ hudJob.company|default(t('base.sidebar.company_info_missing')) }}</div>
                     {% if hudJob.hasJob|default(false) %}
                         <div class="mt-2 text-[10px] font-black uppercase tracking-widest {{ hudJob.workedToday|default(false) ? 'text-emerald-300' : 'text-amber-300' }}">
                             {{ hudJob.status }}{% if hudJob.salary|default(0) > 0 %} · {{ hudJob.salary|number_format(2) }} {{ hudJob.currency }}{% endif %}
                         </div>
                     {% else %}
-                        <div class="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-500">{{ hudJob.status|default(t('base.sidebar.no_active_job')) }}</div>
+                        <div class="hud-meta mt-2 font-black uppercase tracking-widest">{{ hudJob.status|default(t('base.sidebar.no_active_job')) }}</div>
                     {% endif %}
                 </div>
             </div>
         </div>
+        #}
 
-        <div class="glass-panel hud-panel p-3.5 space-y-2.5">
-            <div class="hud-row">
-                <span class="text-[10px] font-black uppercase text-slate-300"><i class="fa-solid fa-coins mr-2 text-yellow-400"></i>Gold</span>
+        <div class="glass-panel hud-panel hud-section-tight space-y-2">
+            <div class="hud-row hud-money-row">
+                <span class="hud-money-label"><i class="fa-solid fa-coins text-yellow-400"></i>Gold</span>
                 <span class="hud-value">{{ hudMoney.gold|default(0)|number_format(2) }}</span>
             </div>
-            <div class="hud-row border-t border-white/5 pt-2.5">
-                <span class="text-[10px] font-black uppercase text-slate-300">
-                    {% if hudLocation.countryId|default(0) %}<img src="img/flags/{{ hudLocation.countryId }}.png" class="mr-2 inline h-4 w-6 rounded-sm object-cover" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">{% endif %}
+            <div class="hud-row hud-money-row">
+                <span class="hud-money-label">
+                    {% if hudLocation.countryId|default(0) %}<img src="img/flags/{{ hudLocation.countryId }}.png" class="h-4 w-6 rounded-sm object-cover" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">{% endif %}
                     {{ hudMoney.localCurrency|default('') ?: 'LOCAL' }}
                 </span>
                 <span class="hud-value">{{ hudMoney.local|default(0)|number_format(2) }}</span>
             </div>
         </div>
 
-        <a href="{{ path_for('logout') }}" class="glass-panel hud-panel border-red-900/40 bg-red-950/20 p-3.5 text-center text-[10px] font-black uppercase text-red-400 transition-all hover:bg-red-600 hover:text-white">{{ t('base.sidebar.disconnect') }}</a>
+        <a href="{{ path_for('logout') }}" class="glass-panel hud-panel hud-logout-link border-red-900/40 bg-red-950/20 px-3 py-2.5 text-center text-[10px] font-black uppercase text-red-400 transition-all hover:bg-red-600 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i>{{ t('base.sidebar.disconnect') }}</a>
     </aside>
     {% endif %}
 

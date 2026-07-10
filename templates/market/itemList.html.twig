@@ -7,9 +7,9 @@
             <div class="text-[10px] font-black text-white uppercase tracking-[0.18em]">{{ marketMessage }}</div>
         </div>
     {% endif %}
-    <div class="glass-panel p-5 border-l-4 border-cyan-500 flex justify-between items-center bg-cyan-950/10">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-cyan-600/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+    <div class="glass-panel p-5 border-l-4 border-[color:var(--brand-primary)] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[color:var(--brand-primary)]/10">
+        <div class="flex items-center gap-4 min-w-0">
+            <div class="w-12 h-12 rounded-xl bg-[color:var(--brand-primary)]/15 border border-[color:var(--brand-primary)]/30 flex items-center justify-center text-[color:var(--brand-primary)] shadow-[0_0_15px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)]">
                 <i class="fa-solid fa-truck-fast text-xl"></i>
             </div>
             <div>
@@ -21,21 +21,21 @@
         </div>
     </div>
 
-    <div class="glass-panel p-5 bg-black/20 flex flex-col sm:flex-row items-center justify-between gap-4 border-t-2 border-slate-700">
+    <div class="glass-panel p-4 bg-black/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t-2 border-slate-700">
         <div class="flex items-center gap-3">
             <i class="fa-solid fa-satellite-dish text-slate-500 text-lg"></i>
             <span class="text-[10px] font-black text-white uppercase tracking-widest">Bölgesel Ticaret Filtresi</span>
         </div>
         <div class="w-full sm:w-1/3">
-            <div class="bg-black/60 border border-white/10 rounded-xl px-3 py-1 shadow-inner focus-within:border-cyan-500/50 transition-colors">
+            <div class="bg-black/60 border border-white/10 rounded-xl px-3 py-1 shadow-inner focus-within:border-[color:var(--brand-primary)]/50 transition-colors">
                 {% include 'widgets/countrySelector.html.twig' %}
             </div>
         </div>
     </div>
 
-    <div class="glass-panel p-6 border-t-2 border-cyan-500">
+    <div class="glass-panel p-4 md:p-6 border-t-2 border-[color:var(--brand-primary)]">
         <h2 class="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
-            <i class="fa-solid fa-list-check text-cyan-500"></i> Mevcut Tedarik Teklifleri
+            <i class="fa-solid fa-list-check text-[color:var(--brand-primary)]"></i> Mevcut Tedarik Teklifleri
         </h2>
 
         {% if offers|length > 0 %}

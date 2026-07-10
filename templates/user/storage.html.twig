@@ -21,9 +21,9 @@
 
         #v2-storage-center .holo-panel {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(2, 6, 23, 0.95));
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255,255,255,0.08);
             border-radius: 12px;
             overflow: hidden;
             position: relative;
@@ -35,7 +35,7 @@
             inset: 0;
             pointer-events: none;
             background-image: repeating-linear-gradient(transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
-            opacity: 0.5;
+            opacity: 0.28;
         }
 
         .tech-border-top-cyan {
@@ -48,7 +48,7 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 10px;
             position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
             overflow: hidden;
             z-index: 10;
         }
@@ -68,8 +68,8 @@
 
         .tech-slot:hover {
             border-color: var(--storage-accent-border);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px var(--storage-accent-soft);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.42), 0 0 12px var(--storage-accent-soft);
         }
 
         .tech-slot:hover::before {
@@ -98,7 +98,7 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 2px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
             z-index: 10;
             display: inline-flex;
             align-items: center;
@@ -193,6 +193,23 @@
         .storage-empty-cta:hover {
             background: color-mix(in srgb, var(--storage-accent) 20%, transparent);
         }
+        .storage-action-copy {
+            color: color-mix(in srgb, var(--text-muted, #94a3b8) 84%, #fff);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            line-height: 1.45;
+        }
+        @media (max-width: 768px) {
+            #v2-storage-center { gap: 1rem; }
+            #v2-storage-center .holo-panel { border-radius: 14px; }
+            #v2-storage-center .holo-panel { backdrop-filter: none; }
+            #storage-section { gap: 12px; }
+            .tech-slot { padding: 12px !important; }
+            #sell-item-form { gap: 14px; }
+            .cyber-btn { min-height: 44px; letter-spacing: 1px; }
+        }
     </style>
 
     {% set item_names = {
@@ -209,7 +226,7 @@
     } %}
 
     <div class="holo-panel storage-theme-shell border-l-4 p-5">
-        <div class="flex justify-between items-center relative z-10">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative z-10">
             <div class="flex items-center gap-4">
                 <div class="storage-theme-icon w-12 h-12 rounded-xl border flex items-center justify-center">
                     <i class="fa-solid fa-box-archive text-2xl"></i>
@@ -219,19 +236,20 @@
                     <p class="storage-theme-sub text-[10px] font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
                         <span class="storage-theme-dot w-2 h-2 rounded-full animate-pulse"></span> {{ t('storage.hero.subtitle') }}
                     </p>
+                    <p class="storage-action-copy mt-2">Stoklarini kontrol et, satisa cikaracagin urunu ve fiyatini net sec.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="holo-panel p-6 tech-border-top-cyan relative">
+    <div class="holo-panel p-4 md:p-6 tech-border-top-cyan relative">
         <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4 relative z-10">
             <h2 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
                 <i class="storage-theme-title-icon fa-solid fa-cubes text-lg"></i> {{ t('storage.panel.stock') }}
             </h2>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-5 relative z-10" id="storage-section">
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 relative z-10" id="storage-section">
             {% if items|length > 0 %}
                 {% for item in items %}
                     {% set translatedName = item_names[item.item] | default(t('storage.item.default', {'id': item.item})) %}
@@ -251,7 +269,7 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <div class="storage-empty-shell col-span-full py-16 text-center bg-black/40 rounded-xl border border-dashed relative z-10">
+                <div class="storage-empty-shell col-span-full py-12 text-center bg-black/40 rounded-xl border border-dashed relative z-10">
                     <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-inner">
                         <i class="fa-solid fa-box-open text-2xl text-slate-500"></i>
                     </div>
@@ -265,12 +283,12 @@
     </div>
 
     {% if items|length > 0 %}
-    <div class="holo-panel p-6 tech-border-top-cyan bg-black/40 relative">
+    <div class="holo-panel p-4 md:p-6 tech-border-top-cyan bg-black/40 relative">
         <h2 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2 mb-6 border-b border-white/5 pb-4 relative z-10">
             <i class="storage-theme-title-icon fa-solid fa-file-invoice-dollar text-lg"></i> {{ t('storage.panel.sell') }}
         </h2>
 
-        <form id="sell-item-form" action="{{ path_for('marketSell') }}" method="post" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end relative z-10">
+        <form id="sell-item-form" action="{{ path_for('marketSell') }}" method="post" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end relative z-10">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="space-y-2">
                 <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-crosshairs mr-1"></i> {{ t('storage.form.item') }}</label>
