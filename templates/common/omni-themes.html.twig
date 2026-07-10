@@ -112,6 +112,27 @@
     html[data-theme] .drop-link:hover { border-left-color: var(--brand-primary) !important; color: var(--brand-primary) !important; }
     html[data-theme] .avatar-box { border-color: var(--brand-primary) !important; box-shadow: 0 0 15px var(--brand-glow) !important; }
 
+    :where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--brand-primary) 70%, #ffffff) !important;
+        outline-offset: 3px !important;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 16%, transparent) !important;
+    }
+
+    :where(button, input, select, textarea):disabled {
+        cursor: not-allowed;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html *,
+        html *::before,
+        html *::after {
+            animation-duration: 0.001ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.001ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+
     .tc-red { color: #ef4444; }
     .tc-purple { color: #a855f7; }
     .tc-amber { color: #f59e0b; }

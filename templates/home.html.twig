@@ -126,6 +126,22 @@
         letter-spacing: 0.06em;
         box-shadow: none;
     }
+    .home-theme-surface :where(a, button, input, select, textarea, [role="link"], [role="button"]):focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--brand-primary) 74%, #ffffff);
+        outline-offset: 3px;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 16%, transparent), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    }
+    .home-theme-surface .news-terminal-row:focus-visible,
+    .home-theme-surface .route-card:focus-visible,
+    .home-theme-surface .quick-action-link:focus-visible {
+        outline-offset: 4px;
+    }
+    .home-theme-surface .shout-action:focus-visible,
+    .home-theme-surface .news-share-action:focus-visible,
+    .home-theme-surface .shout-filter-tab:focus-visible {
+        min-width: 34px;
+        min-height: 34px;
+    }
 
     /* Gradient Text Utility */
     .text-gradient-primary {
@@ -358,6 +374,17 @@
     }
     .home-theme-surface .shout-input { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.06); transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease; color: #f8fafc; border-radius: 14px; box-shadow: inset 0 3px 12px rgba(0,0,0,0.48); backdrop-filter: blur(10px); }
     .home-theme-surface .shout-input:focus { background: rgba(0, 0, 0, 0.5); border-color: color-mix(in srgb, var(--brand-primary) 60%, transparent); box-shadow: inset 0 4px 15px rgba(0,0,0,0.6), 0 0 0 4px color-mix(in srgb, var(--brand-primary) 15%, transparent); outline: none; }
+    .home-theme-surface #shout-body {
+        border-color: rgba(255,255,255,0.055);
+        box-shadow: inset 0 2px 9px rgba(0,0,0,0.46);
+    }
+    .home-theme-surface #shout-body:focus {
+        border-color: color-mix(in srgb, var(--brand-primary) 46%, transparent);
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.52);
+    }
+    .home-theme-surface #shout-body:focus-visible {
+        outline: none;
+    }
     
     .home-theme-surface #shout-feed {
         isolation: isolate;
@@ -1397,6 +1424,7 @@
         .home-theme-surface *::after {
             animation-duration: 0.001ms !important;
             animation-iteration-count: 1 !important;
+            transition-duration: 0.001ms !important;
             scroll-behavior: auto !important;
         }
         .home-theme-surface .theme-button:hover,
@@ -1453,15 +1481,15 @@
                         </div>
                         <div class="mt-4 flex items-center justify-between gap-3">
                             <div class="reply-meta-actions">
-                                <button type="button" class="reply-meta-btn like-meta-btn {{ presidentMessage.liked_by_me ? 'is-active' : '' }}" data-action="president-like" data-shout-id="{{ presidentMessage.id }}" title="{{ t('home.shouts.like') }}">
+                                <button type="button" class="reply-meta-btn like-meta-btn {{ presidentMessage.liked_by_me ? 'is-active' : '' }}" data-action="president-like" data-shout-id="{{ presidentMessage.id }}" title="{{ t('home.shouts.like') }}" aria-label="{{ t('home.shouts.like') }}">
                                     <i class="{{ presidentMessage.liked_by_me ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
                                     <span class="count" data-president-like-count>{{ presidentMessage.likes_count|default(0) }}</span>
                                 </button>
-                                <button type="button" class="reply-meta-btn" data-action="president-comments" data-shout-id="{{ presidentMessage.id }}" title="{{ t('home.shouts.replies') }}">
+                                <button type="button" class="reply-meta-btn" data-action="president-comments" data-shout-id="{{ presidentMessage.id }}" title="{{ t('home.shouts.replies') }}" aria-label="{{ t('home.shouts.replies') }}">
                                     <i class="fa-regular fa-comment"></i>
                                     <span class="count" data-president-reply-count>{{ presidentMessage.reply_count|default(0) }}</span>
                                 </button>
-                                <button type="button" class="reply-meta-btn" data-action="president-reply" data-shout-id="{{ presidentMessage.id }}" title="{{ t('home.shouts.reply') }}">
+                                <button type="button" class="reply-meta-btn" data-action="president-reply" data-shout-id="{{ presidentMessage.id }}" title="{{ t('home.shouts.reply') }}" aria-label="{{ t('home.shouts.reply') }}">
                                     <i class="fa-solid fa-reply"></i>
                                 </button>
                             </div>
@@ -1484,7 +1512,6 @@
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)]"></span>
                                 </span>
                             </div>
-                            <div class="mt-1 text-[11px] font-medium text-slate-400">{{ t('home.news.live') }}</div>
                         </div>
                         <div class="news-header-actions flex flex-wrap items-center gap-2">
                             <a href="{{ path_for('newspaperList') }}" class="theme-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white">
@@ -1612,6 +1639,7 @@
                             rows="2"
                             class="shout-input w-full px-4 py-3 text-[13px] font-medium leading-relaxed placeholder:text-slate-500"
                             placeholder="{{ t('home.shouts.placeholder') }}"
+                            aria-label="{{ t('home.shouts.placeholder') }}"
                             {% if shoutRestriction.is_muted %}disabled{% endif %}
                         ></textarea>
 
@@ -1636,7 +1664,7 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <div id="shout-counter" class="shout-counter text-[10px] font-black text-slate-500 bg-black/40 px-3 py-2 rounded-lg border border-white/5 shadow-inner">0 / 240</div>
-                                <button type="button" id="shout-cancel-edit" class="hidden theme-button inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+                                <button type="button" id="shout-cancel-edit" class="hidden theme-button inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.1em] text-white" aria-label="{{ t('home.shouts.cancel') }}">
                                     <span class="label">{{ t('home.shouts.cancel') }}</span>
                                 </button>
                                 <button type="submit" id="shout-submit" class="shout-submit inline-flex h-11 min-w-[52px] items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-[12px] shadow-[0_8px_24px_color-mix(in_srgb,var(--brand-primary)_18%,transparent)]" title="{{ t('home.shouts.send') }}" aria-label="{{ t('home.shouts.send') }}" {% if shoutRestriction.is_muted %}disabled{% endif %}>
@@ -1688,12 +1716,12 @@
                                         <div class="mt-1 text-[10px] font-bold text-slate-500">{{ t('home.shouts.report_hint') }}</div>
                                     </div>
                                 </div>
-                                <button type="button" id="shout-report-close" class="shout-report-close-btn h-9 w-9 shrink-0 rounded-xl">
+                                <button type="button" id="shout-report-close" class="shout-report-close-btn h-9 w-9 shrink-0 rounded-xl" aria-label="{{ t('home.shouts.cancel') }}">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
                             <div class="mt-4">
-                                <textarea id="shout-report-reason" maxlength="240" class="shout-input shout-report-textarea min-h-[118px] w-full resize-y rounded-xl px-4 py-3 text-[13px] font-medium shadow-inner" placeholder="{{ t('home.shouts.report_placeholder') }}"></textarea>
+                                <textarea id="shout-report-reason" maxlength="240" class="shout-input shout-report-textarea min-h-[118px] w-full resize-y rounded-xl px-4 py-3 text-[13px] font-medium shadow-inner" placeholder="{{ t('home.shouts.report_placeholder') }}" aria-label="{{ t('home.shouts.report_reason') }}"></textarea>
                                 <div id="shout-report-feedback" class="mt-2 min-h-[18px] text-[11px] font-bold text-slate-500"></div>
                             </div>
                             <div class="mt-5 flex items-center justify-end gap-2.5">
@@ -1932,6 +1960,12 @@ document.addEventListener('DOMContentLoaded', function () {
         shoutFeedLoadError: '{{ t('home.shouts.feed_load_error')|e('js') }}',
         shoutEmpty: '{{ t('home.shouts.empty')|e('js') }}',
         shoutLike: '{{ t('home.shouts.like')|e('js') }}',
+        shoutEdit: '{{ t('home.shouts.edit')|e('js') }}',
+        shoutDelete: '{{ t('home.shouts.delete')|e('js') }}',
+        shoutTip1: '{{ t('home.shouts.tip_1')|e('js') }}',
+        shoutTip5: '{{ t('home.shouts.tip_5')|e('js') }}',
+        shoutPrevPage: '{{ t('home.shouts.prev_page')|e('js') }}',
+        shoutNextPage: '{{ t('home.shouts.next_page')|e('js') }}',
         shoutRead: '{{ t('home.shouts.read')|e('js') }}',
         shoutEdited: '{{ t('home.shouts.edited')|e('js') }}',
         shoutSendError: '{{ t('home.shouts.send_error')|e('js') }}',
@@ -2201,7 +2235,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var nextDisabled = shoutCurrentPage >= shoutTotalPages ? ' disabled' : '';
         var html = '' +
             '<div class="shout-pagination-shell">' +
-                '<button type="button" class="shout-page-btn inline-flex items-center justify-center text-[11px] font-black" data-page="' + Math.max(1, shoutCurrentPage - 1) + '" aria-label="Previous page" title="Previous page"' + prevDisabled + '><i class="fa-solid fa-chevron-left"></i></button>';
+                '<button type="button" class="shout-page-btn inline-flex items-center justify-center text-[11px] font-black" data-page="' + Math.max(1, shoutCurrentPage - 1) + '" aria-label="' + homeI18n.shoutPrevPage + '" title="' + homeI18n.shoutPrevPage + '"' + prevDisabled + '><i class="fa-solid fa-chevron-left"></i></button>';
 
         pages.forEach(function (page, index) {
             var prevPage = index > 0 ? pages[index - 1] : 0;
@@ -2217,7 +2251,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         html += '' +
                 '<div class="shout-page-status">' + shoutCurrentPage + ' / ' + shoutTotalPages + '</div>' +
-                '<button type="button" class="shout-page-btn inline-flex items-center justify-center text-[11px] font-black" data-page="' + Math.min(shoutTotalPages, shoutCurrentPage + 1) + '" aria-label="Next page" title="Next page"' + nextDisabled + '><i class="fa-solid fa-chevron-right"></i></button>' +
+                '<button type="button" class="shout-page-btn inline-flex items-center justify-center text-[11px] font-black" data-page="' + Math.min(shoutTotalPages, shoutCurrentPage + 1) + '" aria-label="' + homeI18n.shoutNextPage + '" title="' + homeI18n.shoutNextPage + '"' + nextDisabled + '><i class="fa-solid fa-chevron-right"></i></button>' +
             '</div>';
 
         shoutPaginationRoot.innerHTML = html;
@@ -2818,8 +2852,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderTipHtml(shout) {
         if (!shout.can_tip) return '';
         return '' +
-            '<button type="button" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em]" data-action="tip-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '" data-gold-amount="1"><span class="label text-yellow-500 drop-shadow-[0_0_3px_rgba(234,179,8,0.5)]">+1G</span></button>' +
-            '<button type="button" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em]" data-action="tip-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '" data-gold-amount="5"><span class="label text-yellow-500 drop-shadow-[0_0_3px_rgba(234,179,8,0.5)]">+5G</span></button>';
+            '<button type="button" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em]" data-action="tip-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '" data-gold-amount="1" title="' + homeI18n.shoutTip1 + '" aria-label="' + homeI18n.shoutTip1 + '"><span class="label text-yellow-500 drop-shadow-[0_0_3px_rgba(234,179,8,0.5)]">+1G</span></button>' +
+            '<button type="button" class="shout-action px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em]" data-action="tip-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '" data-gold-amount="5" title="' + homeI18n.shoutTip5 + '" aria-label="' + homeI18n.shoutTip5 + '"><span class="label text-yellow-500 drop-shadow-[0_0_3px_rgba(234,179,8,0.5)]">+5G</span></button>';
     }
 
     function renderTipFooterHtml(shout) {
@@ -2920,10 +2954,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 '<div class="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-500">' + formatShoutDate(reply) + '</div>' +
                             '</div>' +
                             '<div class="flex flex-wrap items-center gap-1.5">' +
-                                '<button type="button" class="shout-action px-2 py-1 text-[9px]' + likedClass + '" data-action="like-shout" data-shout-id="' + parseInt(reply.id || 0, 10) + '"><i class="fa-solid fa-heart mr-1"></i><span class="font-black">' + parseInt(reply.likes_count || 0, 10) + '</span></button>' +
+                                '<button type="button" class="shout-action px-2 py-1 text-[9px]' + likedClass + '" data-action="like-shout" data-shout-id="' + parseInt(reply.id || 0, 10) + '" title="' + homeI18n.shoutLike + '" aria-label="' + homeI18n.shoutLike + '"><i class="fa-solid fa-heart mr-1"></i><span class="font-black">' + parseInt(reply.likes_count || 0, 10) + '</span></button>' +
                                 '<button type="button" class="shout-action report-action px-2 py-1 text-[9px]' + reportedClass + '" data-action="report-shout" data-shout-id="' + parseInt(reply.id || 0, 10) + '"' + reportedDisabled + ' title="' + homeI18n.shoutReportSubmit + '" aria-label="' + homeI18n.shoutReportSubmit + '"><i class="fa-solid fa-flag"></i></button>' +
-                                (canEdit ? '<button type="button" class="shout-action px-2 py-1 text-[9px]" data-action="edit-shout" data-shout-id="' + parseInt(reply.id || 0, 10) + '"><i class="fa-solid fa-pen"></i></button>' : '') +
-                                (canDelete ? '<button type="button" class="shout-action px-2 py-1 text-[9px] hover:text-red-400 hover:border-red-500/50" data-action="delete-shout" data-shout-id="' + parseInt(reply.id || 0, 10) + '"><i class="fa-solid fa-trash-can"></i></button>' : '') +
+                                (canEdit ? '<button type="button" class="shout-action px-2 py-1 text-[9px]" data-action="edit-shout" data-shout-id="' + parseInt(reply.id || 0, 10) + '" title="' + homeI18n.shoutEdit + '" aria-label="' + homeI18n.shoutEdit + '"><i class="fa-solid fa-pen"></i></button>' : '') +
+                                (canDelete ? '<button type="button" class="shout-action px-2 py-1 text-[9px] hover:text-red-400 hover:border-red-500/50" data-action="delete-shout" data-shout-id="' + parseInt(reply.id || 0, 10) + '" title="' + homeI18n.shoutDelete + '" aria-label="' + homeI18n.shoutDelete + '"><i class="fa-solid fa-trash-can"></i></button>' : '') +
                             '</div>' +
                         '</div>' +
                         '<div class="mt-2 text-[12px] font-medium leading-relaxed text-slate-200 break-words">' + replyBody + '</div>' +
@@ -2946,16 +2980,16 @@ document.addEventListener('DOMContentLoaded', function () {
         var likeIconClass = shout.liked_by_me ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
         var actions = '' +
             '<div class="reply-meta-actions">' +
-                '<button type="button" class="reply-meta-btn like-meta-btn' + likedClass + '" data-action="like-shout" data-shout-id="' + parentId + '" title="' + homeI18n.shoutLike + '">' +
+                '<button type="button" class="reply-meta-btn like-meta-btn' + likedClass + '" data-action="like-shout" data-shout-id="' + parentId + '" title="' + homeI18n.shoutLike + '" aria-label="' + homeI18n.shoutLike + '">' +
                     '<i class="' + likeIconClass + '"></i><span class="count">' + parseInt(shout.likes_count || 0, 10) + '</span>' +
                 '</button>' +
-                '<button type="button" class="reply-meta-btn' + (isVisible ? ' is-active' : '') + '" data-action="toggle-replies" data-shout-id="' + parentId + '" title="' + replyToggleLabel(shout) + '">' +
+                '<button type="button" class="reply-meta-btn' + (isVisible ? ' is-active' : '') + '" data-action="toggle-replies" data-shout-id="' + parentId + '" title="' + replyToggleLabel(shout) + '" aria-label="' + replyToggleLabel(shout) + '">' +
                     '<i class="fa-regular fa-comment"></i><span class="count">' + count + '</span>' +
                 '</button>' +
-                '<button type="button" class="reply-meta-btn' + (replyComposerParentId === parentId ? ' is-active' : '') + '" data-action="reply-shout" data-shout-id="' + parentId + '" title="' + homeI18n.shoutReply + '">' +
+                '<button type="button" class="reply-meta-btn' + (replyComposerParentId === parentId ? ' is-active' : '') + '" data-action="reply-shout" data-shout-id="' + parentId + '" title="' + homeI18n.shoutReply + '" aria-label="' + homeI18n.shoutReply + '">' +
                     '<i class="fa-solid fa-reply"></i>' +
                 '</button>' +
-                (isVisible ? '<button type="button" class="reply-meta-btn" data-action="toggle-replies" data-shout-id="' + parentId + '" title="' + homeI18n.shoutReplyToggleClose + '"><i class="fa-solid fa-chevron-up"></i></button>' : '') +
+                (isVisible ? '<button type="button" class="reply-meta-btn" data-action="toggle-replies" data-shout-id="' + parentId + '" title="' + homeI18n.shoutReplyToggleClose + '" aria-label="' + homeI18n.shoutReplyToggleClose + '"><i class="fa-solid fa-chevron-up"></i></button>' : '') +
             '</div>';
 
         if (!isVisible && replyComposerParentId !== parentId) {
@@ -3094,8 +3128,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 '<div class="shout-card-actions flex flex-wrap items-center justify-end gap-1">' +
                                     renderTipHtml(shout) +
                                     '<button type="button" class="shout-action report-action px-2 py-1 text-[10px]' + reportedClass + '" data-action="report-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '"' + reportedDisabled + ' title="' + homeI18n.shoutReportSubmit + '" aria-label="' + homeI18n.shoutReportSubmit + '"><i class="fa-solid fa-flag"></i></button>' +
-                                    (canEdit ? '<button type="button" class="shout-action px-2 py-1 text-[10px]" data-action="edit-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '"><i class="fa-solid fa-pen"></i></button>' : '') +
-                                    (canDelete ? '<button type="button" class="shout-action px-2 py-1 text-[10px] hover:text-red-400 hover:border-red-500/50" data-action="delete-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '"><i class="fa-solid fa-trash-can"></i></button>' : '') +
+                                    (canEdit ? '<button type="button" class="shout-action px-2 py-1 text-[10px]" data-action="edit-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '" title="' + homeI18n.shoutEdit + '" aria-label="' + homeI18n.shoutEdit + '"><i class="fa-solid fa-pen"></i></button>' : '') +
+                                    (canDelete ? '<button type="button" class="shout-action px-2 py-1 text-[10px] hover:text-red-400 hover:border-red-500/50" data-action="delete-shout" data-shout-id="' + parseInt(shout.id || 0, 10) + '" title="' + homeI18n.shoutDelete + '" aria-label="' + homeI18n.shoutDelete + '"><i class="fa-solid fa-trash-can"></i></button>' : '') +
                                 '</div>' +
                             '</div>' +
                             '<div class="shout-body-text text-[13px] font-medium text-slate-200 break-words drop-shadow-sm">' + displayBody + '</div>' +
