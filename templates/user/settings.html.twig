@@ -98,6 +98,15 @@
         .settings-system-control-title { display: flex; align-items: center; gap: 7px; color: #e2e8f0; font-size: 9px; font-weight: 950; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.25; }
         .settings-system-control .settings-primary-action { width: 100%; min-height: 42px; justify-content: center; }
         .settings-system-control .settings-action-hint { margin-top: 8px; text-align: center; line-height: 1.35; }
+        .settings-system-control .select-wrapper { margin-bottom: 10px; }
+        .settings-system-control .settings-helper,
+        .settings-system-control .settings-action-hint { text-transform: none; letter-spacing: 0.02em; font-size: 10px; font-weight: 750; }
+        .settings-system-control .cyber-btn:disabled {
+            opacity: 0.72;
+            color: #cbd5e1;
+            background: color-mix(in srgb, var(--settings-accent) 8%, rgba(15,23,42,0.58)) !important;
+            border: 1px solid color-mix(in srgb, var(--settings-accent) 16%, rgba(255,255,255,0.08)) !important;
+        }
         .settings-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .settings-field { min-width: 0; }
         .settings-field.is-wide { grid-column: 1 / -1; }
@@ -256,9 +265,22 @@
             .game-settings-head { flex-direction: column; }
             .settings-card { padding: 16px; }
             .settings-hero { padding: 12px; }
-            .settings-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+            .settings-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-snap-type: x proximity; overscroll-behavior-x: contain; padding-bottom: 8px; }
             .settings-tabs::-webkit-scrollbar { display: none; }
-            .settings-tabs .tab-btn { flex: 0 0 auto; min-width: 148px; min-height: 44px; white-space: nowrap; }
+            .settings-tabs .tab-btn { flex: 0 0 auto; min-width: 148px; min-height: 44px; white-space: nowrap; scroll-snap-align: start; }
+            .settings-tabs .tab-btn.active { box-shadow: inset 0 0 14px color-mix(in srgb, var(--brand-primary) 12%, transparent), 0 0 0 1px color-mix(in srgb, var(--brand-primary) 26%, transparent); }
+            .settings-system-panel { order: 2; }
+            .settings-system-layout > .holo-panel:not(.settings-system-panel) { order: 1; }
+            .settings-system-stack { gap: 10px; }
+            .settings-system-control { padding: 11px; border-radius: 12px; }
+            .settings-system-control-head { margin-bottom: 8px; }
+            .settings-system-control .settings-primary-action { min-height: 44px; }
+            .settings-system-control .settings-action-hint { margin-top: 7px; }
+            .mode-grid, .theme-grid, .eye-comfort-level-grid { gap: 8px; }
+            .mode-card { min-height: 54px; padding: 9px 10px; }
+            .theme-card { min-height: 44px; padding: 8px 9px; }
+            .eye-comfort-card { min-height: 54px; padding: 9px; }
+            .eye-comfort-locked-palette { align-items: flex-start; min-height: 0; padding: 10px; }
         }
 
         .perf-mode-radio:checked + .perf-mode-card {
@@ -437,7 +459,7 @@
                         <button type="button" id="language-save-btn" onclick="window.updateLanguage()" class="cyber-btn btn-cyan settings-primary-action" disabled>
                             <i class="fa-solid fa-language"></i> {{ t('settings.localization.apply_language') }}
                         </button>
-                        <div id="language-save-hint" class="settings-action-hint">Degisiklik yok; dil secimini degistirince aktif olur.</div>
+                        <div id="language-save-hint" class="settings-action-hint">Dil degisince kaydetme aktif olur.</div>
                     </div>
 
                     <div class="settings-system-control">
@@ -450,7 +472,7 @@
                         <button type="button" id="theme-save-btn" onclick="window.applyTheme()" class="cyber-btn btn-cyan settings-primary-action" style="background:var(--brand-primary); border-color:var(--brand-primary);" disabled>
                             <i class="fa-solid fa-floppy-disk"></i> Tema Kaydet
                         </button>
-                        <div id="theme-save-hint" class="settings-action-hint">Degisiklik yok.</div>
+                        <div id="theme-save-hint" class="settings-action-hint">Arayuz veya renk secimi degisince aktif olur.</div>
                     </div>
 
                 </div>
@@ -1313,7 +1335,7 @@
             if (languageButton && languageSelect) {
                 const isReady = languageSelect.value !== initialLanguage;
                 languageButton.disabled = !isReady;
-                setHint(languageHint, 'Dil kaydedilince sayfa yenilenir.', 'Degisiklik yok; dil secimini degistirince aktif olur.', isReady);
+                setHint(languageHint, 'Dil kaydedilince sayfa yenilenir.', 'Dil degisince kaydetme aktif olur.', isReady);
             }
         };
 
@@ -1335,7 +1357,7 @@
                 });
                 const isReady = selectedModeEl.value !== initialTheme.mode || selectedColor !== initialTheme.color || selectedEyeComfortLevel !== initialTheme.eyeComfortLevel;
                 themeButton.disabled = !isReady;
-                setHint(themeHint, 'Kaydet ve yenile.', 'Degisiklik yok.', isReady);
+                setHint(themeHint, 'Kaydet ve yenile.', 'Arayuz veya renk secimi degisince aktif olur.', isReady);
             }
         };
 

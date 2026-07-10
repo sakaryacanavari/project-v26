@@ -107,6 +107,26 @@
     .home-theme-surface .quick-action-link.is-favorite { border-color: color-mix(in srgb, var(--brand-primary) 38%, transparent) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 14px 28px -22px color-mix(in srgb, var(--brand-primary) 65%, transparent); }
     .home-theme-surface .quick-action-link.is-favorite::after { content: "FAVORI"; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border-radius: 999px; background: var(--brand-primary); color: #fff; padding: 2px 6px; font-size: 7px; font-weight: 950; letter-spacing: 0.1em; box-shadow: 0 0 12px var(--brand-glow); }
 
+    .home-theme-surface .home-main-stack > :not([hidden]) ~ :not([hidden]) { margin-top: 14px !important; }
+    .home-theme-surface .home-hero { padding: 12px !important; }
+    .home-theme-surface .quick-action-link {
+        min-height: 40px;
+        padding: 9px 42px 9px 13px !important;
+        border-radius: 12px !important;
+        letter-spacing: 0.08em !important;
+    }
+    .home-theme-surface .quick-action-link:not(.is-favorite) { opacity: .84; }
+    .home-theme-surface .quick-action-link.is-favorite {
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 22px -20px color-mix(in srgb, var(--brand-primary) 62%, transparent);
+    }
+    .home-theme-surface .quick-action-link.is-favorite::after {
+        right: 9px;
+        padding: 2px 5px;
+        font-size: 6px;
+        letter-spacing: 0.06em;
+        box-shadow: none;
+    }
+
     /* Gradient Text Utility */
     .text-gradient-primary {
         background: linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--brand-primary) 80%, white) 50%, var(--brand-primary) 100%);
@@ -655,6 +675,21 @@
     .home-theme-surface .route-head-copy {
         max-width: 26rem;
     }
+    .home-theme-surface .route-guide-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 10px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 20%, rgba(255,255,255,0.08));
+        background: color-mix(in srgb, var(--brand-primary) 7%, rgba(2,6,23,0.46));
+        color: color-mix(in srgb, var(--brand-primary) 72%, #e2e8f0);
+        padding: 6px 9px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
     .home-theme-surface .onboarding-summary {
         background:
             linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(2, 6, 23, 0.72) 100%),
@@ -689,6 +724,7 @@
     .home-theme-surface .route-card.is-done .route-icon { background: rgba(16,185,129,.12); color: #86efac; border-color: rgba(16,185,129,.28); }
     .home-theme-surface .route-card.is-next-route .route-icon { background: var(--brand-primary); color: #020617; box-shadow: 0 0 14px color-mix(in srgb, var(--brand-primary) 35%, transparent), inset 0 -1px 3px rgba(0,0,0,0.35); border: none; }
     .home-theme-surface .route-card.is-locked .route-icon { background: rgba(15,23,42,.44); color: #64748b; border-color: rgba(148,163,184,.10); }
+    .home-theme-surface .route-step-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
     .home-theme-surface .route-status-pill { white-space: nowrap; border-radius: 999px; padding: 3px 8px; border: 1px solid transparent; background: transparent; color: #94a3b8; }
     .home-theme-surface .route-card.is-done .route-status-pill { color: #86efac; }
     .home-theme-surface .route-card.is-next-route .route-status-pill { color: #022c22; border-color: color-mix(in srgb, var(--brand-primary) 34%, transparent); background: var(--brand-primary); box-shadow: 0 6px 14px color-mix(in srgb, var(--brand-primary) 16%, transparent); }
@@ -700,6 +736,7 @@
         .home-theme-surface .onboarding-summary { padding: 12px; }
         .home-theme-surface .route-status-pill { order: 3; width: fit-content; margin-top: 2px; }
         .home-theme-surface .route-card { min-height: 72px; }
+        .home-theme-surface .route-guide-note { width: 100%; justify-content: center; }
     }
     .home-theme-surface .admin-ops-shell { background: linear-gradient(180deg, rgba(127, 29, 29, 0.15) 0%, rgba(0,0,0,0.2) 100%) !important; border-radius: 20px !important; border: 1px solid rgba(127, 29, 29, 0.3) !important; }
     .home-theme-surface .admin-ops-item { border-radius: 14px; }
@@ -1097,6 +1134,184 @@
         }
     }
 
+    .home-theme-surface .news-v10-shell,
+    .home-theme-surface .shout-v10-shell,
+    .home-theme-surface .route-v2-shell {
+        border-radius: 18px !important;
+    }
+    .home-theme-surface .news-v10-shell,
+    .home-theme-surface .shout-v10-shell {
+        padding: 13px !important;
+    }
+    .home-theme-surface .news-v10-shell .panel-head-v10,
+    .home-theme-surface .shout-v10-shell .panel-head-v10 {
+        margin-bottom: 7px;
+    }
+    .home-theme-surface .panel-title-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand-primary);
+        background: color-mix(in srgb, var(--brand-primary) 10%, rgba(2,6,23,0.58));
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, rgba(255,255,255,0.06));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.045);
+    }
+    .home-theme-surface .news-terminal-shell {
+        border-radius: 13px;
+        border-color: rgba(255,255,255,0.055);
+        box-shadow: inset 0 3px 12px rgba(0,0,0,0.48), 0 8px 20px -18px rgba(0,0,0,0.72);
+    }
+    .home-theme-surface .news-terminal-row {
+        min-height: 54px;
+        margin: 2px 5px;
+        padding: 8px 10px;
+    }
+    .home-theme-surface .news-terminal-row:first-child {
+        padding: 9px 10px;
+        box-shadow: inset 2px 0 0 color-mix(in srgb, var(--brand-primary) 38%, transparent), inset 0 1px 0 rgba(255,255,255,0.045);
+    }
+    .home-theme-surface .news-terminal-row:hover,
+    .home-theme-surface .news-terminal-row:focus-visible {
+        border-left-width: 2px;
+        box-shadow: 0 8px 20px -14px rgba(0,0,0,0.68), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .home-theme-surface .news-share-action {
+        width: 27px;
+        height: 27px;
+        border-radius: 9px;
+    }
+    .home-theme-surface #shout-body {
+        min-height: 44px;
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.42);
+    }
+    .home-theme-surface #shout-form > .shout-control-row {
+        background: rgba(2,6,23,0.18);
+        border-color: rgba(255,255,255,0.035);
+    }
+    .home-theme-surface #shout-counter {
+        min-width: 70px;
+        text-align: center;
+    }
+    .home-theme-surface .shout-submit {
+        min-width: 40px !important;
+        height: 38px !important;
+        box-shadow: 0 8px 18px -15px color-mix(in srgb, var(--brand-primary) 62%, transparent) !important;
+    }
+    .home-theme-surface .shout-filter-tab {
+        min-width: 34px;
+        min-height: 30px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    }
+    .home-theme-surface .shout-card {
+        padding: 12px !important;
+        border-radius: 14px;
+    }
+    .home-theme-surface .shout-card .relative.flex.items-start {
+        gap: 10px;
+    }
+    .home-theme-surface .shout-avatar {
+        width: 38px !important;
+        height: 38px !important;
+        border-radius: 12px;
+        box-shadow: 0 0 0 2px rgba(255,255,255,0.02), 0 0 10px color-mix(in srgb, var(--brand-primary) 14%, transparent);
+    }
+    .home-theme-surface .shout-author-name {
+        font-size: 13px !important;
+        line-height: 1.15;
+    }
+    .home-theme-surface .shout-badges {
+        margin-top: 3px !important;
+        gap: 3px !important;
+    }
+    .home-theme-surface .shout-badge {
+        padding: 3px 7px !important;
+        font-size: 8px !important;
+        box-shadow: none !important;
+    }
+    .home-theme-surface .shout-body-text {
+        margin-top: 6px !important;
+        line-height: 1.44;
+    }
+    .home-theme-surface .reply-meta-actions {
+        margin-top: 7px;
+    }
+    .home-theme-surface .shout-card-actions {
+        gap: 4px !important;
+    }
+    .home-theme-surface .route-v2-shell {
+        padding: 13px !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.055), 0 12px 28px -24px rgba(0,0,0,0.82);
+    }
+    .home-theme-surface .route-v2-shell::after {
+        opacity: 0.18;
+    }
+    .home-theme-surface .route-orb {
+        opacity: 0.12;
+        filter: blur(42px);
+    }
+    .home-theme-surface .route-head-v2 {
+        padding-bottom: 11px !important;
+    }
+    .home-theme-surface .route-list {
+        margin-top: 11px !important;
+    }
+    .home-theme-surface .route-list > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 8px !important;
+    }
+    .home-theme-surface .route-card {
+        min-height: 60px;
+        border-radius: 14px;
+    }
+    .home-theme-surface .route-card.block {
+        padding: 10px 12px !important;
+    }
+    .home-theme-surface .route-card.is-next-route {
+        border-color: color-mix(in srgb, var(--brand-primary) 48%, transparent);
+        box-shadow: inset 3px 0 0 var(--brand-primary), inset 0 1px 0 rgba(255,255,255,0.065), 0 10px 22px -17px color-mix(in srgb, var(--brand-primary) 46%, transparent);
+    }
+    .home-theme-surface .route-card.is-next-route .route-icon {
+        box-shadow: 0 0 12px color-mix(in srgb, var(--brand-primary) 30%, transparent), inset 0 -1px 3px rgba(0,0,0,0.32);
+    }
+    .home-theme-surface .onboarding-summary {
+        border-radius: 14px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 18px -14px rgba(0,0,0,0.62);
+    }
+    .main-container:has(.home-theme-surface) .hud-stack {
+        gap: 12px;
+    }
+    .main-container:has(.home-theme-surface) .hud-panel {
+        border-radius: 16px !important;
+        border-color: color-mix(in srgb, var(--brand-primary) 10%, rgba(255,255,255,0.07)) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.055), 0 12px 26px -24px rgba(0,0,0,0.84) !important;
+    }
+    .main-container:has(.home-theme-surface) .hud-kicker {
+        color: #94a3b8;
+        letter-spacing: 0.12em;
+    }
+    .main-container:has(.home-theme-surface) .hud-chip {
+        border-color: rgba(255,255,255,0.07);
+        background: rgba(2,6,23,0.34);
+    }
+    .main-container:has(.home-theme-surface) .hud-stat-card {
+        border-color: rgba(255,255,255,0.055);
+        background: linear-gradient(180deg, rgba(255,255,255,0.032), rgba(2,6,23,0.24));
+    }
+    .main-container:has(.home-theme-surface) .hud-avatar {
+        box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 28%, transparent) !important;
+    }
+    .main-container:has(.home-theme-surface) .hud-progress > span {
+        box-shadow: 0 0 8px color-mix(in srgb, var(--brand-primary) 28%, transparent);
+    }
+    .main-container:has(.home-theme-surface) .hud-progress.energy > span {
+        box-shadow: 0 0 7px rgba(245,158,11,.28);
+    }
+    .main-container:has(.home-theme-surface) .hud-progress.daily > span {
+        box-shadow: 0 0 7px rgba(34,197,94,.22);
+    }
+
     @media (max-width: 768px) {
         .home-theme-surface .president-message-main {
             flex-direction: column;
@@ -1107,12 +1322,72 @@
         }
 
         .home-theme-surface .home-hero .grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            display: flex;
+            grid-template-columns: none;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scroll-snap-type: x proximity;
+            scrollbar-width: thin;
+        }
+
+        .home-theme-surface {
+            gap: 14px;
+        }
+
+        .home-theme-surface .home-dashboard-grid {
+            row-gap: 14px;
+        }
+
+        .home-theme-surface .home-main-stack > :not([hidden]) ~ :not([hidden]) {
+            margin-top: 12px !important;
         }
 
         .home-theme-surface .theme-button,
         .home-theme-surface .shout-filter-tab {
             min-height: 42px;
+        }
+
+        .home-theme-surface .quick-action-link {
+            flex: 0 0 154px;
+            justify-content: flex-start;
+            min-height: 40px;
+            padding-right: 40px !important;
+            font-size: 9px !important;
+            scroll-snap-align: start;
+        }
+
+        .home-theme-surface .news-v10-shell,
+        .home-theme-surface .shout-v10-shell,
+        .home-theme-surface .route-v2-shell {
+            padding: 12px !important;
+        }
+
+        .home-theme-surface [data-news-tabs] {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .home-theme-surface .news-terminal-tab {
+            flex: 0 0 auto;
+        }
+
+        .home-theme-surface #shout-form > .shout-control-row {
+            align-items: stretch;
+        }
+
+        .home-theme-surface #shout-form > .shout-control-row > div {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .home-theme-surface #shout-counter {
+            flex: 1 1 auto;
+        }
+
+        .home-theme-surface .shout-submit {
+            flex: 0 0 42px;
         }
     }
 
@@ -1200,6 +1475,9 @@
                     <div class="panel-head-v10 flex flex-col gap-3 pb-2 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <div class="flex items-center gap-2.5">
+                                <div class="panel-title-icon">
+                                    <i class="fa-solid fa-newspaper text-[13px]"></i>
+                                </div>
                                 <h2 class="text-[18px] font-black uppercase tracking-[0.15em] text-gradient-primary">{{ t('home.news.title') }}</h2>
                                 <span class="relative flex h-2 w-2 ml-1">
                                     <span class="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -1296,7 +1574,7 @@
                     <div class="panel-head-v10 flex flex-col gap-3 pb-2 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <div class="flex items-center gap-3">
-                                <div class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[color:var(--brand-primary)]/12 text-[color:var(--brand-primary)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--brand-primary)_18%,transparent),0_0_14px_color-mix(in_srgb,var(--brand-primary)_16%,transparent)]">
+                                <div class="panel-title-icon">
                                     <i class="fa-solid fa-comments text-[14px]"></i>
                                 </div>
                                 <div>
@@ -1473,6 +1751,7 @@
                     <div class="route-head-copy">
                         <div class="text-[12px] font-black uppercase tracking-[0.18em] text-gradient-primary drop-shadow">{{ t('home.route.title') }}</div>
                         <p class="mt-1.5 text-[10px] font-medium leading-relaxed text-slate-400">{{ t('home.route.subtitle') }}</p>
+                        <div class="route-guide-note"><i class="fa-solid fa-route"></i>{{ completedOnboarding }}/{{ onboardingTotal }} {{ t('home.route.status_done') }}</div>
                     </div>
                     <div class="onboarding-summary w-full rounded-2xl p-3 lg:max-w-[214px] border border-white/5">
                         <div class="flex items-start justify-between gap-2">
@@ -1510,7 +1789,9 @@
                                 </div>
                                 <div class="min-w-0 flex-1 pt-0.5">
                                     <div class="flex items-center justify-between gap-2 flex-wrap">
-                                        <span class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">{{ t('home.route.step') }} {{ loop.index }}</span>
+                                        <span class="route-step-meta">
+                                            <span class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">{{ t('home.route.step') }} {{ loop.index }}</span>
+                                        </span>
                                         <span class="route-status-pill text-[8px] font-black uppercase tracking-[0.1em]">
                                             {{ routeStatusLabel }}
                                         </span>
