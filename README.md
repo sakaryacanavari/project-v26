@@ -83,11 +83,13 @@ Requirements:
 - Git
 - Composer, only if you install dependencies outside Docker
 
-Build and run a local container from the project directory:
+Quick local setup:
 
 ```bash
-docker build -t project-v26 .
-docker run --rm -p 8080:80 --env-file .env project-v26
+git clone <repository-url>
+cd project-v26
+cp .env.example .env
+docker compose up -d --build
 ```
 
 Then open:
@@ -96,14 +98,31 @@ Then open:
 http://localhost:8080
 ```
 
-If your local environment uses a separate Docker Compose file, keep it outside committed secrets and document local-only overrides separately.
+The included Compose setup starts:
+
+- `app` on `http://localhost:8080`
+- `mysql` exposed locally on port `3307`
+
+Useful development commands:
+
+```bash
+docker compose ps
+docker compose logs -f app
+docker compose logs -f mysql
+docker compose exec app composer install
+docker compose down
+```
+
+If you use local-only Docker overrides, keep secrets and machine-specific settings out of commits.
 
 ## Local Setup
 
-1. Clone the repository.
+Use this path when you are not relying on the provided Compose workflow.
+
+1. Clone the repository and enter the project directory.
 2. Copy `.env.example` to `.env`.
 3. Fill in local database values.
-4. Install PHP dependencies if your environment does not mount an existing `vendor` directory:
+4. Install PHP dependencies:
 
 ```bash
 composer install
@@ -111,6 +130,58 @@ composer install
 
 5. Start the app with Docker or your local Apache/PHP setup.
 6. Import a development database only from a safe local dump. Do not commit dumps such as `db.sql`.
+
+## Development Status
+
+Project V26 is in active early development. The public repository is prepared for review and contribution, but some systems are still being stabilized or planned.
+
+Before contributing:
+
+- Check [ROADMAP.md](ROADMAP.md) and existing issues first.
+- Keep planned features separate from backend-supported features.
+- Do not commit fake secrets, local database dumps, runtime files or generated dependencies.
+- Prefer small changes that are easy to review.
+
+## Troubleshooting
+
+### Docker does not start
+
+Make sure Docker Desktop is running, then check service status:
+
+```bash
+docker compose ps
+docker compose logs -f app
+```
+
+### Port 8080 is already in use
+
+Change the `app` port mapping in your local Compose override or stop the process using port `8080`. Do not commit machine-specific port changes unless the default changes for everyone.
+
+### Database connection fails
+
+The Compose app container connects to MySQL with `DB_HOST=mysql`, `DB_DATABASE=proje`, `DB_USERNAME=proje` and `DB_PASSWORD=proje`. If you run PHP outside Docker, use your local database host and port instead.
+
+### `.env` is missing
+
+Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+Then adjust only local values. Never commit real secrets.
+
+### Composer dependencies are missing
+
+Install dependencies inside the app container:
+
+```bash
+docker compose exec app composer install
+```
+
+### Cache, logs or runtime files cause issues
+
+Remove only local runtime output that your environment created. Do not commit `logs/`, cache folders, database dumps, `vendor/` or `node_modules/`.
 
 ## Project Structure
 

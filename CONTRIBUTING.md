@@ -13,10 +13,11 @@ Thanks for considering a contribution to Project V26. This project is a PHP/Slim
 
 1. Fork or branch from the current main development branch.
 2. Copy `.env.example` to `.env` and use local-only values.
-3. Install dependencies only in your local environment.
-4. Make the smallest change that solves the problem.
-5. Test the touched area manually.
-6. Open a pull request with a short summary and screenshots for UI changes.
+3. Start the local Docker environment with `docker compose up -d --build`.
+4. Install dependencies inside the app container when needed: `docker compose exec app composer install`.
+5. Make the smallest change that solves the problem.
+6. Test the touched area manually.
+7. Open a pull request with a short summary and screenshots for UI changes.
 
 ## Code Style
 
@@ -32,6 +33,7 @@ Thanks for considering a contribution to Project V26. This project is a PHP/Slim
 - [ ] Generated dependencies are not committed.
 - [ ] UI changes include screenshots when relevant.
 - [ ] Any new setting is actually persisted or clearly marked as planned.
+- [ ] Local setup or environment changes are documented when they affect contributors.
 
 ## Reporting Bugs
 

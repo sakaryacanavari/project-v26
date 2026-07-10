@@ -8,7 +8,7 @@ This roadmap describes the public direction for Project V26. Items may change as
 - Continue polishing the home dashboard: News, Shouts and player progress.
 - Strengthen settings UX for profile, password, language, theme, notifications and privacy.
 - Keep planned features visually separate from backend-supported features.
-- Improve Docker/local setup documentation.
+- Improve Docker/local setup documentation and first-run troubleshooting.
 
 ## Mid Term
 
@@ -17,6 +17,7 @@ This roadmap describes the public direction for Project V26. Items may change as
 - Add safer development fixtures for public contributors.
 - Improve newspaper and public content moderation tools.
 - Review legacy frontend asset tooling and document the supported path.
+- Add contributor-friendly setup checks once the public development flow is stable.
 
 ## Long Term
 
