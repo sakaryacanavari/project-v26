@@ -197,6 +197,26 @@ class PoliticalParty extends Controller
         }
         $partyArray['member_list'] = $memberList;
 
+        $viewerMembership = $myAffiliation && (int) $myAffiliation->party === (int) $party->id
+            ? $myAffiliation
+            : null;
+        $viewerLevel = (int) ($viewerMembership->level ?? 0);
+        $partyArray['viewer_is_member'] = $viewerMembership !== null;
+        $partyArray['viewer_role_level'] = $viewerLevel;
+        $partyArray['viewer_role_label'] = $viewerLevel >= PartyMember::LEVEL_LEADER
+            ? 'Parti Lideri'
+            : ($viewerLevel >= PartyMember::LEVEL_TODO ? 'Yonetici' : ($viewerLevel >= PartyMember::LEVEL_AFFILIATED ? 'Sozcu' : 'Bagimsiz'));
+        $partyArray['viewer_role_note'] = $partyArray['is_leader']
+            ? 'Basvurulari, uyeleri, parti bilgisini ve mevcut yonetim araclarini kullanabilirsin.'
+            : ($viewerMembership
+                ? 'Bu rol parti ici gorunurlugunu belirler; yonetim islemleri parti liderine aittir.'
+                : 'Bu partiye uye degilsin. Basvuru secenegi mevcutsa partiye katilabilirsin.');
+        $partyArray['viewer_next_step'] = $partyArray['is_leader']
+            ? 'Basvurulari, uyeleri ve parti hedeflerini yonet.'
+            : ($viewerMembership
+                ? 'Partinin duyuru ve faaliyet akisini takip et.'
+                : 'Uyelik basvurusu yaparak siyasi yolculuguna basla.');
+
         try {
             $partyArray['logs'] = DB::table('party_logs')
                 ->where('party_id', $id)
@@ -210,6 +230,7 @@ class PoliticalParty extends Controller
 
         $partyArray['join_applications'] = [];
         $partyArray['my_pending_application'] = null;
+        $partyArray['my_application'] = null;
 
         try {
             if ($partyArray['is_leader']) {
@@ -228,43 +249,89 @@ class PoliticalParty extends Controller
                     )
                     ->get()
                     ->toArray();
-            } elseif (!$myAffiliation) {
-                $partyArray['my_pending_application'] = DB::table('party_join_applications')
+            } else {
+                $partyArray['my_application'] = DB::table('party_join_applications')
                     ->where('party_id', $id)
                     ->where('uid', App::user()->getUid())
-                    ->where('status', 'pending')
+                    ->orderBy('id', 'DESC')
                     ->first();
+                if ($partyArray['my_application'] && $partyArray['my_application']->status === 'pending') {
+                    $partyArray['my_pending_application'] = $partyArray['my_application'];
+                }
             }
         } catch (\Exception $e) {
         }
 
-        $electionQuery = DB::table('party_elections')
-            ->where('party_id', $id)
-            ->where('status', '!=', 'finished');
+        try {
+            $schema = DB::getSchemaBuilder();
+            if ($schema->hasTable('party_elections') && $schema->hasTable('party_candidates') && $schema->hasTable('party_votes')) {
+                $electionQuery = DB::table('party_elections')
+                    ->where('party_id', $id)
+                    ->where('status', '!=', 'finished');
 
-        if (DB::getSchemaBuilder()->hasColumn('party_elections', 'election_key')) {
-            $electionQuery->where('election_key', date('Y-m-01 00:00:00'));
-        }
+                if ($schema->hasColumn('party_elections', 'election_key')) {
+                    $electionQuery->where('election_key', date('Y-m-01 00:00:00'));
+                }
 
-        $election = $electionQuery->orderBy('id', 'DESC')->first();
+                $election = $electionQuery->orderBy('id', 'DESC')->first();
 
-        if ($election) {
-            $election = (array) $election;
-            $candidates = DB::table('party_candidates')->where('election_id', $election['id'])->get();
-            $election['candidates'] = [];
+                if ($election) {
+                    $election = (array) $election;
+                    $candidates = DB::table('party_candidates')->where('election_id', $election['id'])->get();
+                    $election['candidates'] = [];
+                    $voteCounts = [];
+                    $totalVotes = 0;
 
-            foreach ($candidates as $c) {
-                $u = User::where('id', $c->uid)->first();
-                $candName = $this->resolveUserDisplayName($u, 'Aday ' . $c->uid);
-                $election['candidates'][] = ['uid' => $c->uid, 'name' => $candName];
+                    foreach (DB::table('party_votes')
+                        ->select('candidate_uid', DB::raw('COUNT(*) as total'))
+                        ->where('election_id', $election['id'])
+                        ->groupBy('candidate_uid')
+                        ->get() as $voteRow) {
+                        $voteCounts[(int) $voteRow->candidate_uid] = (int) $voteRow->total;
+                        $totalVotes += (int) $voteRow->total;
+                    }
+
+                    foreach ($candidates as $c) {
+                        $u = User::where('id', $c->uid)->first();
+                        $candName = $this->resolveUserDisplayName($u, 'Aday ' . $c->uid);
+                        $votes = (int) ($voteCounts[(int) $c->uid] ?? 0);
+                        $election['candidates'][] = [
+                            'uid' => (int) $c->uid,
+                            'name' => $candName,
+                            'votes' => $votes,
+                            'support_percent' => $totalVotes > 0 ? (int) round(($votes / $totalVotes) * 100) : 0,
+                            'is_viewer' => (int) $c->uid === (int) App::user()->getUid(),
+                        ];
+                    }
+
+                    $election['my_vote'] = DB::table('party_votes')
+                        ->where('election_id', $election['id'])
+                        ->where('voter_uid', App::user()->getUid())
+                        ->first();
+
+                    $election['candidate_count'] = count($election['candidates']);
+                    $election['total_votes'] = $totalVotes;
+                    $election['viewer_is_candidate'] = false;
+                    foreach ($election['candidates'] as $candidate) {
+                        if (!empty($candidate['is_viewer'])) {
+                            $election['viewer_is_candidate'] = true;
+                            break;
+                        }
+                    }
+                    $election['phase_label'] = [
+                        'candidacy' => 'Adaylik',
+                        'voting' => 'Oylama',
+                        'results' => 'Sonuclar',
+                    ][(string) ($election['status'] ?? '')] ?? 'Aktif tur';
+                    $election['viewer_status'] = $election['viewer_is_candidate']
+                        ? 'Aday'
+                        : ($election['my_vote'] ? 'Oy kullandin' : 'Takipte');
+
+                    $partyArray['active_election'] = $election;
+                }
             }
-
-            $election['my_vote'] = DB::table('party_votes')
-                ->where('election_id', $election['id'])
-                ->where('voter_uid', App::user()->getUid())
-                ->first();
-
-            $partyArray['active_election'] = $election;
+        } catch (\Exception $e) {
+            $partyArray['active_election'] = null;
         }
 
         try {
@@ -359,14 +426,42 @@ class PoliticalParty extends Controller
     public function showList()
     {
         $parties = PartyModel::where(['country' => App::user()->getLocation()['country']['id']])->get();
+        $myAffiliation = App::user()->getPoliticalParty();
         $list = [];
         foreach ($parties as $p) {
             $pd = $p->toArray();
             $pd['members_count'] = PartyMember::where('party', $p->id)->count();
             $pd['is_featured'] = ($p->ad_until && strtotime($p->ad_until) > time());
+            $pd['is_my_party'] = $myAffiliation && (int) $myAffiliation->party === (int) $p->id;
             $list[] = $pd;
         }
-        return $this->render('party/list.html.twig', ['list' => $list]);
+
+        usort($list, function ($left, $right) {
+            return ($right['members_count'] <=> $left['members_count']) ?: ($left['name'] <=> $right['name']);
+        });
+
+        foreach ($list as $index => &$party) {
+            $party['competition_rank'] = $index + 1;
+        }
+        unset($party);
+
+        $viewerLevel = (int) ($myAffiliation->level ?? 0);
+        $politicalProfile = [
+            'has_party' => $myAffiliation !== null,
+            'role_label' => $viewerLevel >= PartyMember::LEVEL_LEADER
+                ? 'Parti Lideri'
+                : ($viewerLevel >= PartyMember::LEVEL_TODO ? 'Yonetici' : ($viewerLevel >= PartyMember::LEVEL_AFFILIATED ? 'Sozcu' : 'Bagimsiz')),
+            'next_step' => $myAffiliation
+                ? 'Partinin faaliyetlerini takip et ve rolunun sorumluluklarini incele.'
+                : 'Partileri incele, uygun birine basvur veya kendi partini kur.',
+        ];
+
+        if ($myAffiliation) {
+            $myParty = PartyModel::where('id', (int) $myAffiliation->party)->first();
+            $politicalProfile['party_name'] = $myParty ? (string) $myParty->name : '';
+        }
+
+        return $this->render('party/list.html.twig', ['list' => $list, 'politicalProfile' => $politicalProfile]);
     }
 
     public function create()
@@ -674,13 +769,27 @@ class PoliticalParty extends Controller
 
     public function assignRole()
     {
+        $partyId = (int) ($_POST['party_id'] ?? 0);
+        $targetUid = (int) ($_POST['target_uid'] ?? 0);
+        $newRole = (int) ($_POST['new_role'] ?? -1);
+        $currentUid = (int) App::user()->getUid();
+        $party = PartyModel::where('id', $partyId)->first();
+
+        if (!$party || (int) $party->uid !== $currentUid) {
+            return ['error' => 1, 'message' => 'Sadece parti lideri rolleri degistirebilir.'];
+        }
+
+        if ($targetUid < 1 || $targetUid === $currentUid || $targetUid === (int) $party->uid || !in_array($newRole, [0, 1, 2], true)) {
+            return ['error' => 1, 'message' => 'Gecersiz rol islemi.'];
+        }
+
         $member = PartyMember::where([
-            'party' => (int) $_POST['party_id'],
-            'uid' => (int) $_POST['target_uid'],
+            'party' => $partyId,
+            'uid' => $targetUid,
         ])->first();
 
         if ($member) {
-            $member->level = (int) $_POST['new_role'];
+            $member->level = $newRole;
             $member->save();
             return ['error' => 0];
         }

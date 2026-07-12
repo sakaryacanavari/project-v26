@@ -194,6 +194,7 @@
             <span class="text-[color:var(--brand-primary)] text-glow font-black font-telemetry text-[11px]">%{{ candidate.vote_percentage }}</span>
         </div>
         <div class="e-bar mb-1.5"><div class="e-fill" style="width: {{ candidate.vote_percentage }}%;"></div></div>
+        <div class="text-[8px] font-bold uppercase tracking-[0.1em] text-slate-500">{{ candidate.votes }} {{ t('elections.candidate.votes') }} · %{{ candidate.vote_percentage }} {{ t('elections.candidate.support') }}</div>
         
         {% if candidate.campaign_message is defined and candidate.campaign_message %}
             <div class="text-[10px] text-slate-400 truncate italic">"{{ candidate.campaign_message }}"</div>
@@ -303,6 +304,18 @@
                                     {% endfor %}
                                 </div>
                             </div>
+
+                            {% if panel.data.my_candidate %}
+                            <div class="e-card p-4 !border-l-[var(--brand-primary)] !transform-none hover:bg-black/20">
+                                <div class="text-[9px] font-black uppercase tracking-[0.15em] text-[color:var(--brand-primary)] mb-1">Adaylik durumu</div>
+                                <div class="text-[11px] font-bold leading-5 text-white">Bu secim turunda adaysin. Oy durumun aday listesinde gercek zamanli olmayan mevcut kayitlardan gosterilir.</div>
+                            </div>
+                            {% elseif panel.data.can_apply %}
+                            <div class="e-card p-4 !border-none !transform-none hover:bg-black/20">
+                                <div class="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mb-1">Adaylik durumu</div>
+                                <div class="text-[11px] font-bold leading-5 text-slate-300">Kosullari sagliyorsun. Adaylik basvurusu yaparak bu turda yer alabilirsin.</div>
+                            </div>
+                            {% endif %}
 
                             {% if panel.data.history|length > 0 %}
                             <div class="e-card p-4 !border-none !transform-none hover:bg-black/20">

@@ -684,6 +684,7 @@
     .work-market-subtext { margin-top: 6px; color: #64748b; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; text-align: left; }
     .skill-state-ok { color: color-mix(in srgb, var(--brand-primary) 82%, #ffffff); font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; }
     .skill-state-low { color: color-mix(in srgb, var(--brand-primary) 72%, #ffffff); font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; }
+    .work-eligibility-note { margin-top: 5px; color: color-mix(in srgb, var(--text-muted, #94a3b8) 88%, #ffffff); font-size: 9px; font-weight: 800; line-height: 1.35; }
     .currency-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.10); background:rgba(255,255,255,0.04); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
     .currency-dot { width:10px; height:10px; border-radius:999px; display:inline-block; box-shadow:0 0 10px rgba(255,255,255,.18); }
 
@@ -1141,17 +1142,21 @@
                                         <div class="skill-state-low">
                                             <i class="fa-solid fa-briefcase"></i> AKTÄ°F Ä°ÅÄ°N VAR
                                         </div>
+                                    {% elseif needsTravel %}
+                                        <div class="skill-state-low">
+                                            <i class="fa-solid fa-location-dot"></i> BOLGE GEREKLI
+                                        </div>
+                                        <div class="work-eligibility-note">Bu ilan bulundugun bolgenin disinda.</div>
                                     {% elseif skillEnough %}
                                         <div class="skill-state-ok">
                                             <i class="fa-solid fa-circle-check"></i> UYGUN
                                         </div>
+                                        <div class="work-eligibility-note">Beceri: {{ userSkill }} / gereken {{ requiredSkill }}</div>
                                     {% else %}
                                         <div class="skill-state-low">
                                             <i class="fa-solid fa-lock"></i> YETERSÄ°Z
                                         </div>
-                                        <div class="text-[9px] text-slate-500 font-bold mt-1">
-                                            {{ userSkill }} / {{ requiredSkill }}
-                                        </div>
+                                        <div class="work-eligibility-note">Beceri: {{ userSkill }} / gereken {{ requiredSkill }}</div>
                                     {% endif %}
                                 </td>
 
@@ -1265,17 +1270,21 @@
                                         <div class="skill-state-low">
                                             <i class="fa-solid fa-briefcase"></i> AKTÄ°F Ä°ÅÄ°N VAR
                                         </div>
+                                    {% elseif needsTravel %}
+                                        <div class="skill-state-low">
+                                            <i class="fa-solid fa-location-dot"></i> BOLGE GEREKLI
+                                        </div>
+                                        <div class="work-eligibility-note">Bu ilan bulundugun bolgenin disinda.</div>
                                     {% elseif skillEnough %}
                                         <div class="skill-state-ok">
                                             <i class="fa-solid fa-circle-check"></i> UYGUN
                                         </div>
+                                        <div class="work-eligibility-note">Beceri: {{ userSkill }} / gereken {{ requiredSkill }}</div>
                                     {% else %}
                                         <div class="skill-state-low">
                                             <i class="fa-solid fa-lock"></i> YETERSÄ°Z
                                         </div>
-                                        <div class="text-[9px] text-slate-500 font-bold mt-1">
-                                            {{ userSkill }} / {{ requiredSkill }}
-                                        </div>
+                                        <div class="work-eligibility-note">Beceri: {{ userSkill }} / gereken {{ requiredSkill }}</div>
                                     {% endif %}
                                 </div>
 

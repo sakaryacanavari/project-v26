@@ -1,6 +1,20 @@
 {% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
 
 {% block content %}
+<style>
+    .trade-offer-row { background: color-mix(in srgb, var(--panel-bg, #0f172a) 82%, transparent) !important; transition: background-color .18s ease, border-color .18s ease, transform .18s ease; }
+    .trade-offer-row:hover { background: color-mix(in srgb, var(--brand-primary) 7%, var(--panel-bg, #0f172a)) !important; transform: translateY(-1px); }
+    .trade-stock-pill, .trade-price-pill { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 88px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--text-muted, #94a3b8) 24%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--panel-bg, #0f172a) 88%, transparent); }
+    .trade-price-pill { border-color: color-mix(in srgb, var(--brand-primary) 28%, transparent); color: color-mix(in srgb, var(--brand-primary) 78%, #ffffff); }
+    .trade-order-form { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .trade-quantity { width: 64px; min-height: 42px; border-color: color-mix(in srgb, var(--text-muted, #94a3b8) 25%, transparent) !important; }
+    .trade-buy-btn { min-width: 54px; min-height: 42px; gap: 6px; background: var(--brand-primary) !important; border-color: color-mix(in srgb, var(--brand-primary) 62%, #ffffff) !important; box-shadow: 0 8px 18px color-mix(in srgb, var(--brand-primary) 20%, transparent) !important; }
+    .trade-buy-btn span { font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    @media (max-width: 768px) {
+        .trade-offer-row:hover { transform: none; }
+        .trade-order-form { min-width: 136px; }
+    }
+</style>
 <div class="space-y-6 animate-fade-in w-full overflow-hidden">
     {% if marketStatus and marketMessage %}
         <div class="glass-panel p-4 {% if marketStatus == 'success' %}border-l-4 border-emerald-500 bg-emerald-950/10{% else %}border-l-4 border-red-500 bg-red-950/10{% endif %}">
@@ -52,7 +66,7 @@
                     </thead>
                     <tbody class="text-[10px] font-bold text-white">
                         {% for offer in offers %}
-                            <tr id="offer-{{ offer.id }}" class="bg-black/20 hover:bg-black/40 transition-colors group">
+                            <tr id="offer-{{ offer.id }}" class="trade-offer-row bg-black/20 hover:bg-black/40 transition-colors group">
                                 
                                 <td class="p-3 rounded-l-lg flex items-center gap-4 border-y border-l border-white/5 group-hover:border-cyan-500/30">
                                     <div class="w-12 h-12 bg-black/60 rounded-xl flex items-center justify-center border border-white/10 shadow-inner group-hover:border-cyan-500/50 transition-colors">
@@ -72,27 +86,28 @@
                                 </td>
 
                                 <td class="p-3 text-center border-y border-white/5 group-hover:border-cyan-500/30">
-                                    <div class="flex items-center justify-center gap-2 bg-black/40 py-1.5 px-3 rounded-lg border border-white/10 w-fit mx-auto">
+                                    <div class="trade-stock-pill flex items-center justify-center gap-2 bg-black/40 py-1.5 px-3 rounded-lg border border-white/10 w-fit mx-auto" title="Mevcut stok">
                                         <span class="font-mono text-xs font-black text-white">{{ offer.quantity }}</span>
                                         <span class="text-[8px] text-slate-500 uppercase tracking-widest">Adet</span>
                                     </div>
                                 </td>
 
                                 <td class="p-3 text-center border-y border-white/5 group-hover:border-cyan-500/30">
-                                    <div class="flex items-center justify-center gap-1.5 text-yellow-500 bg-yellow-950/20 py-2 px-3 rounded-lg border border-yellow-500/20 w-fit mx-auto shadow-inner">
+                                    <div class="trade-price-pill flex items-center justify-center gap-1.5 text-yellow-500 bg-yellow-950/20 py-2 px-3 rounded-lg border border-yellow-500/20 w-fit mx-auto shadow-inner" title="Birim fiyat">
                                         <span class="font-mono text-sm font-black">{{ offer.price }}</span>
                                         <span class="text-[9px] font-black uppercase tracking-widest text-yellow-500/70 ml-1">{% filter upper %}{{ offer.country.currency }}{% endfilter %}</span>
                                     </div>
                                 </td>
 
                                 <td class="p-3 text-right rounded-r-lg border-y border-r border-white/5 group-hover:border-cyan-500/30 pr-4">
-                                    <form action="{{ path_for('marketBuyPage') }}" method="post" class="flex items-center justify-end gap-3">
+                                    <form action="{{ path_for('marketBuyPage') }}" method="post" class="trade-order-form flex items-center justify-end gap-3" aria-label="Tedarik emri">
                                         <input type="hidden" name="id" value="{{ offer.id }}">
                                         <input name="quantity" type="number" value="1" min="1" max="{{ offer.quantity }}"
-                                               class="w-16 bg-black/80 border border-white/10 text-white p-2.5 rounded-lg text-[11px] font-mono font-bold outline-none focus:border-cyan-500 transition shadow-inner text-center">
+                                               class="trade-quantity w-16 bg-black/80 border border-white/10 text-white p-2.5 rounded-lg text-[11px] font-mono font-bold outline-none focus:border-cyan-500 transition shadow-inner text-center" aria-label="Satın alma miktarı" title="Satın alma miktarı">
                                         <button type="submit" title="Satin Al" aria-label="Satin Al"
-                                                class="bg-cyan-600 hover:bg-cyan-500 text-white w-11 h-11 rounded-xl transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 border border-cyan-400/30 inline-flex items-center justify-center group-hover:scale-105 relative z-10 cursor-pointer pointer-events-auto text-sm">
+                                                class="trade-buy-btn bg-cyan-600 hover:bg-cyan-500 text-white w-11 h-11 rounded-xl transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 border border-cyan-400/30 inline-flex items-center justify-center group-hover:scale-105 relative z-10 cursor-pointer pointer-events-auto text-sm">
                                             <i class="fa-solid fa-cart-arrow-down"></i>
+                                            <span>Al</span>
                                         </button>
                                     </form>
                                 </td>

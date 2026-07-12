@@ -201,6 +201,12 @@
             text-transform: uppercase;
             line-height: 1.45;
         }
+        .storage-sell-summary {
+            color: color-mix(in srgb, var(--text-muted, #94a3b8) 86%, #fff);
+            font-size: 9px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
         @media (max-width: 768px) {
             #v2-storage-center { gap: 1rem; }
             #v2-storage-center .holo-panel { border-radius: 14px; }
@@ -308,6 +314,7 @@
             <div class="space-y-2">
                 <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-weight-hanging mr-1"></i> {{ t('storage.form.quantity') }}</label>
                 <input id="quantity" name="quantity" type="number" value="1" min="1" class="cyber-input w-full p-3.5 rounded-lg text-xs font-bold">
+                <p id="storage-sell-summary" class="storage-sell-summary"></p>
             </div>
 
             <div class="space-y-2">
@@ -337,6 +344,7 @@
                 let max = selected.data('max');
 
                 $('#quantity').attr('max', max);
+                $('#storage-sell-summary').text('Satilabilir adet: ' + max + ' | Secili kalite: Q' + q);
 
                 if ($('#hidden-quality').length === 0) {
                     $('#sell-item-form').append('<input type="hidden" name="quality" id="hidden-quality" value=\"' + q + '\">');

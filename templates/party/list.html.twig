@@ -94,10 +94,15 @@
     .party-helper-copy { color: color-mix(in srgb, var(--text-muted, #94a3b8) 86%, #fff); line-height: 1.45; }
     .party-primary-action { min-height: 44px; }
     .party-empty-state { padding: 48px 18px; }
+    .political-profile-strip { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .8fr); gap: 12px; }
+    .political-profile-item { min-width: 0; border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, rgba(255,255,255,.06)); background: color-mix(in srgb, var(--brand-primary) 5%, rgba(2,6,23,.34)); border-radius: 12px; padding: 13px 14px; }
+    .party-rank-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent); background: color-mix(in srgb, var(--brand-primary) 10%, transparent); color: color-mix(in srgb, var(--brand-primary) 78%, #ffffff); border-radius: 999px; padding: 3px 7px; font-size: 8px; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+    .party-policy-line { margin-top: 5px; color: color-mix(in srgb, var(--text-muted, #94a3b8) 84%, #ffffff); font-size: 9px; font-weight: 800; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     @media (max-width: 768px) {
         .party-action-hero { padding: 16px; }
         .party-action-hero > div { gap: 14px; }
         .party-primary-action { width: 100%; min-height: 46px; }
+        .political-profile-strip { grid-template-columns: 1fr; }
         .party-card-v26:hover,
         .party-card-promoted-v26:hover,
         .party-card-ghost-v26:hover { transform: none; }
@@ -131,6 +136,20 @@
             </a>
         </div>
     </div>
+
+    <section class="glass-panel p-4 rounded-2xl">
+        <div class="political-profile-strip">
+            <div class="political-profile-item">
+                <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--brand-primary)]"><i class="fa-solid fa-id-badge"></i> Siyasi konumun</div>
+                <div class="mt-2 text-[15px] font-black text-white truncate">{{ politicalProfile.has_party ? politicalProfile.party_name : 'Bagimsiz oyuncu' }}</div>
+                <div class="mt-1 text-[10px] font-bold text-slate-400">Rol: {{ politicalProfile.role_label }}</div>
+            </div>
+            <div class="political-profile-item">
+                <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400"><i class="fa-solid fa-route"></i> Siradaki adim</div>
+                <p class="mt-2 text-[11px] font-bold leading-5 text-slate-200">{{ politicalProfile.next_step }}</p>
+            </div>
+        </div>
+    </section>
 
     {% if list|length > 0 %}
         
@@ -186,10 +205,12 @@
                                         {{ party.name }}
                                     </h3>
                                     <div class="flex items-center gap-2">
+                                        <span class="party-rank-chip"><i class="fa-solid fa-ranking-star"></i> #{{ party.competition_rank }}</span>
                                         <div class="bg-black/80 border border-yellow-500/40 px-2.5 py-0.5 rounded-md text-[8px] font-black text-yellow-500/90 uppercase tracking-widest flex items-center gap-1.5 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)]">
                                             <i class="fa-solid fa-users text-yellow-500/80 drop-shadow-sm"></i> {{ t('party.list.members') }}: <span class="text-white drop-shadow-sm">{{ party.members_count }}</span>
                                         </div>
                                     </div>
+                                    {% if party.ideology %}<div class="party-policy-line">{{ party.ideology }}</div>{% endif %}
                                 </div>
                                 
                                 <div class="w-6 h-6 rounded-full flex items-center justify-center bg-yellow-500/10 border border-yellow-500/30 text-yellow-500/80 group-hover:bg-yellow-500/25 group-hover:text-yellow-300 group-hover:border-yellow-400/60 shadow-[0_0_10px_rgba(234,179,8,0.2)] transition-all shrink-0">
@@ -218,10 +239,12 @@
                                         {{ party.name }}
                                     </h3>
                                     <div class="flex items-center gap-2">
+                                        <span class="party-rank-chip"><i class="fa-solid fa-ranking-star"></i> #{{ party.competition_rank }}</span>
                                         <div class="bg-black/60 border border-white/5 px-2.5 py-0.5 rounded-md text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]">
                                             <i class="fa-solid fa-users opacity-60"></i> {{ t('party.list.members') }}: <span class="text-slate-300">{{ party.members_count }}</span>
                                         </div>
                                     </div>
+                                    {% if party.ideology %}<div class="party-policy-line">{{ party.ideology }}</div>{% endif %}
                                 </div>
                                 
                                 <div class="text-slate-600 group-hover:text-[color:var(--brand-primary)] transition-colors shrink-0 drop-shadow-sm">

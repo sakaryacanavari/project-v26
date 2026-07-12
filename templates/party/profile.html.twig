@@ -149,6 +149,15 @@
     #treasury-panel > .relative.grid.grid-cols-2.gap-2.mb-4 > p {
         display: none;
     }
+
+    .political-status-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, .8fr)); gap: 10px; }
+    .political-status-item { min-width: 0; border: 1px solid color-mix(in srgb, var(--brand-primary) 17%, rgba(255,255,255,.06)); background: color-mix(in srgb, var(--brand-primary) 5%, rgba(2,6,23,.34)); border-radius: 12px; padding: 12px; }
+    .political-status-label { color: color-mix(in srgb, var(--text-muted, #94a3b8) 88%, #ffffff); font-size: 8px; font-weight: 950; letter-spacing: .14em; text-transform: uppercase; }
+    .political-status-value { margin-top: 6px; color: var(--text-main, #fff); font-size: 12px; font-weight: 900; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .party-member-actions { display: flex; align-items: center; gap: 6px; }
+    .party-member-actions button { min-width: 32px; min-height: 32px; }
+    @media (max-width: 768px) { .political-status-grid { grid-template-columns: 1fr 1fr; } .political-status-item:first-child { grid-column: 1 / -1; } }
+    @media (max-width: 768px) { .party-member-actions { opacity: 1 !important; } }
 </style>
 <div class="space-y-6 animate-fade-in w-full">
     
@@ -232,6 +241,71 @@
     </div>
 
     {# --- AYARLAR MODALİ --- #}
+    <section class="glass-panel p-4 md:p-5 border-l-4" style="border-color: var(--brand-primary);">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--brand-primary)]"><i class="fa-solid fa-id-badge"></i> Siyasi durum</div>
+                <p class="mt-2 text-[11px] font-bold leading-5 text-slate-300">{{ party.viewer_next_step }}</p>
+                <p class="mt-1 text-[10px] font-bold leading-5 text-slate-500">{{ party.viewer_role_note }}</p>
+            </div>
+            <span class="shrink-0 rounded-lg border border-[color:var(--brand-primary)]/30 bg-[color:var(--brand-primary)]/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--brand-primary)]">{{ party.viewer_role_label }}</span>
+        </div>
+        <div class="political-status-grid mt-4">
+            <div class="political-status-item">
+                <div class="political-status-label">Siyasi bag</div>
+                <div class="political-status-value">{{ party.viewer_is_member ? party.name : 'Bagimsiz oyuncu' }}</div>
+            </div>
+            <div class="political-status-item">
+                <div class="political-status-label">Ideoloji</div>
+                <div class="political-status-value">{{ party.ideology|default('-') }}</div>
+            </div>
+            <div class="political-status-item">
+                <div class="political-status-label">Uye sayisi</div>
+                <div class="political-status-value">{{ party.members_count|default(0) }}</div>
+            </div>
+            <div class="political-status-item">
+                <div class="political-status-label">Koalisyon</div>
+                <div class="political-status-value">{{ party.coalition ? party.coalition.name : 'Bagli degil' }}</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="glass-panel p-4 md:p-5 border-l-4" style="border-color: color-mix(in srgb, var(--brand-primary) 62%, #f59e0b);">
+        {% if party.active_election %}
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--brand-primary)]"><i class="fa-solid fa-check-to-slot"></i> Parti liderligi secimi</div>
+                    <p class="mt-2 text-[11px] font-bold leading-5 text-slate-300">
+                        {% if party.active_election.viewer_is_candidate %}Adayligin aktif siyasi surecte kayitli.
+                        {% elseif party.active_election.my_vote %}Bu secim turunda oyunu kullandin.
+                        {% else %}Adaylar ve oy durumu Secim Merkezi uzerinden takip edilir.{% endif %}
+                    </p>
+                </div>
+                <a href="{{ path_for('electionsHome') }}" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-[color:var(--brand-primary)]/30 bg-[color:var(--brand-primary)]/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary)]/20"><i class="fa-solid fa-arrow-up-right-from-square"></i> Secim merkezi</a>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div class="treasury-stat-card rounded-lg p-3"><div class="political-status-label">Aday</div><div class="political-status-value">{{ party.active_election.candidate_count }}</div></div>
+                <div class="treasury-stat-card rounded-lg p-3"><div class="political-status-label">Kayitli oy</div><div class="political-status-value">{{ party.active_election.total_votes }}</div></div>
+                <div class="treasury-stat-card rounded-lg p-3 col-span-2 sm:col-span-1"><div class="political-status-label">Durum</div><div class="political-status-value">{{ party.active_election.phase_label }} · {{ party.active_election.viewer_status }}</div></div>
+            </div>
+            {% if party.active_election.candidates %}
+                <div class="mt-3 space-y-2">
+                    {% for candidate in party.active_election.candidates|slice(0, 3) %}
+                        <div class="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-black/20 px-3 py-2.5">
+                            <div class="min-w-0 text-[11px] font-bold text-white truncate">{{ candidate.name }}{% if candidate.is_viewer %}<span class="ml-1 text-[9px] uppercase tracking-wider text-[color:var(--brand-primary)]">Sen</span>{% endif %}</div>
+                            <div class="shrink-0 text-right"><div class="text-[11px] font-black text-white">%{{ candidate.support_percent }}</div><div class="text-[8px] font-bold uppercase tracking-wider text-slate-500">{{ candidate.votes }} oy</div></div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div><div class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400"><i class="fa-solid fa-calendar-days mr-1.5"></i> Secim takvimi</div><p class="mt-2 text-[11px] font-bold leading-5 text-slate-300">Bu parti icin aktif liderlik secimi bulunmuyor. Yaklasan siyasi surecleri Secim Merkezi'nden takip edebilirsin.</p></div>
+                <a href="{{ path_for('electionsHome') }}" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-slate-200 hover:border-[color:var(--brand-primary)]/30 hover:text-white"><i class="fa-solid fa-arrow-up-right-from-square"></i> Secim merkezi</a>
+            </div>
+        {% endif %}
+    </section>
+
     {% if party.is_leader %}
     <div id="party-settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
         <div class="glass-panel w-full max-w-2xl border-t-4 border-fuchsia-500 p-6 relative">
@@ -518,10 +592,10 @@
                                 </div>
                             </div>
                             {% if party.is_leader and member.uid != party.uid %}
-                                <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
-                                    <button onclick="assignRole({{ member.uid }}, 2)" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
-                                    <button onclick="assignRole({{ member.uid }}, 1)" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
-                                    <button onclick="assignRole({{ member.uid }}, 0)" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
+                                <div class="party-member-actions opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="assignRole({{ member.uid }}, 2)" title="Yonetici yap" aria-label="Yonetici yap" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 1)" title="Sozcu yap" aria-label="Sozcu yap" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 0)" title="Uye yap" aria-label="Uye yap" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
                                 </div>
                             {% endif %}
                         </div>
@@ -532,7 +606,19 @@
         
         {# --- SAĞ SÜTUN --- #}
         <aside class="col-span-12 lg:col-span-4 space-y-4">
-            {% if party.is_leader or party.my_pending_application %}
+            {% if party.is_leader %}
+            <section class="glass-panel p-5 border-l-4" style="border-color: var(--brand-primary); background: color-mix(in srgb, var(--brand-primary) 5%, rgba(2,6,23,.46));">
+                <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-[color:var(--brand-primary)]"></i> Yonetim yetkileri</h2>
+                <p class="text-[11px] leading-5 font-bold text-slate-300">Bu partinin lideri olarak asagidaki mevcut yonetim araclarini kullanabilirsin.</p>
+                <ul class="mt-3 space-y-2 text-[10px] font-bold text-slate-400">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[color:var(--brand-primary)]"></i> Basvurulari incele ve karar ver</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[color:var(--brand-primary)]"></i> Uye rollerini ve parti bilgisini yonet</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[color:var(--brand-primary)]"></i> Hazine, reklam ve koalisyon islemlerini takip et</li>
+                </ul>
+            </section>
+            {% endif %}
+
+            {% if party.is_leader or party.my_application %}
             <div class="glass-panel p-5 border-l-4 border-emerald-500 bg-emerald-500/5">
                 <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-3 flex items-center gap-2">
                     <i class="fa-solid fa-envelope-open-text text-emerald-400"></i> {{ t('party.profile.applications') }}
@@ -549,8 +635,11 @@
                                         <div class="min-w-0 flex-1">
                                             <div class="flex items-center justify-between gap-2">
                                     <div class="text-[12px] font-bold text-white truncate">{{ application.nick|default(t('party.profile.role.member') ~ ' #' ~ application.uid) }}</div>
-                                                <div class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500 shrink-0">
-                                                    {% if application.created_at %}{{ application.created_at|date('d.m H:i') }}{% endif %}
+                                                <div class="flex items-center gap-2 shrink-0">
+                                                    <span class="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-amber-300">Bekliyor</span>
+                                                    <span class="text-[8px] font-black uppercase tracking-[0.16em] text-slate-500">
+                                                        {% if application.created_at %}{{ application.created_at|date('d.m H:i') }}{% endif %}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div class="mt-2 rounded-lg border border-emerald-500/10 bg-emerald-500/5 px-3 py-2 text-[11px] leading-5 text-slate-300 font-bold whitespace-pre-wrap">
@@ -575,11 +664,14 @@
                         {% endif %}
                     </div>
                 {% else %}
-                    <div class="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-4">
-                        <div class="text-[10px] font-black uppercase tracking-[0.16em] text-amber-400">{{ t('party.profile.application_processing') }}</div>
-                        <div class="mt-2 text-[12px] leading-6 font-bold text-slate-200">
-                            {{ t('party.profile.application_processing_text') }}
+                    <div class="rounded-xl border px-4 py-4 {% if party.my_application.status == 'approved' %}border-emerald-500/20 bg-emerald-500/10{% elseif party.my_application.status == 'rejected' %}border-red-500/20 bg-red-500/10{% else %}border-amber-500/20 bg-amber-500/10{% endif %}">
+                        <div class="text-[10px] font-black uppercase tracking-[0.16em] {% if party.my_application.status == 'approved' %}text-emerald-300{% elseif party.my_application.status == 'rejected' %}text-red-300{% else %}text-amber-400{% endif %}">
+                            {% if party.my_application.status == 'approved' %}Basvuru kabul edildi{% elseif party.my_application.status == 'rejected' %}Basvuru reddedildi{% else %}{{ t('party.profile.application_processing') }}{% endif %}
                         </div>
+                        <div class="mt-2 text-[12px] leading-6 font-bold text-slate-200">
+                            {% if party.my_application.status == 'approved' %}Parti uyeligin aktif.{% elseif party.my_application.status == 'rejected' %}Bu basvuru parti lideri tarafindan reddedildi.{% else %}{{ t('party.profile.application_processing_text') }}{% endif %}
+                        </div>
+                        {% if party.my_application.created_at %}<div class="mt-2 text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">Basvuru: {{ party.my_application.created_at|date('d.m.Y H:i') }}</div>{% endif %}
                     </div>
                 {% endif %}
             </div>
@@ -604,7 +696,7 @@
                                 </div>
                             </div>
                             {% if party.is_leader and member.uid != party.uid %}
-                                <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
+                                <div class="party-member-actions shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button onclick="removeMember({{ member.uid }}, '{{ member.nick|default(member.name)|escape('js') }}')" class="bg-red-600/20 hover:bg-red-500 text-red-400 hover:text-white w-8 h-8 rounded flex items-center justify-center text-[11px] border border-red-500/30" title="{{ t('party.profile.kick_member') }}"><i class="fa-solid fa-user-slash"></i></button>
                                 </div>
                             {% endif %}
@@ -749,7 +841,7 @@
             <div class="glass-panel p-5 border-l-4 border-sky-500 bg-sky-500/5">
                 <div class="flex items-center justify-between gap-3 mb-4 border-b border-white/5 pb-3">
                     <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                        <i class="fa-solid fa-timeline text-sky-400"></i> {{ t('party.profile.logs') }}
+                        <i class="fa-solid fa-timeline text-sky-400"></i> Siyasi faaliyet akisi
                     </h2>
                     <span class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">Son 10 kayit</span>
                 </div>
@@ -797,10 +889,10 @@
                                 </div>
                             </div>
                             {% if party.is_leader and member.uid != party.uid %}
-                                <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
-                                    <button onclick="assignRole({{ member.uid }}, 2)" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
-                                    <button onclick="assignRole({{ member.uid }}, 1)" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
-                                    <button onclick="assignRole({{ member.uid }}, 0)" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
+                                <div class="party-member-actions shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="assignRole({{ member.uid }}, 2)" title="Yonetici yap" aria-label="Yonetici yap" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 1)" title="Sozcu yap" aria-label="Sozcu yap" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 0)" title="Uye yap" aria-label="Uye yap" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
                                 </div>
                             {% endif %}
                         </div>
@@ -827,10 +919,10 @@
                                 </div>
                             </div>
                             {% if party.is_leader and member.uid != party.uid %}
-                                <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
-                                    <button onclick="assignRole({{ member.uid }}, 2)" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
-                                    <button onclick="assignRole({{ member.uid }}, 1)" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
-                                    <button onclick="assignRole({{ member.uid }}, 0)" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
+                                <div class="party-member-actions shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="assignRole({{ member.uid }}, 2)" title="Yonetici yap" aria-label="Yonetici yap" class="bg-fuchsia-600/20 hover:bg-fuchsia-500 text-fuchsia-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-fuchsia-500/30"><i class="fa-solid fa-star"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 1)" title="Sozcu yap" aria-label="Sozcu yap" class="bg-blue-600/20 hover:bg-blue-500 text-blue-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-blue-500/30"><i class="fa-solid fa-bullhorn"></i></button>
+                                    <button onclick="assignRole({{ member.uid }}, 0)" title="Uye yap" aria-label="Uye yap" class="bg-slate-600/20 hover:bg-slate-500 text-slate-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-[10px] border border-slate-500/30"><i class="fa-solid fa-user-minus"></i></button>
                                 </div>
                             {% endif %}
                         </div>

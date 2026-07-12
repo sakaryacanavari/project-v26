@@ -330,6 +330,34 @@
             position: sticky;
             top: 92px;
         }
+        .home-theme-surface.gx-priority-news .home-primary-col {
+            display: block;
+            grid-column: 1 / span 8 !important;
+            min-width: 0;
+        }
+        .home-theme-surface.gx-priority-news .home-main-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            width: 100%;
+        }
+        .home-theme-surface.gx-priority-news .home-main-stack > :not([hidden]) ~ :not([hidden]) {
+            margin-top: 0 !important;
+        }
+        .home-theme-surface.gx-priority-news .news-v10-shell,
+        .home-theme-surface.gx-priority-news .shout-v10-shell {
+            grid-column: auto !important;
+            width: 100%;
+            max-width: none !important;
+        }
+        .home-theme-surface.gx-priority-news .home-side-col {
+            grid-column: 9 / -1 !important;
+            align-self: start;
+        }
+        .home-theme-surface.gx-priority-news .home-side-col .route-v2-shell {
+            position: sticky;
+            top: 92px;
+        }
         .home-theme-surface.gx-priority-shouts .shout-v10-shell {
             grid-column: 1 / -1 !important;
         }
@@ -745,25 +773,41 @@
     .home-theme-surface .route-card:hover, .home-theme-surface .route-card:focus-visible { background: linear-gradient(180deg, rgba(255,255,255,0.055) 0%, rgba(2,6,23,0.28) 100%); transform: translateY(-2px); box-shadow: 0 12px 24px -12px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.12); border-color: rgba(148,163,184,0.18); outline: none; }
     .home-theme-surface .route-card:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 52%, transparent), 0 12px 24px -12px rgba(0,0,0,0.62); }
     .home-theme-surface .route-card.is-done { background: linear-gradient(180deg, rgba(6, 78, 59, 0.20), rgba(2,6,23,0.34)); border-color: rgba(16, 185, 129, 0.18); box-shadow: inset 3px 0 0 rgba(16,185,129,.44), inset 0 1px 0 rgba(255,255,255,0.035); }
-    .home-theme-surface .route-card.is-locked { background: rgba(2,6,23,0.34); border-color: rgba(148,163,184,0.07); }
+    .home-theme-surface .route-card.is-secondary-route { background: rgba(2,6,23,0.34); border-color: rgba(148,163,184,0.09); }
     .home-theme-surface .route-card.is-next-route { background: linear-gradient(160deg, color-mix(in srgb, var(--brand-primary) 14%, rgba(15,23,42,0.7)) 0%, rgba(2,6,23,0.46) 100%); border-color: color-mix(in srgb, var(--brand-primary) 42%, transparent); border-left: 3px solid var(--brand-primary); box-shadow: 0 12px 24px -16px color-mix(in srgb, var(--brand-primary) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 22px color-mix(in srgb, var(--brand-primary) 7%, transparent); }
     .home-theme-surface .route-icon { background: rgba(15,23,42,.62); border: 1px solid rgba(148,163,184,.14); color: #94a3b8; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
     .home-theme-surface .route-card.is-done .route-icon { background: rgba(16,185,129,.12); color: #86efac; border-color: rgba(16,185,129,.28); }
     .home-theme-surface .route-card.is-next-route .route-icon { background: var(--brand-primary); color: #020617; box-shadow: 0 0 14px color-mix(in srgb, var(--brand-primary) 35%, transparent), inset 0 -1px 3px rgba(0,0,0,0.35); border: none; }
-    .home-theme-surface .route-card.is-locked .route-icon { background: rgba(15,23,42,.44); color: #64748b; border-color: rgba(148,163,184,.10); }
+    .home-theme-surface .route-card.is-secondary-route .route-icon { background: rgba(15,23,42,.44); color: #94a3b8; border-color: rgba(148,163,184,.10); }
     .home-theme-surface .route-step-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
     .home-theme-surface .route-status-pill { white-space: nowrap; border-radius: 999px; padding: 3px 8px; border: 1px solid transparent; background: transparent; color: #94a3b8; }
     .home-theme-surface .route-card.is-done .route-status-pill { color: #86efac; }
     .home-theme-surface .route-card.is-next-route .route-status-pill { color: #022c22; border-color: color-mix(in srgb, var(--brand-primary) 34%, transparent); background: var(--brand-primary); box-shadow: 0 6px 14px color-mix(in srgb, var(--brand-primary) 16%, transparent); }
-    .home-theme-surface .route-card.is-locked .route-status-pill { color: #64748b; }
+    .home-theme-surface .route-card.is-secondary-route .route-status-pill { color: #94a3b8; }
+    .home-theme-surface .route-stage-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 3px 7px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .home-theme-surface .route-context { margin-top: 7px; display: grid; gap: 4px; color: color-mix(in srgb, var(--text-muted, #94a3b8) 86%, #ffffff); font-size: 9px; font-weight: 800; line-height: 1.35; }
+    .home-theme-surface .route-context strong { color: color-mix(in srgb, var(--brand-primary) 72%, #ffffff); font-size: 8px; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
     .home-theme-surface .route-action-cue { color: #94a3b8; transition: color .18s ease, transform .18s ease; }
     .home-theme-surface .route-card:hover .route-action-cue, .home-theme-surface .route-card:focus-visible .route-action-cue { color: var(--brand-primary); transform: translateX(2px); }
+    .home-theme-surface .player-goals-shell { border-color: color-mix(in srgb, var(--brand-primary) 16%, rgba(255,255,255,0.08)); }
+    .home-theme-surface .player-goal-card { display: flex; align-items: center; gap: 10px; min-width: 0; border: 1px solid rgba(148,163,184,0.10); border-radius: 14px; padding: 10px 11px; background: rgba(2,6,23,0.30); transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+    .home-theme-surface .player-goal-card:hover, .home-theme-surface .player-goal-card:focus-visible { border-color: color-mix(in srgb, var(--brand-primary) 38%, transparent); background: color-mix(in srgb, var(--brand-primary) 8%, rgba(2,6,23,0.42)); transform: translateY(-1px); outline: none; }
+    .home-theme-surface .player-goal-card.is-done { border-color: color-mix(in srgb, var(--status-success, #34d399) 24%, transparent); background: color-mix(in srgb, var(--status-success, #34d399) 7%, rgba(2,6,23,0.32)); }
+    .home-theme-surface .player-goal-card.is-next { border-color: color-mix(in srgb, var(--brand-primary) 44%, transparent); box-shadow: inset 2px 0 0 var(--brand-primary); }
+    .home-theme-surface .player-goal-icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex: 0 0 30px; border-radius: 10px; color: var(--brand-primary); background: color-mix(in srgb, var(--brand-primary) 12%, transparent); border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent); }
+    .home-theme-surface .player-goal-card.is-done .player-goal-icon { color: var(--status-success, #34d399); background: color-mix(in srgb, var(--status-success, #34d399) 12%, transparent); border-color: color-mix(in srgb, var(--status-success, #34d399) 24%, transparent); }
+    .home-theme-surface .player-goal-status { white-space: nowrap; border-radius: 999px; padding: 3px 7px; font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted, #94a3b8); background: rgba(148,163,184,0.08); }
+    .home-theme-surface .player-goal-card.is-done .player-goal-status { color: var(--status-success, #6ee7b7); background: color-mix(in srgb, var(--status-success, #34d399) 12%, transparent); }
+    .home-theme-surface .player-goal-card.is-next .player-goal-status { color: var(--brand-primary); background: color-mix(in srgb, var(--brand-primary) 12%, transparent); }
     @media (max-width: 640px) {
         .home-theme-surface .route-head-v2 { gap: 14px; }
         .home-theme-surface .onboarding-summary { padding: 12px; }
         .home-theme-surface .route-status-pill { order: 3; width: fit-content; margin-top: 2px; }
         .home-theme-surface .route-card { min-height: 72px; }
+        .home-theme-surface .route-context { font-size: 8.5px; }
         .home-theme-surface .route-guide-note { width: 100%; justify-content: center; }
+        .home-theme-surface .player-goal-card { align-items: flex-start; padding: 9px 10px; }
+        .home-theme-surface .player-goal-status { margin-left: auto; }
     }
     .home-theme-surface .admin-ops-shell { background: linear-gradient(180deg, rgba(127, 29, 29, 0.15) 0%, rgba(0,0,0,0.2) 100%) !important; border-radius: 20px !important; border: 1px solid rgba(127, 29, 29, 0.3) !important; }
     .home-theme-surface .admin-ops-item { border-radius: 14px; }
@@ -1808,27 +1852,33 @@
                         <div class="onboarding-progress mt-3">
                             <div class="onboarding-progress-bar h-full" style="width: {{ onboardingProgress|default(0) }}%"></div>
                         </div>
-                        {% if onboardingTotal > 0 and completedOnboarding == onboardingTotal %}
+                        {% if onboardingComplete|default(false) %}
                             <div class="mt-2 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">{{ t('home.route.completed') }}</div>
                         {% endif %}
                     </div>
                 </div>
 
+                {% if onboardingComplete|default(false) %}
+                    <div class="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-3 py-2.5 text-[10px] font-bold leading-5 text-emerald-100 relative z-10">
+                        <i class="fa-solid fa-circle-check mr-1.5 text-emerald-300"></i>{{ t('home.route.completed_next') }}
+                    </div>
+                {% endif %}
+
                 <div class="route-list mt-4 space-y-2.5 relative z-10">
-                    {% set nextRouteHighlighted = false %}
                     {% for step in onboardingSteps %}
-                        {% set isNextRoute = (not step.done and not nextRouteHighlighted) %}
-                        {% set isLockedRoute = (not step.done and not isNextRoute) %}
-                        {% set routeStatusLabel = step.done ? t('home.route.status_done') : (isNextRoute ? t('home.route.status_active') : t('home.route.status_locked')) %}
-                        <a href="{{ step.href }}" class="route-card {{ step.done ? 'is-done' : '' }} {{ isNextRoute ? 'is-next-route' : '' }} {{ isLockedRoute ? 'is-locked' : '' }} block px-3.5 py-3" aria-label="{{ step.label }} - {{ routeStatusLabel }}">
+                        {% set isNextRoute = (not step.done and step.key == onboardingNextKey|default('')) %}
+                        {% set isSecondaryRoute = (not step.done and not isNextRoute) %}
+                        {% set routeStatusLabel = step.done ? t('home.route.status_done') : (isNextRoute ? t('home.route.status_active') : (step.optional ? t('home.route.optional') : (step.daily ? t('home.route.daily') : t('home.route.recommended')))) %}
+                        <a href="{{ step.href }}" class="route-card {{ step.done ? 'is-done' : '' }} {{ isNextRoute ? 'is-next-route' : '' }} {{ isSecondaryRoute ? 'is-secondary-route' : '' }} block px-3.5 py-3" aria-label="{{ step.label }} - {{ routeStatusLabel }}">
                             <div class="flex items-start gap-3">
                                 <div class="route-icon h-9 w-9 shrink-0 rounded-xl flex items-center justify-center text-[12px]">
-                                    <i class="fa-solid {{ step.done ? 'fa-check' : (isNextRoute ? 'fa-arrow-right' : 'fa-lock') }}"></i>
+                                    <i class="fa-solid {{ step.done ? 'fa-check' : (isNextRoute ? 'fa-arrow-right' : (step.daily ? 'fa-calendar-day' : (step.optional ? 'fa-compass' : step.icon))) }}"></i>
                                 </div>
                                 <div class="min-w-0 flex-1 pt-0.5">
                                     <div class="flex items-center justify-between gap-2 flex-wrap">
                                         <span class="route-step-meta">
                                             <span class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">{{ t('home.route.step') }} {{ loop.index }}</span>
+                                            <span class="route-stage-chip"><i class="fa-solid fa-layer-group"></i>{{ t('home.route.stage.' ~ step.stage) }}</span>
                                         </span>
                                         <span class="route-status-pill text-[8px] font-black uppercase tracking-[0.1em]">
                                             {{ routeStatusLabel }}
@@ -1842,12 +1892,39 @@
                                 </div>
                             </div>
                         </a>
-                        {% if isNextRoute %}
-                            {% set nextRouteHighlighted = true %}
-                        {% endif %}
                     {% endfor %}
                 </div>
             </section>
+
+            {% if playerGoals|default([])|length > 0 %}
+                <section class="player-goals-shell glass-panel rounded-2xl p-4 relative overflow-hidden" aria-labelledby="player-goals-title">
+                    <div class="flex items-start justify-between gap-3 border-b border-white/5 pb-3">
+                        <div class="min-w-0">
+                            <h2 id="player-goals-title" class="text-[12px] font-black uppercase tracking-[0.16em] text-gradient-primary">
+                                <i class="fa-solid fa-bullseye mr-1.5" aria-hidden="true"></i>{{ t('home.player_goals.title') }}
+                            </h2>
+                            <p class="mt-1 text-[10px] font-medium leading-relaxed text-slate-400">{{ t('home.player_goals.subtitle') }}</p>
+                        </div>
+                        <span class="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-slate-400">{{ t('home.player_goals.real_data') }}</span>
+                    </div>
+                    <div class="mt-3 space-y-2">
+                        {% for goal in playerGoals %}
+                            {% set goalStatus = goal.done ? t('home.player_goals.status_done') : (goal.is_next ? t('home.player_goals.status_next') : t('home.player_goals.status_recommended')) %}
+                            <a href="{{ goal.href }}" class="player-goal-card {{ goal.done ? 'is-done' : '' }} {{ goal.is_next ? 'is-next' : '' }}" aria-label="{{ goal.label }} - {{ goalStatus }}">
+                                <span class="player-goal-icon" aria-hidden="true"><i class="fa-solid {{ goal.done ? 'fa-check' : goal.icon }}"></i></span>
+                                <span class="min-w-0 flex-1">
+                                    <span class="flex items-center gap-2 min-w-0">
+                                        <span class="truncate text-[11px] font-black text-white">{{ goal.label }}</span>
+                                        <span class="player-goal-status">{{ goalStatus }}</span>
+                                    </span>
+                                    <span class="mt-1 block text-[9px] font-medium leading-relaxed text-slate-400">{{ goal.description }}</span>
+                                </span>
+                                <i class="fa-solid fa-chevron-right shrink-0 pt-1 text-[10px] text-slate-500" aria-hidden="true"></i>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
 
             {% if isAdminUser %}
                 <section class="admin-ops-shell glass-panel p-4 border border-red-500/20 bg-red-500/5 rounded-2xl">

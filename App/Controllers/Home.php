@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UserGym;
+use App\Models\UserItem;
 use App\System\App;
 use App\System\Controller;
 use App\System\GameExperience;
@@ -240,6 +241,13 @@ class Home extends Controller
             }
         }
 
+        $hasInventoryItem = false;
+        try {
+            $hasInventoryItem = UserItem::where('uid', $uid)->where('quantity', '>', 0)->exists();
+        } catch (\Exception $e) {
+            $hasInventoryItem = false;
+        }
+
         $pendingPartyApplications = 0;
         if ($hasPoliticalParty && (int) ($myPartyMembership->level ?? 0) === 3) {
             try {
@@ -350,50 +358,105 @@ class Home extends Controller
 
         $onboardingSteps = [
             [
+                'key' => 'profile',
+                'stage' => 'start',
+                'icon' => 'fa-id-card',
+                'optional' => false,
+                'daily' => false,
                 'label' => \t('home.route.step_1_label'),
                 'done' => $hasCompletedProfile,
                 'href' => $this->app->getContainer()->get('router')->pathFor('settings'),
                 'hint' => $hasCompletedProfile ? \t('home.route.step_1_hint_done') : \t('home.route.step_1_hint_pending'),
-                'badge' => $hasCompletedProfile ? \t('home.route.step_1_badge_done') : \t('home.route.step_1_badge_pending'),
+                'reason' => \t('home.route.step_1_reason'),
+                'benefit' => \t('home.route.step_1_benefit'),
             ],
             [
+                'key' => 'training',
+                'stage' => 'growth',
+                'icon' => 'fa-dumbbell',
+                'optional' => false,
+                'daily' => true,
                 'label' => \t('home.route.step_2_label'),
                 'done' => $hasAnyTrainingToday,
                 'href' => $this->app->getContainer()->get('router')->pathFor('gyms'),
                 'hint' => $hasAnyTrainingToday ? \t('home.route.step_2_hint_done') : \t('home.route.step_2_hint_pending'),
-                'badge' => $hasAnyTrainingToday ? \t('home.route.step_2_badge_done') : \t('home.route.step_2_badge_pending'),
+                'reason' => \t('home.route.step_2_reason'),
+                'benefit' => \t('home.route.step_2_benefit'),
             ],
             [
+                'key' => 'work',
+                'stage' => 'economy',
+                'icon' => 'fa-briefcase',
+                'optional' => false,
+                'daily' => false,
                 'label' => \t('home.route.step_3_label'),
                 'done' => !empty($job),
                 'href' => $this->app->getContainer()->get('router')->pathFor('workOffers'),
                 'hint' => !empty($job) ? \t('home.route.step_3_hint_done') : \t('home.route.step_3_hint_pending'),
-                'badge' => !empty($job) ? \t('home.route.step_3_badge_done') : \t('home.route.step_3_badge_pending'),
+                'reason' => \t('home.route.step_3_reason'),
+                'benefit' => \t('home.route.step_3_benefit'),
             ],
             [
+                'key' => 'inventory',
+                'stage' => 'economy',
+                'icon' => 'fa-box-archive',
+                'optional' => false,
+                'daily' => false,
                 'label' => \t('home.route.step_4_label'),
+                'done' => $hasInventoryItem,
+                'href' => $this->app->getContainer()->get('router')->pathFor('marketplace'),
+                'hint' => $hasInventoryItem ? \t('home.route.step_4_hint_done') : \t('home.route.step_4_hint_pending'),
+                'reason' => \t('home.route.step_4_reason'),
+                'benefit' => \t('home.route.step_4_benefit'),
+            ],
+            [
+                'key' => 'party',
+                'stage' => 'politics',
+                'icon' => 'fa-landmark-dome',
+                'optional' => false,
+                'daily' => false,
+                'label' => \t('home.route.step_5_label'),
                 'done' => $hasPoliticalParty,
                 'href' => $this->app->getContainer()->get('router')->pathFor('partyList'),
-                'hint' => $hasPoliticalParty ? \t('home.route.step_4_hint_done') : \t('home.route.step_4_hint_pending'),
-                'badge' => $hasPoliticalParty ? \t('home.route.step_4_badge_done') : \t('home.route.step_4_badge_pending'),
+                'hint' => $hasPoliticalParty ? \t('home.route.step_5_hint_done') : \t('home.route.step_5_hint_pending'),
+                'reason' => \t('home.route.step_5_reason'),
+                'benefit' => \t('home.route.step_5_benefit'),
             ],
             [
-                'label' => \t('home.route.step_5_label'),
+                'key' => 'newspaper',
+                'stage' => 'social',
+                'icon' => 'fa-newspaper',
+                'optional' => true,
+                'daily' => false,
+                'label' => \t('home.route.step_6_label'),
                 'done' => !empty($myNewspaper),
                 'href' => $this->app->getContainer()->get('router')->pathFor('createNewspaper'),
-                'hint' => !empty($myNewspaper) ? \t('home.route.step_5_hint_done') : \t('home.route.step_5_hint_pending'),
-                'badge' => !empty($myNewspaper) ? \t('home.route.step_5_badge_done') : \t('home.route.step_5_badge_pending'),
+                'hint' => !empty($myNewspaper) ? \t('home.route.step_6_hint_done') : \t('home.route.step_6_hint_pending'),
+                'reason' => \t('home.route.step_6_reason'),
+                'benefit' => \t('home.route.step_6_benefit'),
             ],
         ];
 
         $completedOnboarding = 0;
+        $onboardingCoreTotal = 0;
+        $completedOnboardingCore = 0;
+        $onboardingNextKey = null;
         foreach ($onboardingSteps as $step) {
             if (!empty($step['done'])) {
                 $completedOnboarding++;
             }
+            if (empty($step['optional']) && empty($step['daily'])) {
+                $onboardingCoreTotal++;
+                if (!empty($step['done'])) {
+                    $completedOnboardingCore++;
+                } elseif ($onboardingNextKey === null) {
+                    $onboardingNextKey = $step['key'];
+                }
+            }
         }
-        $onboardingTotal = count($onboardingSteps);
-        $onboardingProgress = $onboardingTotal > 0 ? (int) floor(($completedOnboarding / $onboardingTotal) * 100) : 0;
+        $onboardingTotal = $onboardingCoreTotal;
+        $onboardingProgress = $onboardingCoreTotal > 0 ? (int) floor(($completedOnboardingCore / $onboardingCoreTotal) * 100) : 0;
+        $onboardingComplete = $onboardingCoreTotal > 0 && $completedOnboardingCore === $onboardingCoreTotal;
 
         $cronEntries = [];
         if ($isAdmin) {
@@ -411,6 +474,113 @@ class Home extends Controller
 
         $gameExperienceSettings = GameExperience::getPreferences((int) $uid);
         $router = $this->app->getContainer()->get('router');
+
+        $playerGoals = [
+            [
+                'key' => 'profile',
+                'icon' => 'fa-id-card',
+                'label' => \t('home.player_goals.profile.label'),
+                'description' => \t('home.player_goals.profile.description'),
+                'done' => $hasCompletedProfile,
+                'href' => $router->pathFor('settings'),
+            ],
+            [
+                'key' => 'career',
+                'icon' => 'fa-briefcase',
+                'label' => \t('home.player_goals.career.label'),
+                'description' => \t('home.player_goals.career.description'),
+                'done' => !empty($job),
+                'href' => $router->pathFor('workOffers'),
+            ],
+            [
+                'key' => 'party',
+                'icon' => 'fa-landmark-dome',
+                'label' => \t('home.player_goals.party.label'),
+                'description' => \t('home.player_goals.party.description'),
+                'done' => $hasPoliticalParty,
+                'href' => $hasPoliticalParty
+                    ? $router->pathFor('party', ['id' => (int) ($myPartyMembership->party ?? 0)])
+                    : $router->pathFor('partyList'),
+            ],
+        ];
+
+        if ($hasPoliticalParty) {
+            $partyRoleLevel = (int) ($myPartyMembership->level ?? 0);
+            $playerGoals[] = [
+                'key' => 'party_role',
+                'icon' => 'fa-user-tie',
+                'label' => \t('home.player_goals.party_role.label'),
+                'description' => \t('home.player_goals.party_role.description'),
+                'done' => $partyRoleLevel > 0,
+                'href' => $router->pathFor('party', ['id' => (int) ($myPartyMembership->party ?? 0)]),
+            ];
+        }
+
+        if ($hasPoliticalParty) {
+            try {
+                $schema = DB::getSchemaBuilder();
+                $hasElectionTables = $schema->hasTable('party_elections')
+                    && $schema->hasTable('party_candidates')
+                    && $schema->hasTable('party_votes');
+
+                if ($hasElectionTables) {
+                    $partyElectionQuery = DB::table('party_elections')
+                        ->where('party_id', (int) $myPartyMembership->party)
+                        ->where('status', '!=', 'finished');
+                    if ($schema->hasColumn('party_elections', 'election_key')) {
+                        $partyElectionQuery->where('election_key', date('Y-m-01 00:00:00'));
+                    }
+                    $partyElection = $partyElectionQuery->orderBy('id', 'desc')->first();
+
+                    if ($partyElection) {
+                        $electionId = (int) $partyElection->id;
+                        $isCandidate = DB::table('party_candidates')
+                            ->where('election_id', $electionId)
+                            ->where('uid', $uid)
+                            ->exists();
+                        $hasVoted = DB::table('party_votes')
+                            ->where('election_id', $electionId)
+                            ->where('voter_uid', $uid)
+                            ->exists();
+                        $electionStatus = (string) ($partyElection->status ?? '');
+
+                        if ($electionStatus === 'candidacy' || $isCandidate) {
+                            $playerGoals[] = [
+                                'key' => 'election_candidate',
+                                'icon' => 'fa-person-running',
+                                'label' => \t('home.player_goals.election_candidate.label'),
+                                'description' => \t('home.player_goals.election_candidate.description'),
+                                'done' => $isCandidate,
+                                'href' => $router->pathFor('electionsHome'),
+                            ];
+                        }
+                        if ($electionStatus === 'voting' || $hasVoted) {
+                            $playerGoals[] = [
+                                'key' => 'election_vote',
+                                'icon' => 'fa-check-to-slot',
+                                'label' => \t('home.player_goals.election_vote.label'),
+                                'description' => \t('home.player_goals.election_vote.description'),
+                                'done' => $hasVoted,
+                                'href' => $router->pathFor('electionsHome'),
+                            ];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Election goals remain hidden when their tables are unavailable.
+            }
+        }
+
+        $nextPlayerGoal = true;
+        foreach ($playerGoals as &$playerGoal) {
+            $playerGoal['is_next'] = false;
+            if (!$playerGoal['done'] && $nextPlayerGoal) {
+                $playerGoal['is_next'] = true;
+                $nextPlayerGoal = false;
+            }
+        }
+        unset($playerGoal);
+
         $quickLinks = GameExperience::buildQuickLinks($gameExperienceSettings, function ($routeName) use ($router) {
             return $router->pathFor($routeName);
         });
@@ -423,9 +593,13 @@ class Home extends Controller
             "newsFeeds" => $newsFeeds,
             "todaySummaryArticles" => $todaySummaryArticles,
             "onboardingSteps" => $onboardingSteps,
-            "completedOnboarding" => $completedOnboarding,
+            "completedOnboarding" => $completedOnboardingCore,
             "onboardingTotal" => $onboardingTotal,
             "onboardingProgress" => $onboardingProgress,
+            "onboardingNextKey" => $onboardingNextKey,
+            "onboardingComplete" => $onboardingComplete,
+            "onboardingAllCompleted" => $completedOnboarding,
+            "playerGoals" => $playerGoals,
             "countryCurrency" => $countryCurrency,
             "localBalance" => $localBalance,
             "goldBalance" => $goldBalance,
