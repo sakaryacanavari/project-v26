@@ -375,42 +375,68 @@
     </div>
 
     {% endif %}
-    <div class="glass-panel p-6 border-t-2 border-indigo-500 relative overflow-hidden bg-black/40 shadow-xl">
-        <div class="flex justify-between items-end mb-6 border-b border-white/5 pb-4 relative z-10">
-            <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                <i class="fa-solid fa-users-viewfinder text-indigo-500"></i> Meclis Kompozisyonu
-            </h2>
-            <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 shadow-inner">
-                Toplam <span class="text-indigo-400 text-[11px]">{{ totalSeats }}</span> Koltuk
+    <section class="glass-panel p-5 md:p-6 border-t border-white/5 relative overflow-hidden bg-black/40 shadow-[0_16px_30px_-26px_rgba(0,0,0,0.9)]" aria-labelledby="parliament-overview-title">
+        <div class="flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 id="parliament-overview-title" class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                    <i class="fa-solid fa-landmark text-[color:var(--brand-primary)]"></i> Meclis Durumu
+                </h2>
+                <p class="mt-2 text-[10px] font-medium leading-5 text-slate-400">Secilmis temsilciler ve temsil edilen partiler mevcut kayitlardan gosterilir.</p>
             </div>
+            <span class="inline-flex w-fit items-center gap-2 rounded-lg bg-black/45 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-slate-300 shadow-inner">
+                <i class="fa-solid fa-chair text-[color:var(--brand-primary)]"></i> Dolu sandalye: {{ filledSeatCount }}
+            </span>
         </div>
-        {% if totalSeats > 0 %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 relative z-10">
-                {% for party in partySeats %}
-                    <div class="relative bg-black/60 border border-white/10 rounded-2xl p-5 hover:scale-[1.02] transition-all duration-300 group overflow-hidden shadow-lg flex flex-col justify-between" style="border-bottom: 3px solid {{ party.color|default('#6B7280') }}; min-height: 100px;">
-                        <div class="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-10 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none" style="background-color: {{ party.color|default('#6B7280') }};"></div>
-                        <div class="relative z-10 flex justify-between items-start gap-2">
-                            <div class="flex-1">
-                                <div class="flex items-start gap-2 mb-3">
-                                    <span class="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] group-hover:animate-pulse mt-1 flex-shrink-0" style="background-color: {{ party.color|default('#6B7280') }};"></span>
-                                    <h3 class="text-[11px] font-black text-white uppercase tracking-widest leading-snug break-words">{{ party.name }}</h3>
-                                </div>
-                                <div class="text-2xl font-black text-white drop-shadow-md flex items-end gap-1.5">
-                                    {{ party.count }} <span class="text-[8px] text-slate-500 uppercase tracking-widest mb-1.5">Milletvekili</span>
-                                </div>
-                            </div>
-                            <div class="relative flex-shrink-0 w-14 h-14 rounded-full border border-white/5 bg-black/50 shadow-inner flex items-center justify-center self-center">
-                                <div class="absolute inset-0 rounded-full opacity-80" style="background: conic-gradient({{ party.color|default('#6B7280') }} {{ party.percentage }}%, transparent 0);"></div>
-                                <div class="absolute inset-1.5 bg-slate-900 rounded-full flex items-center justify-center border border-black/50 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"><span class="text-[9px] font-black text-white">%{{ party.percentage|round(1) }}</span></div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
+
+        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-xl bg-black/35 px-4 py-3 shadow-inner">
+                <div class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">Dolu sandalye</div>
+                <div class="mt-1 text-[20px] font-black text-white">{{ filledSeatCount }}</div>
             </div>
-        {% else %}
-            <div class="text-center py-12 text-slate-500 opacity-70"><i class="fa-solid fa-ghost text-5xl mb-4"></i><div class="text-[12px] font-black uppercase tracking-widest text-slate-400">Meclis Henüz Kurulmadı</div></div>
-        {% endif %}
-    </div>
+            {% if seatCapacity is not null %}
+                <div class="rounded-xl bg-black/35 px-4 py-3 shadow-inner">
+                    <div class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">Tanimli kapasite</div>
+                    <div class="mt-1 text-[20px] font-black text-white">{{ seatCapacity }}</div>
+                </div>
+            {% endif %}
+            <div class="rounded-xl bg-black/35 px-4 py-3 shadow-inner">
+                <div class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">Temsil edilen parti</div>
+                <div class="mt-1 text-[20px] font-black text-white">{{ representedPartyCount }}</div>
+            </div>
+            {% if myParliamentMembership %}
+                <div class="rounded-xl bg-[color:var(--brand-primary)]/5 px-4 py-3 shadow-inner">
+                    <div class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">Meclis durumun</div>
+                    <div class="mt-1 text-[12px] font-black text-white">Secilmis temsilci</div>
+                    <div class="mt-1 text-[9px] font-bold text-[color:var(--brand-primary)]">{{ myParliamentMembership.party_name }}</div>
+                </div>
+            {% else %}
+                <div class="rounded-xl bg-black/30 px-4 py-3 shadow-inner">
+                    <div class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">Meclis durumun</div>
+                    <div class="mt-1 text-[12px] font-black text-white">Temsilci degilsin</div>
+                    <div class="mt-1 text-[9px] font-medium text-slate-400">Mevcut kayitlarda adin yok.</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-5 border-t border-white/5 pt-4">
+            <div class="mb-3 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Parti dagilimi</div>
+            {% if partySeats|length > 0 %}
+                <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {% for party in partySeats %}
+                        <div class="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-black/35 px-4 py-3 shadow-inner">
+                            <div class="min-w-0 flex items-center gap-2.5">
+                                <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)]"><i class="fa-solid {{ party.is_independent ? 'fa-user' : 'fa-flag' }} text-[11px]"></i></span>
+                                <span class="min-w-0 truncate text-[11px] font-black text-white">{{ party.name }}</span>
+                            </div>
+                            <span class="shrink-0 text-right"><strong class="text-[17px] font-black text-white">{{ party.count }}</strong><span class="ml-1 text-[8px] font-black uppercase tracking-[0.1em] text-slate-500">sandalye</span></span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="rounded-xl bg-black/30 px-4 py-5 text-[11px] font-medium leading-5 text-slate-400 shadow-inner">Mecliste kayitli temsilci olmadigi icin parti dagilimi olusmadi.</div>
+            {% endif %}
+        </div>
+    </section>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
         <aside class="xl:col-span-5 space-y-6 relative z-[50]">
@@ -523,21 +549,21 @@
                 </div>
             </div>
 
-            <div class="glass-panel p-6 border-t-2 border-indigo-500 relative overflow-hidden z-10">
+            <div class="glass-panel p-5 md:p-6 border-t border-white/5 relative overflow-hidden z-10">
                 <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-white/5 pb-4 relative z-10"><i class="fa-solid fa-user-tie text-indigo-500"></i> Aktif Meclis Üyeleri</h2>
-                <div class="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 relative z-10">
+                <div class="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1 sm:pr-2 relative z-10">
                     {% if congressMembers|length > 0 %}
                         {% for member in congressMembers %}
-                            <div class="flex items-center gap-3 bg-black/40 border border-white/5 p-2.5 rounded-xl transition-colors shadow-inner group" style="border-left: 3px solid {{ member.color }};">
-                                <div class="w-9 h-9 rounded-full flex flex-shrink-0 items-center justify-center border" style="background-color: {{ member.color }}20; border-color: {{ member.color }}50; color: {{ member.color }};"><i class="fa-solid fa-user-tie text-xs"></i></div>
-                                <div class="overflow-hidden">
-                                    <div class="text-[11px] font-black text-white uppercase tracking-wider mb-0.5 truncate">{{ member.nick }}</div>
-                                    <div class="text-[8px] font-bold uppercase tracking-widest flex items-start gap-1 break-words leading-tight" style="color: {{ member.color }}90;"><i class="fa-solid fa-flag mt-0.5"></i> {{ member.party_name }}</div>
+                            <div class="flex items-center gap-3 rounded-xl p-3 transition-colors {% if member.is_viewer %}border border-[color:var(--brand-primary)]/35 bg-[color:var(--brand-primary)]/8{% else %}bg-black/40 shadow-inner{% endif %}">
+                                <div class="w-9 h-9 rounded-full flex flex-shrink-0 items-center justify-center bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)]"><i class="fa-solid fa-user-tie text-xs"></i></div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2"><div class="min-w-0 truncate text-[11px] font-black text-white uppercase tracking-wider">{{ member.nick }}</div>{% if member.is_viewer %}<span class="shrink-0 rounded-full border border-[color:var(--brand-primary)]/25 bg-[color:var(--brand-primary)]/10 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.1em] text-[color:var(--brand-primary)]">Sen</span>{% endif %}</div>
+                                    <div class="mt-1 text-[8px] font-bold uppercase tracking-widest leading-tight text-slate-400"><i class="fa-solid {{ member.is_independent ? 'fa-user' : 'fa-flag' }} mr-1"></i>{{ member.party_name }}</div>
                                 </div>
                             </div>
                         {% endfor %}
                     {% else %}
-                        <div class="text-center py-6 text-slate-500 opacity-70"><i class="fa-solid fa-ghost text-3xl mb-2"></i><div class="text-[10px] font-black uppercase tracking-widest">Meclis Boş</div></div>
+                        <div class="text-center py-6 text-slate-500 opacity-70"><i class="fa-solid fa-landmark text-3xl mb-2"></i><div class="text-[10px] font-black uppercase tracking-widest">Kayitli temsilci yok</div><div class="mt-2 text-[9px] font-medium normal-case tracking-normal">Temsilci kayitlari olustugunda burada listelenir.</div></div>
                     {% endif %}
                 </div>
             </div>

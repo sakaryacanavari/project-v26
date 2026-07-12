@@ -318,11 +318,10 @@ class PoliticalParty extends Controller
                             break;
                         }
                     }
-                    $election['phase_label'] = [
-                        'candidacy' => 'Adaylik',
-                        'voting' => 'Oylama',
-                        'results' => 'Sonuclar',
-                    ][(string) ($election['status'] ?? '')] ?? 'Aktif tur';
+                    $partyElectionDay = (int) date('j');
+                    $election['phase_label'] = $partyElectionDay >= 12 && $partyElectionDay <= 14
+                        ? 'Adaylik'
+                        : ($partyElectionDay === 15 ? 'Oylama' : ($partyElectionDay === 16 ? 'Sonuclar' : 'Aktif tur'));
                     $election['viewer_status'] = $election['viewer_is_candidate']
                         ? 'Aday'
                         : ($election['my_vote'] ? 'Oy kullandin' : 'Takipte');

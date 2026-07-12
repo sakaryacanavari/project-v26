@@ -542,9 +542,11 @@ class Home extends Controller
                             ->where('election_id', $electionId)
                             ->where('voter_uid', $uid)
                             ->exists();
-                        $electionStatus = (string) ($partyElection->status ?? '');
+                        $partyElectionDay = (int) date('j');
+                        $isPartyCandidacyOpen = $partyElectionDay >= 12 && $partyElectionDay <= 14;
+                        $isPartyVotingOpen = $partyElectionDay === 15;
 
-                        if ($electionStatus === 'candidacy' || $isCandidate) {
+                        if ($isPartyCandidacyOpen || $isCandidate) {
                             $playerGoals[] = [
                                 'key' => 'election_candidate',
                                 'icon' => 'fa-person-running',
@@ -554,7 +556,7 @@ class Home extends Controller
                                 'href' => $router->pathFor('electionsHome'),
                             ];
                         }
-                        if ($electionStatus === 'voting' || $hasVoted) {
+                        if ($isPartyVotingOpen || $hasVoted) {
                             $playerGoals[] = [
                                 'key' => 'election_vote',
                                 'icon' => 'fa-check-to-slot',

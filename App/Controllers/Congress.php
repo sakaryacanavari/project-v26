@@ -1244,7 +1244,8 @@ class Congress extends Controller
         $id = DB::table('party_elections')->insertGetId([
             'party_id' => (int) $partyId,
             'election_key' => $electionKey,
-            'status' => $phaseMeta['phase'],
+            // The database stores lifecycle state; the visible phase is calculated from the election calendar.
+            'status' => 'running',
             'created_at' => date('Y-m-d H:i:s'),
             'ends_at' => date('Y-m-d H:i:s', $this->getElectionWindowTimestamp(self::PARTY_RESULTS_DAY, true)),
         ]);
@@ -1885,39 +1886,82 @@ class Congress extends Controller
             }
         }
 
-        $congressMembersRaw = CongressMember::where(["country" => $cId])->get()->toArray();
-        $congressMembers = []; $partySeats = []; $totalSeats = count($congressMembersRaw);
-        $colorPalette = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#06b6d4', '#d946ef', '#8b5cf6', '#eab308'];
-        $colorIndex = 0;
+        $congressMembersRaw = CongressMember::where(["country" => $cId])->orderBy('id', 'ASC')->get()->toArray();
+        $filledSeatCount = count($congressMembersRaw);
+        $memberUserIds = array_values(array_unique(array_filter(array_map(function ($member) {
+            return (int) ($member['uid'] ?? 0);
+        }, $congressMembersRaw))));
+        $representedPartyIds = array_values(array_unique(array_filter(array_map(function ($member) {
+            return (int) ($member['party'] ?? 0);
+        }, $congressMembersRaw))));
 
-        foreach ($congressMembersRaw as $cm) {
-            $cmUid = isset($cm['uid']) ? $cm['uid'] : 0;
-            if ($cmUid > 0) {
-                $u = DB::table('users')->where('id', $cmUid)->first();
-                if ($u) {
-                    $groupName = "Bağımsız Vekiller"; $isCoalition = false;
-                    $partyMember = DB::table('party_members')->where('uid', $u->id)->first();
-                    if ($partyMember && $partyMember->party > 0) {
-                        $party = DB::table('political_parties')->where('id', $partyMember->party)->first();
-                        if ($party) {
-                            if (!empty($party->coalition_id)) {
-                                $coalition = DB::table('coalitions')->where('id', $party->coalition_id)->first();
-                                if ($coalition) { $groupName = "🤝 " . $coalition->name; $isCoalition = true; }
-                                else { $groupName = "🏴 " . $party->name; }
-                            } else { $groupName = "🏴 " . $party->name; }
-                        }
-                    }
-                    if (!isset($partySeats[$groupName])) {
-                        $partySeats[$groupName] = ['name' => $groupName, 'count' => 0, 'color' => $groupName == "Bağımsız Vekiller" ? '#64748b' : $colorPalette[$colorIndex % count($colorPalette)], 'is_coalition' => $isCoalition];
-                        if ($groupName != "Bağımsız Vekiller") $colorIndex++;
-                    }
-                    $partySeats[$groupName]['count']++;
-                    $congressMembers[] = ['id' => $u->id, 'nick' => $u->nick, 'party_name' => $groupName, 'color' => $partySeats[$groupName]['color']];
-                }
+        $usersById = [];
+        if (!empty($memberUserIds)) {
+            foreach (DB::table('users')->whereIn('id', $memberUserIds)->get() as $userRow) {
+                $usersById[(int) $userRow->id] = $userRow;
             }
         }
-        uasort($partySeats, function($a, $b) { return $b['count'] <=> $a['count']; });
-        foreach ($partySeats as &$ps) { $ps['percentage'] = $totalSeats > 0 ? round(($ps['count'] / $totalSeats) * 100, 1) : 0; }
+        $partiesById = [];
+        if (!empty($representedPartyIds)) {
+            foreach (DB::table('political_parties')->whereIn('id', $representedPartyIds)->get() as $partyRow) {
+                $partiesById[(int) $partyRow->id] = $partyRow;
+            }
+        }
+
+        $congressMembers = [];
+        $partySeats = [];
+        $myParliamentMembership = null;
+        foreach ($congressMembersRaw as $member) {
+            $memberUid = (int) ($member['uid'] ?? 0);
+            $representedPartyId = (int) ($member['party'] ?? 0);
+            $partyRow = $partiesById[$representedPartyId] ?? null;
+            $isIndependent = $representedPartyId < 1 || !$partyRow;
+            $groupKey = $isIndependent ? 'independent' : 'party_' . $representedPartyId;
+            $groupName = $isIndependent ? 'Bagimsiz Temsilciler' : (string) $partyRow->name;
+
+            if (!isset($partySeats[$groupKey])) {
+                $partySeats[$groupKey] = [
+                    'id' => $representedPartyId,
+                    'name' => $groupName,
+                    'count' => 0,
+                    'is_independent' => $isIndependent,
+                ];
+            }
+            $partySeats[$groupKey]['count']++;
+
+            if ($memberUid === $uid) {
+                $myParliamentMembership = [
+                    'party_id' => $representedPartyId,
+                    'party_name' => $groupName,
+                    'is_independent' => $isIndependent,
+                ];
+            }
+
+            $userRow = $usersById[$memberUid] ?? null;
+            if ($userRow) {
+                $congressMembers[] = [
+                    'id' => (int) $userRow->id,
+                    'nick' => (string) $userRow->nick,
+                    'party_name' => $groupName,
+                    'is_independent' => $isIndependent,
+                    'is_viewer' => $memberUid === $uid,
+                ];
+            }
+        }
+        uasort($partySeats, function ($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
+
+        $seatCapacity = null;
+        if (DB::getSchemaBuilder()->hasColumn('countries', 'congress_seat_count')) {
+            $configuredSeatCount = (int) ($countryObj->congress_seat_count ?? 0);
+            if ($configuredSeatCount > 0) {
+                $seatCapacity = $configuredSeatCount;
+            }
+        }
+        $representedPartyCount = count(array_filter($partySeats, function ($party) {
+            return empty($party['is_independent']);
+        }));
 
         $isOhalActive = $countryObj && property_exists($countryObj, 'ohal_until') && $countryObj->ohal_until && strtotime($countryObj->ohal_until) > time();
         $isEmergencySession = $countryObj && property_exists($countryObj, 'emergency_session_until') && $countryObj->emergency_session_until && strtotime($countryObj->emergency_session_until) > time();
@@ -1930,7 +1974,9 @@ class Congress extends Controller
         $proposedToday = DB::table('law_proposals')->where('uid', $uid)->where('created_at', '>=', date('Y-m-d 00:00:00'))->count();
         $remainingQuota = max(0, $maxQuota - $proposedToday);
         return $this->render('congress/home.html.twig', [
-            "latestLaws" => $latestLaws, "congressMembers" => $congressMembers, "partySeats" => $partySeats, "totalSeats" => $totalSeats,
+            "latestLaws" => $latestLaws, "congressMembers" => $congressMembers, "partySeats" => $partySeats,
+            "filledSeatCount" => $filledSeatCount, "seatCapacity" => $seatCapacity, "representedPartyCount" => $representedPartyCount,
+            "myParliamentMembership" => $myParliamentMembership,
             "isOhalActive" => $isOhalActive, "ohalUntil" => $countryObj->ohal_until ?? null,
             "isEmergencySession" => $isEmergencySession, "emergencyUntil" => $countryObj->emergency_session_until ?? null,
             "isBordersClosed" => $isBordersClosed, "isMobilizationActive" => $isMobilizationActive,
