@@ -379,16 +379,16 @@ class Session
 
     public function isCongressist ()
     {
-        return (bool) $this->remember('is_congressist', function () {
-            $uid = $this->getUid();
-            if (!$uid) {
-                return false;
-            }
+        $uid = $this->getUid();
+        if (!$uid) {
+            return false;
+        }
 
-            return CongressMember::where([
-                "uid" => $uid
-            ])->first() == true;
-        });
+        // Meclis üyeliği seçim ve yönetim işlemlerinden sonra değişebilir;
+        // bu yetkiyi oturum cache'inden okumak yeni üyelikleri geciktirir.
+        return CongressMember::where([
+            "uid" => $uid
+        ])->first() == true;
     }
 
     /**

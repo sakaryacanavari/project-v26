@@ -96,18 +96,31 @@
             <div class="glass-panel p-6 border-t-4 border-green-500 bg-green-950/10 flex flex-col items-center justify-center gap-6 shadow-[0_0_15px_rgba(34,197,94,0.05)]">
                 <div class="text-[11px] font-black text-green-400 uppercase tracking-[0.3em] flex items-center gap-2"><i class="fa-solid fa-thumbs-up"></i> Kabul Oyları</div>
                 <div class="text-6xl font-black text-white drop-shadow-md">{{ law.yes }}</div>
-                <button id="btn-vote-yes" onclick="submitCustomVote({{ law.id }}, true)" {% if not isCongressist %}disabled{% endif %} class="w-full bg-green-600/20 hover:bg-green-500/40 text-green-400 hover:text-white py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border border-green-500/30 disabled:opacity-30 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-check mr-2"></i> Teklifi Onayla
-                </button>
+                {% if canVote %}
+                    <button id="btn-vote-yes" onclick="submitCustomVote({{ law.id }}, true)" class="w-full bg-green-600/20 hover:bg-green-500/40 text-green-400 hover:text-white py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border border-green-500/30">
+                        <i class="fa-solid fa-check mr-2"></i> Teklifi Onayla
+                    </button>
+                {% endif %}
             </div>
             <div class="glass-panel p-6 border-t-4 border-red-500 bg-red-950/10 flex flex-col items-center justify-center gap-6 shadow-[0_0_15px_rgba(239,68,68,0.05)]">
                 <div class="text-[11px] font-black text-red-400 uppercase tracking-[0.3em] flex items-center gap-2"><i class="fa-solid fa-thumbs-down"></i> Ret Oyları</div>
                 <div class="text-6xl font-black text-white drop-shadow-md">{{ law.no }}</div>
-                <button id="btn-vote-no" onclick="submitCustomVote({{ law.id }}, false)" {% if not isCongressist %}disabled{% endif %} class="w-full bg-red-600/20 hover:bg-red-500/40 text-red-400 hover:text-white py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border border-red-500/30 disabled:opacity-30 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-xmark mr-2"></i> Teklifi Reddet
-                </button>
+                {% if canVote %}
+                    <button id="btn-vote-no" onclick="submitCustomVote({{ law.id }}, false)" class="w-full bg-red-600/20 hover:bg-red-500/40 text-red-400 hover:text-white py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border border-red-500/30">
+                        <i class="fa-solid fa-xmark mr-2"></i> Teklifi Reddet
+                    </button>
+                {% endif %}
             </div>
         </div>
+        {% if myVote %}
+            <div class="mt-4 rounded-xl bg-black/35 px-4 py-3 text-center text-[11px] font-bold text-slate-300 shadow-inner">
+                Oyun kaydedildi: <span class="text-[color:var(--brand-primary)]">{{ myVote.in_favor ? 'Kabul' : 'Ret' }}</span>
+            </div>
+        {% elseif not canVote %}
+            <div class="mt-4 rounded-xl bg-black/35 px-4 py-3 text-center text-[11px] font-medium text-slate-400 shadow-inner">
+                Bu oylamada oy kullanma yetkin bulunmuyor.
+            </div>
+        {% endif %}
     {% endif %}
 
     <script>
@@ -119,6 +132,10 @@
                 success: function(res) {
                     if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) {} }
                     if(res && res.error) { Swal.fire('Hata', res.message || 'Zaten oy kullandınız', 'error'); }
+                    if (res && res.error) {
+                        targetBtn.prop('disabled', false).html(voteValue === true ? '<i class="fa-solid fa-check mr-2"></i> Teklifi Onayla' : '<i class="fa-solid fa-xmark mr-2"></i> Teklifi Reddet');
+                        return;
+                    }
                     setTimeout(() => window.location.reload(), 1000);
                 }
             });

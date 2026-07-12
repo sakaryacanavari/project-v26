@@ -143,7 +143,7 @@
                 <i class="fa-solid {{ icon }} text-[8px] text-[color:var(--brand-primary)] text-glow opacity-80"></i>
                 <div class="text-[9px] font-black uppercase tracking-[0.2em] text-[color:var(--brand-primary)] text-glow truncate">{{ role }}</div>
             </div>
-            <div class="text-xs font-black uppercase tracking-[0.1em] text-white truncate {{ user ? 'text-glow' : 'opacity-40' }}">{{ user ? user.nick : fallback }}</div>
+            <div class="text-xs font-black tracking-[0.1em] text-white truncate {{ user ? 'text-glow' : 'opacity-40' }}">{{ user ? user.nick : fallback }}</div>
         </div>
     </div>
     
@@ -174,7 +174,7 @@
         </div>
         <div class="min-w-0">
             <div class="flex items-center gap-2">
-                <div class="text-sm font-black uppercase tracking-[0.08em] text-white truncate">{{ candidate.nick }}</div>
+                <div class="text-sm font-black tracking-[0.08em] text-white truncate">{{ candidate.nick }}</div>
                 {% if candidate.is_current_officeholder is defined and candidate.is_current_officeholder %}
                     <i class="fa-solid fa-shield-halved text-[color:var(--brand-primary)] text-[10px] text-glow" title="{{ t('elections.candidate.in_office') }}"></i>
                 {% endif %}

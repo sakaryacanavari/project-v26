@@ -131,6 +131,10 @@ class Congress extends Controller
     }
 
     private function checkPendingLaws($countryId) {
+        $schema = DB::getSchemaBuilder();
+        if (!$schema->hasTable('law_proposals') || !$schema->hasTable('congress_members')) {
+            return;
+        }
         $currentCount = CongressMember::where(["country" => $countryId])->count();
         $pendingLaws = LawProposal::where(["country" => $countryId, "finished" => 0])->get();
         if ($pendingLaws) {
@@ -1792,12 +1796,26 @@ class Congress extends Controller
 
     public function showLawProposal ($id)
     {
+        if (!DB::getSchemaBuilder()->hasTable('law_proposals')) {
+            throw new AppException(AppException::ACTION_FAILED, 'Meclis oylama sistemi henuz hazir degil.');
+        }
         $law = LawProposal::where('id', $id)->first();
         if (!$law) { throw new AppException(AppException::INVALID_DATA); }
         if ($law->finished == 0) { $this->checkPendingLaws($law->country); $law = LawProposal::where('id', $id)->first(); }
 
         $law->phrase = $this->buildLawPhrase($law);
         $law->expires_at_formatted = date('d.m.Y H:i', strtotime($law->created_at) + (24 * 3600));
+
+        $viewerUid = App::user()->getUid();
+        $schema = DB::getSchemaBuilder();
+        $hasCongressMembersTable = $schema->hasTable('congress_members');
+        $isCurrentCongressMember = $hasCongressMembersTable && CongressMember::where([
+            'uid' => $viewerUid,
+            'country' => $law->country,
+        ])->exists();
+        $hasLawVotesTable = $schema->hasTable('law_votes');
+        $myVote = $hasLawVotesTable ? LawVote::where(['law' => $law->id, 'uid' => $viewerUid])->first() : null;
+        $canVote = !$law->finished && $isCurrentCongressMember && !$myVote && $hasLawVotesTable;
 
         $countryObj = DB::table('countries')->where('id', $law->country)->first();
         $isOhalActive = $countryObj && property_exists($countryObj, 'ohal_until') && $countryObj->ohal_until && strtotime($countryObj->ohal_until) > time();
@@ -1814,8 +1832,9 @@ class Congress extends Controller
         }
 
         return $this->render('congress/law_proposal.html.twig', [
-            "law" => $law, "isCongressist" => App::user()->isCongressist(), "isOhalActive" => $isOhalActive,
-            "isPartyLeader" => $isPartyLeader, "whipDecision" => $whipDecision, "myPartyId" => $myPartyId
+            "law" => $law, "isCongressist" => $isCurrentCongressMember, "isOhalActive" => $isOhalActive,
+            "isPartyLeader" => $isPartyLeader, "whipDecision" => $whipDecision, "myPartyId" => $myPartyId,
+            "canVote" => $canVote, "myVote" => $myVote
         ]);
     }
 
@@ -1823,9 +1842,15 @@ class Congress extends Controller
     {
         $cId = $this->getElectionCountry();
         $this->runScheduledElectionMaintenance();
-        $this->checkPendingLaws($cId);
+        $schema = DB::getSchemaBuilder();
+        $hasLawProposalsTable = $schema->hasTable('law_proposals');
+        $hasLawVotesTable = $schema->hasTable('law_votes');
+        $hasCongressMembersTable = $schema->hasTable('congress_members');
+        if ($hasLawProposalsTable) {
+            $this->checkPendingLaws($cId);
+        }
         $uid = App::user()->getUid();
-        $isCongressist = App::user()->isCongressist();
+        $isCongressist = $hasCongressMembersTable && CongressMember::where('uid', $uid)->exists();
 
         $countryObj = DB::table('countries')->where('id', $cId)->first();
         $actualPresId = $this->getActualPresidentId($cId);
@@ -1853,13 +1878,24 @@ class Congress extends Controller
             }
         }
 
-        $latestLawsRaw = LawProposal::where(["country" => $cId])->orderBy('id', 'DESC')->limit(15)->get();
+        $latestLawsRaw = $hasLawProposalsTable
+            ? LawProposal::where(["country" => $cId])->orderBy('id', 'DESC')->limit(15)->get()
+            : collect();
+        $lawIds = $latestLawsRaw->pluck('id')->all();
+        $myVotesByLaw = [];
+        if ($hasLawVotesTable && !empty($lawIds)) {
+            $myVotesByLaw = LawVote::where('uid', $uid)->whereIn('law', $lawIds)->pluck('in_favor', 'law')->all();
+        }
+        $isCurrentCongressMember = $hasCongressMembersTable && CongressMember::where(['uid' => $uid, 'country' => $cId])->exists();
         $latestLaws = [];
         foreach($latestLawsRaw as $l) {
             $ld = $l->toArray();
             $ld['phrase'] = $this->buildLawPhrase($ld);
             $ld['required_majority'] = $this->getLawMajorityRules($ld['type'], $ld['is_vetoed'] ?? 0, $cId);
             $ld['expires_at_formatted'] = date('d.m.Y H:i', strtotime($ld['created_at']) + (24 * 3600));
+            $ld['has_my_vote'] = array_key_exists($ld['id'], $myVotesByLaw);
+            $ld['my_vote'] = $ld['has_my_vote'] ? (int) $myVotesByLaw[$ld['id']] : null;
+            $ld['can_vote'] = empty($ld['finished']) && $isCurrentCongressMember && !$ld['has_my_vote'] && $hasLawVotesTable;
             $latestLaws[] = $ld;
         }
 
@@ -1886,7 +1922,9 @@ class Congress extends Controller
             }
         }
 
-        $congressMembersRaw = CongressMember::where(["country" => $cId])->orderBy('id', 'ASC')->get()->toArray();
+        $congressMembersRaw = $hasCongressMembersTable
+            ? CongressMember::where(["country" => $cId])->orderBy('id', 'ASC')->get()->toArray()
+            : [];
         $filledSeatCount = count($congressMembersRaw);
         $memberUserIds = array_values(array_unique(array_filter(array_map(function ($member) {
             return (int) ($member['uid'] ?? 0);
@@ -2194,6 +2232,10 @@ class Congress extends Controller
     }
 
     public function voteLaw () {
+        $schema = DB::getSchemaBuilder();
+        if (!$schema->hasTable('law_proposals') || !$schema->hasTable('law_votes')) {
+            throw new AppException(AppException::ACTION_FAILED, 'Meclis oylama sistemi henuz hazir degil.');
+        }
         $lawId = isset($_POST["id"]) ? (int)$_POST["id"] : Input::getInteger("law");
         $voteVal = isset($_POST["value"]) ? $_POST["value"] : (isset($_POST["vote"]) ? $_POST["vote"] : "false");
         $inFavor = filter_var($voteVal, FILTER_VALIDATE_BOOLEAN);
@@ -2201,6 +2243,17 @@ class Congress extends Controller
         if ($lawId < 1) throw new AppException(AppException::INVALID_DATA);
         $lawProposal = LawProposal::where(["id" => $lawId])->first();
         if (!$lawProposal || $lawProposal->country != $this->getOwnCountry()) throw new AppException(AppException::INVALID_DATA);
+        $this->checkPendingLaws($lawProposal->country);
+        $lawProposal = LawProposal::where(["id" => $lawId])->first();
+        if ($lawProposal->finished) throw new AppException(AppException::INVALID_DATA, "Oylama tamamlanmis.");
+        if (!$schema->hasTable('congress_members')) {
+            throw new AppException(AppException::ACTION_FAILED, 'Meclis uyelik sistemi henuz hazir degil.');
+        }
+        $isCurrentCongressMember = CongressMember::where([
+            "uid" => App::user()->getUid(),
+            "country" => $lawProposal->country,
+        ])->exists();
+        if (!$isCurrentCongressMember) throw new AppException(AppException::ACTION_FAILED, "Bu oylamada oy kullanma yetkiniz yok.");
         $hasAlreadyVoted = LawVote::where(["law" => $lawId, "uid" => App::user()->getUid()])->first();
         if ($hasAlreadyVoted) throw new AppException(AppException::INVALID_DATA);
 
@@ -2319,6 +2372,10 @@ class Congress extends Controller
     }
     
     public function proposeLaw() {
+        $schema = DB::getSchemaBuilder();
+        if (!$schema->hasTable('law_proposals')) {
+            throw new AppException(AppException::ACTION_FAILED, 'Meclis oylama sistemi henuz hazir degil.');
+        }
         $type = Input::getInteger("type");
         $reason = Input::getString("reason", true);
         $country = Input::getInteger("country");
@@ -2344,7 +2401,7 @@ class Congress extends Controller
         $countryObj = DB::table('countries')->where('id', $lawsCountry)->first();
         $isOhalActive = $countryObj && property_exists($countryObj, 'ohal_until') && $countryObj->ohal_until && strtotime($countryObj->ohal_until) > time();
         $isPresident = $this->isPresident();
-        $isCongressist = App::user()->isCongressist();
+        $isCongressist = $schema->hasTable('congress_members') && CongressMember::where('uid', $uid)->exists();
 
         if ($isOhalActive && !$isPresident) throw new AppException(AppException::ACCESS_DENIED, "OHAL devrede! Sadece Başkan yasa sunabilir.");
         $this->assertLawProposalPermission($type, $isPresident, $isCongressist);

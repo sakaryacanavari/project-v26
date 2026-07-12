@@ -100,7 +100,7 @@
                     {% endif %}
                 </div>
                 <div>
-                    <div class="text-lg font-black text-white uppercase tracking-widest">{{ presidentUser ? presidentUser.nick : 'Makam Boş' }}</div>
+                    <div class="text-lg font-black text-white tracking-widest">{{ presidentUser ? presidentUser.nick : 'Makam Boş' }}</div>
                     <div class="text-[9px] text-amber-200/70 font-bold uppercase tracking-widest">Devlet Başkanı / Başkomutan</div>
                 </div>
             </div>
@@ -119,7 +119,7 @@
                     {% endif %}
                 </div>
                 <div>
-                    <div class="text-lg font-black text-white uppercase tracking-widest">{{ speakerUser ? speakerUser.nick : t('congress.speaker.waiting') }}</div>
+                    <div class="text-lg font-black text-white tracking-widest">{{ speakerUser ? speakerUser.nick : t('congress.speaker.waiting') }}</div>
                     <div class="text-[9px] text-cyan-200/70 font-bold uppercase tracking-widest">Meclis Başkanı (Başkan Vekili)</div>
                 </div>
             </div>
@@ -179,7 +179,7 @@
                         {% for item in presidentialElection.history %}
                             <div class="rounded-xl border border-white/5 bg-black/40 px-3 py-2">
                                 <div class="flex items-center justify-between gap-3">
-                                    <div class="text-[10px] font-black text-white uppercase tracking-wider">{{ item.winner_nick }}</div>
+                                <div class="text-[10px] font-black text-white tracking-wider">{{ item.winner_nick }}</div>
                                     <div class="text-[8px] font-black uppercase tracking-widest text-slate-500">{{ item.finished_at }}</div>
                                 </div>
                                 <div class="mt-1 text-[8px] font-bold uppercase tracking-widest text-slate-500">
@@ -204,7 +204,7 @@
                                     <img src="{{ candidate.avatar ?: (base_url() ~ '/img/avatars/' ~ candidate.uid ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover" alt="{{ candidate.nick }}">
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-[12px] font-black text-white uppercase tracking-wider truncate">{{ candidate.nick }}</div>
+                                    <div class="text-[12px] font-black text-white tracking-wider truncate">{{ candidate.nick }}</div>
                                     <div class="mt-1 text-[8px] font-bold uppercase tracking-widest text-slate-500 truncate">{{ candidate.party_name }}</div>
                                 </div>
                             </div>
@@ -312,7 +312,7 @@
                                     <img src="{{ candidate.avatar ?: (base_url() ~ '/img/avatars/' ~ candidate.uid ~ '.png') }}" onerror="this.src='{{ base_url() }}/img/default_avatar.jpg'" class="w-full h-full object-cover" alt="{{ candidate.nick }}">
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-[12px] font-black text-white uppercase tracking-wider truncate">{{ candidate.nick }}</div>
+                                    <div class="text-[12px] font-black text-white tracking-wider truncate">{{ candidate.nick }}</div>
                                     <div class="mt-1 text-[8px] font-bold uppercase tracking-widest text-slate-500 truncate">{{ candidate.party_name }}</div>
                                     <div class="mt-1 text-[8px] font-black uppercase tracking-widest text-fuchsia-300">Kalan sure: {{ candidate.remaining_label }}</div>
                                 </div>
@@ -406,8 +406,8 @@
             {% if myParliamentMembership %}
                 <div class="rounded-xl bg-[color:var(--brand-primary)]/5 px-4 py-3 shadow-inner">
                     <div class="text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">Meclis durumun</div>
-                    <div class="mt-1 text-[12px] font-black text-white">Secilmis temsilci</div>
-                    <div class="mt-1 text-[9px] font-bold text-[color:var(--brand-primary)]">{{ myParliamentMembership.party_name }}</div>
+                    <div class="mt-1 text-[12px] font-black text-white">{{ myParliamentMembership.is_independent ? 'Bağımsız temsilci' : 'Seçilmiş temsilci' }}</div>
+                    <div class="mt-1 text-[9px] font-bold text-[color:var(--brand-primary)]">{{ myParliamentMembership.is_independent ? 'Parti dışında meclis kaydı' : myParliamentMembership.party_name }}</div>
                 </div>
             {% else %}
                 <div class="rounded-xl bg-black/30 px-4 py-3 shadow-inner">
@@ -469,7 +469,7 @@
                 <div id="propose-law-box" class="space-y-4 relative z-[70] {% if (isOhalActive and not isPresident) or not canUseProposalBox %}opacity-30 grayscale-[50%] pointer-events-none select-none{% endif %}" style="overflow: visible !important;">
                     <div class="space-y-1.5 custom-dropdown-container relative z-[100]">
                         <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Yasama Protokolü (Tür)</label>
-                        <button type="button" onclick="toggleLawDropdown()" class="w-full bg-black/80 border border-indigo-500/50 hover:border-indigo-400 text-white p-4 rounded-xl text-[11px] font-bold outline-none flex justify-between items-center transition-all shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                        <button type="button" onclick="var dropdown = document.getElementById('custom-law-dropdown'); if (dropdown) { dropdown.classList.toggle('hidden'); dropdown.style.display = dropdown.classList.contains('hidden') ? 'none' : 'block'; }" class="w-full bg-black/80 border border-indigo-500/50 hover:border-indigo-400 text-white p-4 rounded-xl text-[11px] font-bold outline-none flex justify-between items-center transition-all shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
                             <span id="selected-law-text" class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Yasa Türünü Seçin...</span>
                             <i class="fa-solid fa-chevron-down text-indigo-400 text-[10px]"></i>
                         </button>
@@ -557,7 +557,7 @@
                             <div class="flex items-center gap-3 rounded-xl p-3 transition-colors {% if member.is_viewer %}border border-[color:var(--brand-primary)]/35 bg-[color:var(--brand-primary)]/8{% else %}bg-black/40 shadow-inner{% endif %}">
                                 <div class="w-9 h-9 rounded-full flex flex-shrink-0 items-center justify-center bg-[color:var(--brand-primary)]/10 text-[color:var(--brand-primary)]"><i class="fa-solid fa-user-tie text-xs"></i></div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2"><div class="min-w-0 truncate text-[11px] font-black text-white uppercase tracking-wider">{{ member.nick }}</div>{% if member.is_viewer %}<span class="shrink-0 rounded-full border border-[color:var(--brand-primary)]/25 bg-[color:var(--brand-primary)]/10 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.1em] text-[color:var(--brand-primary)]">Sen</span>{% endif %}</div>
+                                    <div class="flex items-center gap-2"><div class="min-w-0 truncate text-[11px] font-black text-white tracking-wider">{{ member.nick }}</div>{% if member.is_viewer %}<span class="shrink-0 rounded-full border border-[color:var(--brand-primary)]/25 bg-[color:var(--brand-primary)]/10 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.1em] text-[color:var(--brand-primary)]">Sen</span>{% endif %}</div>
                                     <div class="mt-1 text-[8px] font-bold uppercase tracking-widest leading-tight text-slate-400"><i class="fa-solid {{ member.is_independent ? 'fa-user' : 'fa-flag' }} mr-1"></i>{{ member.party_name }}</div>
                                 </div>
                             </div>
@@ -575,10 +575,10 @@
                     <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2"><i class="fa-solid fa-box-archive text-slate-500"></i> Son Yasa Tasarıları & Oylamalar</h2>
                     <div class="flex items-center gap-3">
                         <div class="flex bg-black/40 p-1 rounded-lg border border-white/5 hidden sm:flex">
-                            <button onclick="filterLaws('all')" class="law-tab active px-3 py-1.5 rounded text-[9px] font-black uppercase text-white bg-indigo-600/50">Tümü</button>
-                            <button onclick="filterLaws('active')" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Aktif</button>
-                            <button onclick="filterLaws('accepted')" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Kabul</button>
-                            <button onclick="filterLaws('rejected')" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Red</button>
+                            <button onclick="filterLaws('all', this)" class="law-tab active px-3 py-1.5 rounded text-[9px] font-black uppercase text-white bg-indigo-600/50">Tümü</button>
+                            <button onclick="filterLaws('active', this)" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Aktif</button>
+                            <button onclick="filterLaws('accepted', this)" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Kabul</button>
+                            <button onclick="filterLaws('rejected', this)" class="law-tab px-3 py-1.5 rounded text-[9px] font-black uppercase text-slate-400">Red</button>
                         </div>
                     </div>
                 </div>
@@ -601,7 +601,7 @@
                                                 <i class="fa-solid {% if law.type == 17 %}fa-box-open{% elseif law.type == 19 %}fa-ban{% elseif law.type == 20 %}fa-passport{% elseif law.type == 21 %}fa-jet-fighter{% elseif law.is_vetoed %}fa-ban{% elseif isAccepted %}fa-check-double{% elseif isRejected %}fa-xmark{% else %}fa-file-contract{% endif %}"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[11px] font-black uppercase tracking-widest leading-snug mb-1 flex items-center gap-2 truncate {% if law.type == 17 %}text-fuchsia-300{% elseif law.type == 21 %}text-blue-300{% elseif isAccepted %}text-green-100{% elseif isRejected %}text-red-200{% else %}text-slate-300{% endif %}">
+                                                <div class="text-[11px] font-black tracking-widest leading-snug mb-1 flex items-center gap-2 truncate {% if law.type == 17 %}text-fuchsia-300{% elseif law.type == 21 %}text-blue-300{% elseif isAccepted %}text-green-100{% elseif isRejected %}text-red-200{% else %}text-slate-300{% endif %}">
                                                     {{ law.phrase }}
                                                     {% if law.is_vetoed %}<span class="bg-red-600 text-white text-[8px] px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(220,38,38,0.8)]"><i class="fa-solid fa-gavel"></i> VETO EDİLDİ</span>{% endif %}
                                                     {% if isAccepted %} <span class="bg-green-500/20 text-green-400 text-[8px] px-1.5 py-0.5 rounded">KABUL</span>{% elseif isRejected %} <span class="bg-red-900/40 text-red-400 text-[8px] px-1.5 py-0.5 rounded">RED</span>{% endif %}
@@ -614,6 +614,11 @@
                                                 </div>
                                             </div>
                                         </a>
+                                        {% if not isFinished and law.has_my_vote %}
+                                            <span class="shrink-0 rounded-lg bg-black/35 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-[color:var(--brand-primary)]">Oyun: {{ law.my_vote ? 'Kabul' : 'Ret' }}</span>
+                                        {% elseif not isFinished and law.can_vote %}
+                                            <span class="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-emerald-400">Oy kullanabilirsin</span>
+                                        {% endif %}
                                         <div class="flex items-center gap-3">
                                             {% if isPresident and not isFinished and not law.is_vetoed %}
                                                 <button onclick="vetoLawByPresident({{ law.id }})" class="bg-red-900/40 hover:bg-red-600 border border-red-500/50 text-red-500 hover:text-white px-3 py-1.5 rounded text-[8px] font-black uppercase tracking-widest transition-all z-20 relative"><i class="fa-solid fa-ban"></i> VETO ET</button>
@@ -634,7 +639,9 @@
 </div>
 
 <script>
-$.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+if (window.jQuery) {
+    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+}
 
 const congressUiI18n = {
     mobilizationTitle: {{ t('congress.banner.mobilization_title')|json_encode|raw }},
@@ -806,7 +813,12 @@ function setupCongressLocalization() {
     });
 }
 
-setupCongressLocalization();
+try {
+    setupCongressLocalization();
+} catch (error) {
+    // UI metinleri başarısız olsa bile yasa seçimi ve gönderme akışı çalışmaya devam eder.
+    console.warn('Congress UI localization skipped.', error);
+}
 
 window.submitPresidentialApplication = function() {
     Swal.fire({
@@ -902,17 +914,20 @@ window.resignPresidentialApplication = function() {
     });
 };
 
-window.toggleLawDropdown = function() { 
-    if ($('#custom-law-dropdown').hasClass('hidden')) {
-        $('#custom-law-dropdown').hide().removeClass('hidden').slideDown(200);
-    } else {
-        $('#custom-law-dropdown').slideUp(200, function(){ $(this).addClass('hidden'); });
-    }
+window.toggleLawDropdown = function() {
+    var dropdown = document.getElementById('custom-law-dropdown');
+    if (!dropdown) return;
+
+    var isHidden = dropdown.classList.contains('hidden');
+    dropdown.classList.toggle('hidden', !isHidden);
+    dropdown.style.display = isHidden ? 'block' : 'none';
 };
 $(document).on('click', function(e) { 
     if (!$(e.target).closest('.custom-dropdown-container').length) { 
-        if (!$('#custom-law-dropdown').hasClass('hidden')) {
-            $('#custom-law-dropdown').slideUp(200, function(){ $(this).addClass('hidden'); });
+        var dropdown = document.getElementById('custom-law-dropdown');
+        if (dropdown && !dropdown.classList.contains('hidden')) {
+            dropdown.classList.add('hidden');
+            dropdown.style.display = 'none';
         }
     } 
 });
@@ -939,9 +954,9 @@ $('.law-option').on('click', function() {
     if(v === '1') $('#law_region_wrapper').removeClass('hidden'); // SADECE SAVAŞ İLANINDA AÇILIR!
 });
 
-window.filterLaws = function(status) {
+window.filterLaws = function(status, tab) {
     $('.law-tab').removeClass('active bg-indigo-600/50 text-white').addClass('text-slate-400');
-    $(event.currentTarget).removeClass('text-slate-400').addClass('active bg-indigo-600/50 text-white');
+    $(tab).removeClass('text-slate-400').addClass('active bg-indigo-600/50 text-white');
     if (status === 'all') { $('.law-card').fadeIn(300); } else { $('.law-card').hide(); $('.law-card[data-status="' + status + '"]').fadeIn(300); }
 };
 

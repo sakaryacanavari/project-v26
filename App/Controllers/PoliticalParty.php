@@ -481,10 +481,17 @@ class PoliticalParty extends Controller
             return ['error' => 1, 'message' => 'Zaten partidesiniz'];
         }
 
+        $name = trim(strip_tags($_POST['name'] ?? ''));
+        $description = trim(strip_tags($_POST['description'] ?? ''));
+        $countryId = (int) (App::user()->getLocation()['country']['id'] ?? 0);
+        if (mb_strlen($name) < 3 || $countryId < 1) {
+            return ['error' => 1, 'message' => 'Parti adi veya ulke bilgisi gecersiz.'];
+        }
+
         $created = PartyModel::create([
-            'name' => trim(strip_tags($_POST['name'])),
-            'description' => trim(strip_tags($_POST['description'])),
-            'country' => App::user()->getLocation()['country']['id'],
+            'name' => $name,
+            'description' => $description,
+            'country' => $countryId,
             'uid' => App::user()->getUid(),
         ]);
 
@@ -498,7 +505,7 @@ class PoliticalParty extends Controller
 
     public function update()
     {
-        $id = (int) $_POST['id'];
+        $id = (int) ($_POST['id'] ?? 0);
         $party = PartyModel::where(['id' => $id])->first();
 
         if (!$party) {
@@ -789,8 +796,9 @@ class PoliticalParty extends Controller
 
         if ($member) {
             $member->level = $newRole;
-            $member->save();
-            return ['error' => 0];
+            return $member->save()
+                ? ['error' => 0]
+                : ['error' => 1, 'message' => 'Rol kaydedilemedi.'];
         }
 
         return ['error' => 1];
