@@ -7,8 +7,8 @@
 
 <script>
     (function () {
-        const VALID_MODES = ['dark', 'command', 'neon', 'war', 'archive'];
-        const VALID_COLORS = ['purple', 'blue', 'diamond', 'amber', 'red', 'matrix', 'mono', 'lavender'];
+        const VALID_MODES = ['dark', 'command', 'neon', 'war', 'archive', 'liquid'];
+        const VALID_COLORS = ['purple', 'blue', 'diamond', 'amber', 'red', 'matrix', 'mono', 'lavender', 'glass'];
         const VALID_EYE_COMFORT_LEVELS = ['light', 'balanced', 'intense'];
         const LEGACY_MODES = { oled: 'command', dim: 'archive', magma: 'war', aurora: 'neon' };
         const LEGACY_COLORS = { cyan: 'blue', pink: 'lavender', overdrive: 'amber', blood: 'red' };
@@ -40,7 +40,9 @@
         }
 
         const resolvedMode = sanitizeMode(storedModeRaw || serverModeRaw || DEFAULT_MODE);
-        const resolvedColor = resolvedMode === 'archive' ? 'amber' : sanitizeColor(storedColorRaw || serverColorRaw || DEFAULT_COLOR);
+        const resolvedColor = resolvedMode === 'archive'
+            ? 'amber'
+            : (resolvedMode === 'liquid' ? 'glass' : sanitizeColor(storedColorRaw || serverColorRaw || DEFAULT_COLOR));
         const resolvedEyeComfortLevel = sanitizeEyeComfortLevel(storedEyeComfortRaw || serverEyeComfortRaw || DEFAULT_EYE_COMFORT_LEVEL);
 
         localStorage.setItem('omni_mode', resolvedMode);
@@ -57,6 +59,7 @@
             'theme-neon',
             'theme-war',
             'theme-archive',
+            'theme-liquid',
             'theme-oled',
             'theme-dim',
             'theme-magma',
@@ -83,6 +86,7 @@
     html[data-theme="diamond"] { --brand-primary: #2dd4bf; --brand-glow: rgba(45, 212, 191, 0.5); }
     html[data-theme="matrix"] { --brand-primary: #22c55e; --brand-glow: rgba(34, 197, 94, 0.5); }
     html[data-theme="lavender"] { --brand-primary: #c084fc; --brand-glow: rgba(192, 132, 252, 0.5); }
+    html[data-theme="glass"] { --brand-primary: #b8e7ff; --brand-glow: rgba(125, 211, 252, 0.24); }
 
     html[data-theme] .text-indigo-400,
     html[data-theme] .text-cyan-400,
@@ -141,6 +145,7 @@
     .tc-diamond { color: #2dd4bf; }
     .tc-matrix { color: #22c55e; }
     .tc-lavender { color: #c084fc; }
+    .tc-glass { color: #b8e7ff; }
 
     html.theme-archive {
         --brand-primary: #d29b55;
@@ -759,5 +764,453 @@
 
     html.theme-neon .omni-item {
         border-color: rgba(168, 85, 247, 0.08) !important;
+    }
+
+    /* Liquid Glass: opaque content with glass reserved for floating controls. */
+    html.theme-liquid {
+        --glass-control-bg: rgba(19, 26, 39, 0.66);
+        --glass-control-bg-hover: rgba(31, 42, 58, 0.78);
+        --glass-control-bg-active: rgba(43, 56, 75, 0.84);
+        --glass-control-border: rgba(198, 216, 232, 0.16);
+        --glass-control-highlight: rgba(255, 255, 255, 0.09);
+        --glass-control-shadow: 0 12px 26px -20px rgba(0, 0, 0, 0.9);
+        --glass-control-blur: 14px;
+        --glass-control-saturation: 135%;
+        --glass-control-radius: 14px;
+        --glass-control-text: #e7eef5;
+        --glass-control-muted: #aab8c7;
+        --glass-content-bg: #111923;
+        --glass-content-bg-alt: #151f2d;
+    }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        html.theme-liquid {
+            --glass-control-bg: rgba(19, 26, 39, 0.98);
+            --glass-control-bg-hover: rgba(31, 42, 58, 0.98);
+            --glass-control-bg-active: rgba(43, 56, 75, 0.98);
+            --glass-control-blur: 0px;
+            --glass-control-saturation: 100%;
+        }
+    }
+
+    /* Large content surfaces remain opaque and readable. */
+    html.theme-liquid .glass-panel,
+    html.theme-liquid #v2-settings-center .holo-panel,
+    html.theme-liquid .home-theme-surface .news-terminal-shell,
+    html.theme-liquid .home-theme-surface .shout-v10-shell,
+    html.theme-liquid .home-theme-surface .shout-shell,
+    html.theme-liquid .home-theme-surface .shout-card,
+    html.theme-liquid .home-theme-surface .route-card {
+        background-color: var(--glass-content-bg) !important;
+        background-image: none !important;
+        border-color: rgba(148, 163, 184, 0.13) !important;
+        box-shadow: 0 14px 30px -26px rgba(0, 0, 0, 0.92), inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    html.theme-liquid .home-theme-surface .news-terminal-row,
+    html.theme-liquid .home-theme-surface .shout-feed-list,
+    html.theme-liquid .home-theme-surface .route-step {
+        background-color: var(--glass-content-bg-alt) !important;
+        background-image: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    /* Floating toolbars, tabs, pills and selection controls receive the material. */
+    html.theme-liquid header,
+    html.theme-liquid .dropdown-v6,
+    html.theme-liquid .omni-drop,
+    html.theme-liquid .omni-top,
+    html.theme-liquid .omni-foot,
+    html.theme-liquid .omni-tabs,
+    html.theme-liquid .omni-mini,
+    html.theme-liquid .omni-tab,
+    html.theme-liquid .omni-ico,
+    html.theme-liquid .omni-i,
+    html.theme-liquid .quick-action-link,
+    html.theme-liquid .home-theme-surface .shout-action,
+    html.theme-liquid .home-theme-surface .shout-filter-tab,
+    html.theme-liquid .home-theme-surface .shout-submit,
+    html.theme-liquid .home-theme-surface .shout-page-btn,
+    html.theme-liquid .home-theme-surface .shout-refresh-pill,
+    html.theme-liquid #v2-settings-center .settings-tabs,
+    html.theme-liquid #v2-settings-center .settings-system-control,
+    html.theme-liquid #v2-settings-center .mode-card,
+    html.theme-liquid #v2-settings-center .theme-card,
+    html.theme-liquid #v2-settings-center .eye-comfort-card,
+    html.theme-liquid #v2-settings-center .settings-choice-card,
+    html.theme-liquid #v2-settings-center .settings-favorite-chip,
+    html.theme-liquid #v2-settings-center .cyber-btn {
+        background-color: var(--glass-control-bg) !important;
+        background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.065), transparent 38%, rgba(255, 255, 255, 0.018)) !important;
+        border-color: var(--glass-control-border) !important;
+        border-radius: var(--glass-control-radius) !important;
+        color: var(--glass-control-text) !important;
+        box-shadow: inset 1px 1px 0 var(--glass-control-highlight), inset -1px -1px 0 rgba(0, 0, 0, 0.18), var(--glass-control-shadow) !important;
+        backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+    }
+
+    html.theme-liquid header {
+        background-color: rgba(10, 15, 24, 0.72) !important;
+        border-bottom-color: rgba(198, 216, 232, 0.12) !important;
+    }
+
+    html.theme-liquid .home-theme-surface .shout-action,
+    html.theme-liquid .home-theme-surface .shout-filter-tab,
+    html.theme-liquid .home-theme-surface .shout-page-btn {
+        border-radius: 999px !important;
+        color: var(--glass-control-muted) !important;
+    }
+
+    html.theme-liquid .home-theme-surface .shout-action:hover,
+    html.theme-liquid .home-theme-surface .shout-filter-tab:hover,
+    html.theme-liquid .home-theme-surface .shout-page-btn:hover:not(:disabled),
+    html.theme-liquid .quick-action-link:hover,
+    html.theme-liquid #v2-settings-center .mode-card:hover,
+    html.theme-liquid #v2-settings-center .theme-card:hover,
+    html.theme-liquid #v2-settings-center .eye-comfort-card:hover,
+    html.theme-liquid #v2-settings-center .tab-btn:hover {
+        background-color: var(--glass-control-bg-hover) !important;
+        border-color: color-mix(in srgb, var(--brand-primary) 36%, var(--glass-control-border)) !important;
+        box-shadow: inset 1px 1px 0 var(--glass-control-highlight), var(--glass-control-shadow) !important;
+    }
+
+    html.theme-liquid .home-theme-surface .shout-action.is-active,
+    html.theme-liquid .home-theme-surface .shout-filter-tab.is-active,
+    html.theme-liquid .home-theme-surface .shout-page-btn.is-active,
+    html.theme-liquid #v2-settings-center .mode-radio:checked + .mode-card,
+    html.theme-liquid #v2-settings-center .theme-radio:checked + .theme-card,
+    html.theme-liquid #v2-settings-center .eye-comfort-radio:checked + .eye-comfort-card {
+        background-color: var(--glass-control-bg-active) !important;
+        border-color: color-mix(in srgb, var(--brand-primary) 70%, var(--glass-control-border)) !important;
+        box-shadow: inset 3px 0 0 var(--brand-primary), inset 1px 1px 0 var(--glass-control-highlight), var(--glass-control-shadow) !important;
+    }
+
+    html.theme-liquid :where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--brand-primary) 76%, #ffffff) !important;
+        outline-offset: 3px !important;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 22%, transparent) !important;
+    }
+
+    html.theme-liquid :where(button, input, select, textarea):disabled {
+        background-color: rgba(19, 26, 39, 0.86) !important;
+        border-color: rgba(148, 163, 184, 0.10) !important;
+        color: rgba(170, 184, 199, 0.58) !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+        html.theme-liquid {
+            --glass-control-bg: rgba(19, 26, 39, 0.98);
+            --glass-control-bg-hover: rgba(31, 42, 58, 0.98);
+            --glass-control-bg-active: rgba(43, 56, 75, 0.98);
+        }
+
+        html.theme-liquid header,
+        html.theme-liquid .dropdown-v6,
+        html.theme-liquid .omni-drop,
+        html.theme-liquid .omni-top,
+        html.theme-liquid .omni-foot,
+        html.theme-liquid .omni-tabs,
+        html.theme-liquid .omni-mini,
+        html.theme-liquid .omni-tab,
+        html.theme-liquid .omni-ico,
+        html.theme-liquid .omni-i,
+        html.theme-liquid .quick-action-link,
+        html.theme-liquid .home-theme-surface .shout-action,
+        html.theme-liquid .home-theme-surface .shout-filter-tab,
+        html.theme-liquid .home-theme-surface .shout-submit,
+        html.theme-liquid .home-theme-surface .shout-page-btn,
+        html.theme-liquid .home-theme-surface .shout-refresh-pill,
+        html.theme-liquid #v2-settings-center .settings-tabs,
+        html.theme-liquid #v2-settings-center .settings-system-control,
+        html.theme-liquid #v2-settings-center .mode-card,
+        html.theme-liquid #v2-settings-center .theme-card,
+        html.theme-liquid #v2-settings-center .eye-comfort-card,
+        html.theme-liquid #v2-settings-center .cyber-btn {
+            background-image: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html.theme-liquid header,
+        html.theme-liquid .dropdown-v6,
+        html.theme-liquid .omni-drop,
+        html.theme-liquid .omni-top,
+        html.theme-liquid .omni-foot,
+        html.theme-liquid .omni-tabs,
+        html.theme-liquid .omni-mini,
+        html.theme-liquid .omni-tab,
+        html.theme-liquid .omni-ico,
+        html.theme-liquid .omni-i,
+        html.theme-liquid .quick-action-link,
+        html.theme-liquid .home-theme-surface .shout-action,
+        html.theme-liquid .home-theme-surface .shout-filter-tab,
+        html.theme-liquid .home-theme-surface .shout-submit,
+        html.theme-liquid .home-theme-surface .shout-page-btn,
+        html.theme-liquid #v2-settings-center .mode-card,
+        html.theme-liquid #v2-settings-center .theme-card,
+        html.theme-liquid #v2-settings-center .eye-comfort-card,
+        html.theme-liquid #v2-settings-center .tab-btn,
+        html.theme-liquid #v2-settings-center .cyber-btn {
+            transition: none !important;
+        }
+    }
+
+    /* Liquid Glass material pass: controls float; content surfaces stay opaque. */
+    html.theme-liquid {
+        --glass-control-bg: rgba(20, 27, 38, 0.42);
+        --glass-control-bg-strong: rgba(20, 27, 38, 0.58);
+        --glass-control-bg-hover: rgba(32, 42, 56, 0.54);
+        --glass-control-bg-active: rgba(48, 60, 77, 0.68);
+        --glass-control-border: rgba(218, 231, 240, 0.16);
+        --glass-control-border-strong: rgba(218, 231, 240, 0.24);
+        --glass-control-highlight: rgba(255, 255, 255, 0.14);
+        --glass-control-highlight-soft: rgba(255, 255, 255, 0.06);
+        --glass-control-divider: rgba(3, 8, 15, 0.34);
+        --glass-control-shadow: 0 12px 28px -22px rgba(0, 0, 0, 0.92);
+        --glass-control-shadow-strong: 0 18px 38px -24px rgba(0, 0, 0, 0.96);
+        --glass-control-blur: 18px;
+        --glass-control-saturation: 155%;
+        --glass-control-radius: 16px;
+        --glass-control-radius-inner: 11px;
+        --glass-control-text: #eef3f7;
+        --glass-control-muted: #b5c0cb;
+        --glass-favorite-bg: #b8e7ff;
+        --glass-favorite-bg-hover: #d6f2ff;
+        --glass-favorite-text: #102133;
+        --glass-favorite-border: rgba(224, 248, 255, 0.48);
+    }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        html.theme-liquid {
+            --glass-control-bg: rgba(20, 27, 38, 0.96);
+            --glass-control-bg-strong: rgba(20, 27, 38, 0.98);
+            --glass-control-bg-hover: rgba(32, 42, 56, 0.98);
+            --glass-control-bg-active: rgba(48, 60, 77, 0.98);
+            --glass-control-blur: 0px;
+            --glass-control-saturation: 100%;
+        }
+    }
+
+    html.theme-liquid header,
+    html.theme-liquid .dropdown-v6,
+    html.theme-liquid .omni-drop,
+    html.theme-liquid .omni-tabs,
+    html.theme-liquid #v2-settings-center .settings-tabs {
+        background-color: var(--glass-control-bg-strong) !important;
+        background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.075), transparent 34%, rgba(255, 255, 255, 0.012)) !important;
+        border-color: var(--glass-control-border) !important;
+        box-shadow: inset 0 1px 0 var(--glass-control-highlight), inset 0 -1px 0 var(--glass-control-divider), var(--glass-control-shadow-strong) !important;
+        backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+    }
+
+    html.theme-liquid header {
+        border-bottom-color: var(--glass-control-border-strong) !important;
+        border-radius: 0 0 18px 18px;
+    }
+
+    html.theme-liquid .dropdown-v6,
+    html.theme-liquid .omni-drop {
+        border-radius: 20px !important;
+        z-index: 30;
+    }
+
+    html.theme-liquid .quick-action-link,
+    html.theme-liquid .home-theme-surface .shout-action,
+    html.theme-liquid .home-theme-surface .shout-filter-tab,
+    html.theme-liquid .home-theme-surface .shout-submit,
+    html.theme-liquid .home-theme-surface .shout-page-btn,
+    html.theme-liquid .home-theme-surface .shout-refresh-pill,
+    html.theme-liquid #v2-settings-center .settings-system-control,
+    html.theme-liquid #v2-settings-center .mode-card,
+    html.theme-liquid #v2-settings-center .theme-card,
+    html.theme-liquid #v2-settings-center .eye-comfort-card,
+    html.theme-liquid #v2-settings-center .settings-choice-card,
+    html.theme-liquid #v2-settings-center .settings-favorite-chip,
+    html.theme-liquid #v2-settings-center .cyber-btn {
+        position: relative;
+        isolation: isolate;
+        background-color: var(--glass-control-bg) !important;
+        background-image: linear-gradient(145deg, var(--glass-control-highlight), transparent 36%, var(--glass-control-highlight-soft)) !important;
+        border: 1px solid var(--glass-control-border) !important;
+        border-top-color: var(--glass-control-border-strong) !important;
+        border-right-color: rgba(218, 231, 240, 0.11) !important;
+        border-bottom-color: var(--glass-control-divider) !important;
+        border-radius: var(--glass-control-radius) !important;
+        color: var(--glass-control-text) !important;
+        box-shadow: inset 1px 1px 0 var(--glass-control-highlight), inset -1px -1px 0 var(--glass-control-divider), var(--glass-control-shadow) !important;
+        backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+        transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease !important;
+    }
+
+    html.theme-liquid .quick-action-link {
+        border-radius: 18px !important;
+        box-shadow: inset 1px 1px 0 var(--glass-control-highlight), inset -1px -1px 0 var(--glass-control-divider), var(--glass-control-shadow-strong) !important;
+    }
+
+    html.theme-liquid .home-theme-surface .shout-action,
+    html.theme-liquid .home-theme-surface .shout-filter-tab,
+    html.theme-liquid .home-theme-surface .shout-page-btn,
+    html.theme-liquid #v2-settings-center .settings-favorite-chip,
+    html.theme-liquid #v2-settings-center .cyber-btn {
+        border-radius: 999px !important;
+    }
+
+    html.theme-liquid .omni-ico,
+    html.theme-liquid .omni-i {
+        background-color: var(--glass-control-bg) !important;
+        background-image: linear-gradient(145deg, var(--glass-control-highlight), transparent 50%) !important;
+        border-color: var(--glass-control-border) !important;
+        box-shadow: inset 1px 1px 0 var(--glass-control-highlight), inset -1px -1px 0 var(--glass-control-divider), var(--glass-control-shadow) !important;
+        backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+    }
+
+    html.theme-liquid .omni-ico {
+        border-radius: 50% !important;
+    }
+
+    html.theme-liquid .omni-tab,
+    html.theme-liquid .omni-top,
+    html.theme-liquid .omni-foot,
+    html.theme-liquid .omni-mini,
+    html.theme-liquid .omni-i {
+        color: var(--glass-control-muted) !important;
+    }
+
+    html.theme-liquid .quick-action-link:hover,
+    html.theme-liquid .home-theme-surface .shout-action:hover,
+    html.theme-liquid .home-theme-surface .shout-filter-tab:hover,
+    html.theme-liquid .home-theme-surface .shout-page-btn:hover:not(:disabled),
+    html.theme-liquid #v2-settings-center .mode-card:hover,
+    html.theme-liquid #v2-settings-center .theme-card:hover,
+    html.theme-liquid #v2-settings-center .eye-comfort-card:hover,
+    html.theme-liquid #v2-settings-center .tab-btn:hover,
+    html.theme-liquid .omni-ico:hover,
+    html.theme-liquid .omni-i:hover {
+        background-color: var(--glass-control-bg-hover) !important;
+        border-top-color: rgba(255, 255, 255, 0.32) !important;
+        border-right-color: rgba(218, 231, 240, 0.20) !important;
+        box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.19), inset -1px -1px 0 var(--glass-control-divider), var(--glass-control-shadow-strong) !important;
+    }
+
+    html.theme-liquid .home-theme-surface .shout-action.is-active,
+    html.theme-liquid .home-theme-surface .shout-filter-tab.is-active,
+    html.theme-liquid .home-theme-surface .shout-page-btn.is-active,
+    html.theme-liquid #v2-settings-center .mode-radio:checked + .mode-card,
+    html.theme-liquid #v2-settings-center .theme-radio:checked + .theme-card,
+    html.theme-liquid #v2-settings-center .eye-comfort-radio:checked + .eye-comfort-card,
+    html.theme-liquid .omni-tab.active,
+    html.theme-liquid .omni-ico[aria-expanded="true"] {
+        background-color: var(--glass-control-bg-active) !important;
+        background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.14), transparent 44%, rgba(0, 0, 0, 0.08)) !important;
+        border-top-color: color-mix(in srgb, var(--brand-primary) 58%, #ffffff 42%) !important;
+        border-right-color: color-mix(in srgb, var(--brand-primary) 34%, var(--glass-control-border)) !important;
+        border-bottom-color: color-mix(in srgb, var(--brand-primary) 42%, var(--glass-control-divider)) !important;
+        box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.16), inset -2px -2px 0 rgba(0, 0, 0, 0.16), 0 14px 30px -22px var(--brand-glow) !important;
+    }
+
+    html.theme-liquid :where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--brand-primary) 72%, #ffffff 28%) !important;
+        outline-offset: 3px !important;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 24%, transparent), inset 1px 1px 0 var(--glass-control-highlight) !important;
+    }
+
+    html.theme-liquid :where(a, button, [role="button"]):active:not(:disabled) {
+        transform: translateY(1px) scale(0.99);
+    }
+
+    html.theme-liquid :where(button, input, select, textarea):disabled,
+    html.theme-liquid [aria-disabled="true"] {
+        background-color: rgba(20, 27, 38, 0.78) !important;
+        background-image: none !important;
+        border-color: rgba(170, 184, 199, 0.12) !important;
+        color: rgba(181, 192, 203, 0.58) !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        cursor: not-allowed !important;
+    }
+
+    html.theme-liquid .home-theme-surface .quick-action-link.is-favorite::after {
+        background: var(--glass-favorite-bg) !important;
+        color: var(--glass-favorite-text) !important;
+        border: 1px solid var(--glass-favorite-border) !important;
+        border-radius: 999px !important;
+        font-size: 7px !important;
+        font-weight: 950 !important;
+        line-height: 1 !important;
+        letter-spacing: 0.06em !important;
+        text-shadow: none !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), inset 0 -1px 0 rgba(16, 33, 51, 0.16) !important;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    html.theme-liquid .home-theme-surface .quick-action-link.is-favorite:hover::after,
+    html.theme-liquid .home-theme-surface .quick-action-link.is-favorite:focus-visible::after {
+        background: var(--glass-favorite-bg-hover) !important;
+        color: var(--glass-favorite-text) !important;
+        border-color: rgba(224, 248, 255, 0.68) !important;
+    }
+
+    html.theme-liquid .home-theme-surface .quick-action-link.is-favorite[aria-disabled="true"]::after,
+    html.theme-liquid .home-theme-surface .quick-action-link.is-favorite.is-disabled::after {
+        background: rgba(184, 231, 255, 0.52) !important;
+        color: rgba(16, 33, 51, 0.72) !important;
+        border-color: rgba(224, 248, 255, 0.26) !important;
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+        html.theme-liquid {
+            --glass-control-bg: rgba(20, 27, 38, 0.98);
+            --glass-control-bg-strong: rgba(20, 27, 38, 0.99);
+            --glass-control-bg-hover: rgba(32, 42, 56, 0.99);
+            --glass-control-bg-active: rgba(48, 60, 77, 0.99);
+            --glass-control-blur: 0px;
+            --glass-control-saturation: 100%;
+        }
+
+        html.theme-liquid header,
+        html.theme-liquid .dropdown-v6,
+        html.theme-liquid .omni-drop,
+        html.theme-liquid .omni-tabs,
+        html.theme-liquid #v2-settings-center .settings-tabs,
+        html.theme-liquid .quick-action-link,
+        html.theme-liquid .home-theme-surface .shout-action,
+        html.theme-liquid .home-theme-surface .shout-filter-tab,
+        html.theme-liquid .home-theme-surface .shout-submit,
+        html.theme-liquid .home-theme-surface .shout-page-btn,
+        html.theme-liquid #v2-settings-center .mode-card,
+        html.theme-liquid #v2-settings-center .theme-card,
+        html.theme-liquid #v2-settings-center .eye-comfort-card,
+        html.theme-liquid .omni-ico,
+        html.theme-liquid .omni-i {
+            background-image: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html.theme-liquid :where(a, button, input, select, textarea, [role="button"], [tabindex]),
+        html.theme-liquid :where(a, button, input, select, textarea, [role="button"], [tabindex])::before {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        html.theme-liquid :where(a, button, [role="button"]):active:not(:disabled) {
+            transform: none !important;
+        }
     }
 </style>

@@ -98,6 +98,11 @@ Then open:
 http://localhost:8080
 ```
 
+On a new Docker volume, MySQL imports `proje.sql` automatically. Existing
+volumes are not migrated automatically. For an existing database, review and
+apply the SQL files in [SCHEMA_SYNC_APPLY_ORDER.md](SCHEMA_SYNC_APPLY_ORDER.md)
+in the documented order before testing features that depend on newer schema.
+
 The included Compose setup starts:
 
 - `app` on `http://localhost:8080`

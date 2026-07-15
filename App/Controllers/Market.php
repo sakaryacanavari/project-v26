@@ -226,7 +226,9 @@ class Market extends Controller
             throw new AppException(AppException::INVALID_DATA);
         }
 
-        $offer = ItemOffer::with("country")->where(["id" => $id])->first();
+        DB::beginTransaction();
+        try {
+        $offer = ItemOffer::with("country")->where(["id" => $id])->lockForUpdate()->first();
         if (!$offer || (int)$offer->quantity < $quantity) {
             throw new AppException(AppException::INVALID_DATA);
         }
@@ -235,8 +237,8 @@ class Market extends Controller
             throw new AppException(AppException::ACTION_FAILED);
         }
 
-        $buyerMoney = UserMoney::where(["uid" => $uid])->first();
-        $sellerMoney = UserMoney::where(["uid" => $offer->uid])->first();
+        $buyerMoney = UserMoney::where(["uid" => $uid])->lockForUpdate()->first();
+        $sellerMoney = UserMoney::where(["uid" => $offer->uid])->lockForUpdate()->first();
         $offerCountry = $offer->relationLoaded("country") ? $offer->getRelation("country") : $offer->country()->first();
         $currency = strtolower(trim((string) ($offerCountry->currency ?? "")));
         $cost = round((float)$offer->price * $quantity, 2);
@@ -259,9 +261,6 @@ class Market extends Controller
         $purchasedItem = $offer->item;
         $purchasedQuality = $offer->quality;
 
-        DB::beginTransaction();
-
-        try {
             $sellerMoney->setAttribute($currency, round($sellerBalance + $cost, 2));
             $sellerMoney->save();
 
@@ -299,7 +298,7 @@ class Market extends Controller
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
-            throw new AppException(AppException::ACTION_FAILED);
+            throw $e instanceof AppException ? $e : new AppException(AppException::ACTION_FAILED);
         }
     }
 

@@ -393,7 +393,7 @@
                         </div>
                         <div class="settings-field">
                             <label class="settings-label"><i class="fa-solid fa-envelope text-slate-500"></i> {{ t('settings.profile.email') }}</label>
-                            <div class="relative"><i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="email" id="input-email" value="{{ my.email }}" required class="cyber-input py-3 pr-4 pl-11"></div>
+                            <div class="relative"><i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="email" id="input-email" name="email" value="{{ my.email }}" required class="cyber-input py-3 pr-4 pl-11"></div>
                             <div id="email-change-note" class="settings-helper is-warn hidden">E-posta degisikligi kayit sonrasi gecerli olur.</div>
                         </div>
                         <div class="settings-field is-wide">
@@ -406,7 +406,7 @@
                                     <div class="settings-helper !mt-1">URL bos veya yuklenemezse varsayilan avatar gosterilir.</div>
                                 </div>
                             </div>
-                            <div class="relative"><i class="fa-solid fa-image absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="url" id="input-avatar" value="{{ my.avatar }}" class="cyber-input py-3 pr-4 pl-11"></div>
+                            <div class="relative"><i class="fa-solid fa-image absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i><input type="url" id="input-avatar" name="avatar" value="{{ my.avatar }}" class="cyber-input py-3 pr-4 pl-11"></div>
                         </div>
                     </div>
                     <div class="settings-action-row">
@@ -560,8 +560,11 @@
                         <div class="settings-helper">Sistem Renk Paleti vurgu rengi, buton ve aktif durumlari degistirir.</div>
                         <div id="eye-comfort-palette-note" class="settings-helper {% if themeState.mode|default('dark') != 'archive' %}hidden{% endif %}">Göz Konforu Modu'nda renk paleti otomatik olarak daha sıcak ve düşük parlaklıkta uygulanır.</div>
 
+                        <div id="liquid-glass-palette-note" class="settings-helper {% if themeState.mode|default('dark') != 'liquid' %}hidden{% endif %}">Buz Işığı paleti, Sıvı Cam modu için otomatik uygulanır.</div>
+
                         <div id="normal-theme-palette" class="theme-grid {% if themeState.mode|default('dark') == 'archive' %}hidden{% endif %}">
                             {% for colorKey, colorMeta in themeConfig.colors %}
+                                {% set liquidPaletteLocked = themeState.mode|default('dark') == 'liquid' and colorKey != 'glass' %}
                                 <input
                                     type="radio"
                                     name="theme"
@@ -569,8 +572,10 @@
                                     class="theme-radio"
                                     value="{{ colorKey }}"
                                     {% if themeState.color|default('purple') == colorKey %}checked{% endif %}
+                                    {% if liquidPaletteLocked %}disabled{% endif %}
+                                    aria-disabled="{{ liquidPaletteLocked ? 'true' : 'false' }}"
                                 >
-                                <label for="theme-{{ colorKey }}" class="theme-card tc-{{ colorKey }}">
+                                <label for="theme-{{ colorKey }}" class="theme-card tc-{{ colorKey }}" aria-disabled="{{ liquidPaletteLocked ? 'true' : 'false' }}">
                                     <i class="{{ colorMeta.icon }} theme-icon"></i>
                                     <span class="theme-name">{{ colorMeta.name }}</span>
                                 </label>
@@ -934,10 +939,11 @@
 
     function getResolvedThemeState() {
         const serverState = getServerThemeState();
+        const mode = serverState.mode || localStorage.getItem('omni_mode') || 'dark';
 
         return {
-            mode: serverState.mode || localStorage.getItem('omni_mode') || 'dark',
-            color: serverState.color || localStorage.getItem('omni_color') || 'purple',
+            mode: mode,
+            color: mode === 'archive' ? 'amber' : (mode === 'liquid' ? 'glass' : (serverState.color || localStorage.getItem('omni_color') || 'purple')),
             eyeComfortLevel: serverState.eyeComfortLevel || localStorage.getItem('omni_eye_comfort_level') || 'balanced'
         };
     }
@@ -1235,7 +1241,7 @@
 
         const resolvedTheme = getResolvedThemeState();
 
-        syncThemeCache(resolvedTheme.mode, resolvedTheme.color);
+        syncThemeCache(resolvedTheme.mode, resolvedTheme.color, resolvedTheme.eyeComfortLevel);
 
         $('#mode-' + resolvedTheme.mode).prop('checked', true);
         $('#theme-' + resolvedTheme.color).prop('checked', true);
@@ -1368,9 +1374,18 @@
         const themeHint = document.getElementById('theme-save-hint');
         const eyeComfortPanel = document.getElementById('eye-comfort-level-panel');
         const eyeComfortPaletteNote = document.getElementById('eye-comfort-palette-note');
+        const liquidGlassPaletteNote = document.getElementById('liquid-glass-palette-note');
         const normalThemePalette = document.getElementById('normal-theme-palette');
         const eyeComfortLockedPalette = document.getElementById('eye-comfort-locked-palette');
-        const initialProfile = profileForm ? $(profileForm).serialize() : '';
+        const profileEmail = document.getElementById('input-email');
+        const profileAvatar = document.getElementById('input-avatar');
+        const normalizeProfileValue = function(value) {
+            return String(value || '').trim();
+        };
+        const initialProfile = {
+            email: profileEmail ? normalizeProfileValue(profileEmail.value) : '',
+            avatar: profileAvatar ? normalizeProfileValue(profileAvatar.value) : ''
+        };
         const initialLanguage = languageSelect ? languageSelect.value : '';
         const initialTheme = getServerThemeState();
 
@@ -1382,11 +1397,20 @@
 
         const syncProfile = function() {
             if (profileButton && profileForm) {
-                const isReady = $(profileForm).serialize() !== initialProfile;
+                const isReady = normalizeProfileValue(profileEmail && profileEmail.value) !== initialProfile.email
+                    || normalizeProfileValue(profileAvatar && profileAvatar.value) !== initialProfile.avatar;
                 profileButton.disabled = !isReady;
                 setHint(profileHint, 'Kaydetmeye hazir.', 'Degisiklik yok.', isReady);
             }
         };
+
+        if (profileForm) {
+            profileForm._resetProfileInitial = function() {
+                initialProfile.email = normalizeProfileValue(profileEmail && profileEmail.value);
+                initialProfile.avatar = normalizeProfileValue(profileAvatar && profileAvatar.value);
+                syncProfile();
+            };
+        }
 
         const syncPassword = function() {
             if (passwordButton) {
@@ -1411,14 +1435,24 @@
             if (themeButton && selectedModeEl && selectedColorEl) {
                 const selectedEyeComfortLevel = selectedEyeComfortEl ? selectedEyeComfortEl.value : 'balanced';
                 const usesEyeComfort = selectedModeEl.value === 'archive';
-                const selectedColor = usesEyeComfort ? 'amber' : selectedColorEl.value;
+                const usesLiquidGlass = selectedModeEl.value === 'liquid';
+                if (usesLiquidGlass) {
+                    const glassInput = document.getElementById('theme-glass');
+                    if (glassInput) glassInput.checked = true;
+                }
+                const selectedColor = usesEyeComfort ? 'amber' : (usesLiquidGlass ? 'glass' : selectedColorEl.value);
                 document.documentElement.setAttribute('data-eye-comfort', usesEyeComfort ? selectedEyeComfortLevel : 'balanced');
                 if (eyeComfortPanel) eyeComfortPanel.classList.toggle('is-visible', usesEyeComfort);
                 if (eyeComfortPaletteNote) eyeComfortPaletteNote.classList.toggle('hidden', !usesEyeComfort);
+                if (liquidGlassPaletteNote) liquidGlassPaletteNote.classList.toggle('hidden', !usesLiquidGlass);
                 if (normalThemePalette) normalThemePalette.classList.toggle('hidden', usesEyeComfort);
                 if (eyeComfortLockedPalette) eyeComfortLockedPalette.classList.toggle('is-visible', usesEyeComfort);
                 document.querySelectorAll('input[name="theme"]').forEach(function(input) {
-                    input.disabled = usesEyeComfort;
+                    const locked = usesEyeComfort || (usesLiquidGlass && input.value !== 'glass');
+                    input.disabled = locked;
+                    input.setAttribute('aria-disabled', locked ? 'true' : 'false');
+                    const label = document.querySelector('label[for="' + input.id + '"]');
+                    if (label) label.setAttribute('aria-disabled', locked ? 'true' : 'false');
                 });
                 const isReady = selectedModeEl.value !== initialTheme.mode || selectedColor !== initialTheme.color || selectedEyeComfortLevel !== initialTheme.eyeComfortLevel;
                 themeButton.disabled = !isReady;
@@ -1426,7 +1460,7 @@
             }
         };
 
-        if (profileForm) $(profileForm).on('input change', syncProfile);
+        if (profileForm) $(profileForm).on('input change paste', syncProfile);
         if (passwordForm) $(passwordForm).on('input change', syncPassword);
         if (languageSelect) languageSelect.addEventListener('change', syncLanguage);
         $('input[name="mode"], input[name="theme"], input[name="eye_comfort_level"]').on('change', syncTheme);
@@ -1435,6 +1469,7 @@
         syncPassword();
         syncLanguage();
         syncTheme();
+        window.setTimeout(syncProfile, 300);
     }
 
     function setupNotificationSettings() {
@@ -1708,7 +1743,9 @@
         }
 
         const selectedMode = selectedModeEl.value;
-        const selectedColor = selectedMode === 'archive' ? 'amber' : selectedColorEl.value;
+        const selectedColor = selectedMode === 'archive'
+            ? 'amber'
+            : (selectedMode === 'liquid' ? 'glass' : selectedColorEl.value);
         const selectedEyeComfortLevel = selectedEyeComfortEl ? selectedEyeComfortEl.value : 'balanced';
 
         $.ajax({
@@ -1980,6 +2017,10 @@
                 if (res && res.error) {
                     Swal.fire({ icon: 'error', title: '{{ t("home.shouts.generic_error") }}', text: res.message, background: '#0f172a', color: '#fff' });
                 } else {
+                    const savedProfileForm = document.getElementById('profile-settings-form');
+                    if (savedProfileForm && typeof savedProfileForm._resetProfileInitial === 'function') {
+                        savedProfileForm._resetProfileInitial();
+                    }
                     showSettingsToast('{{ t("settings.js.profile_saved") }}').then(function() { location.reload(); });
                 }
             },

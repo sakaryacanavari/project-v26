@@ -28,6 +28,7 @@ class UserSettings extends Controller
                 'neon'    => ['name' => 'Mor', 'description' => 'Mor/mavi modern gorunum', 'icon' => 'fa-solid fa-gem text-purple-300'],
                 'war'     => ['name' => 'Kontrast', 'description' => 'Daha belirgin ve okunakli gorunum', 'icon' => 'fa-solid fa-border-all text-slate-200'],
                 'archive' => ['name' => 'Göz Konforu Modu', 'description' => 'Daha sıcak tonlar ve azaltılmış parlaklıkla uzun kullanım için rahat görünüm', 'icon' => 'fa-solid fa-eye text-slate-400'],
+                'liquid'  => ['name' => 'Sıvı Cam', 'description' => 'Opak içerik ve yüzen kontrollerde kontrollü cam derinliği', 'icon' => 'fa-solid fa-layer-group text-sky-200'],
             ],
             'colors' => [
                 'purple'   => ['name' => 'Mor', 'icon' => 'fa-solid fa-vr-cardboard'],
@@ -38,6 +39,7 @@ class UserSettings extends Controller
                 'matrix'   => ['name' => 'Yesil', 'icon' => 'fa-solid fa-circle-check'],
                 'mono'     => ['name' => 'Gri', 'icon' => 'fa-solid fa-shield'],
                 'lavender' => ['name' => 'Lavanta', 'icon' => 'fa-solid fa-star'],
+                'glass'    => ['name' => 'Buz Işığı', 'icon' => 'fa-solid fa-droplet'],
             ],
             'eyeComfortLevels' => [
                 'light' => ['name' => 'Hafif', 'description' => 'Hafif sicak ton, minimum parlaklik azaltimi'],
@@ -103,6 +105,8 @@ class UserSettings extends Controller
 
         if ($mode === 'archive') {
             $color = 'amber';
+        } elseif ($mode === 'liquid') {
+            $color = 'glass';
         }
 
         if (!isset($config['eyeComfortLevels'][$eyeComfortLevel])) {
@@ -304,6 +308,8 @@ class UserSettings extends Controller
 
             if ($mode === 'archive') {
                 $color = 'amber';
+            } elseif ($mode === 'liquid') {
+                $color = 'glass';
             } elseif (!isset($config['colors'][$color])) {
                 return ['error' => true, 'message' => 'Yetkisiz tema!'];
             }

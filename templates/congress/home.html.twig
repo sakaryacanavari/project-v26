@@ -469,12 +469,12 @@
                 <div id="propose-law-box" class="space-y-4 relative z-[70] {% if (isOhalActive and not isPresident) or not canUseProposalBox %}opacity-30 grayscale-[50%] pointer-events-none select-none{% endif %}" style="overflow: visible !important;">
                     <div class="space-y-1.5 custom-dropdown-container relative z-[100]">
                         <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Yasama Protokolü (Tür)</label>
-                        <button type="button" onclick="var dropdown = document.getElementById('custom-law-dropdown'); if (dropdown) { dropdown.classList.toggle('hidden'); dropdown.style.display = dropdown.classList.contains('hidden') ? 'none' : 'block'; }" class="w-full bg-black/80 border border-indigo-500/50 hover:border-indigo-400 text-white p-4 rounded-xl text-[11px] font-bold outline-none flex justify-between items-center transition-all shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
+                        <button id="law-dropdown-trigger" type="button" onclick="toggleLawDropdown(event)" aria-haspopup="listbox" aria-expanded="false" class="w-full bg-black/80 border border-indigo-500/50 hover:border-indigo-400 text-white p-4 rounded-xl text-[11px] font-bold outline-none flex justify-between items-center transition-all shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
                             <span id="selected-law-text" class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Yasa Türünü Seçin...</span>
                             <i class="fa-solid fa-chevron-down text-indigo-400 text-[10px]"></i>
                         </button>
 
-                        <div id="custom-law-dropdown" class="hidden relative mt-2 w-full bg-slate-900/95 border border-indigo-500/50 rounded-xl shadow-inner z-[1000] max-h-[350px] overflow-y-auto custom-scrollbar">
+                        <div id="custom-law-dropdown" role="listbox" aria-labelledby="law-dropdown-trigger" class="hidden relative mt-2 w-full bg-slate-900/95 border border-indigo-500/50 rounded-xl shadow-inner z-[1000] max-h-[350px] overflow-y-auto custom-scrollbar">
                             
                             {% if isPresident %}
                             <div class="px-4 py-2 bg-black/60 text-[9px] font-black text-indigo-400 uppercase tracking-widest border-b border-indigo-500/30">🌍 DİPLOMASİ (Başkan)</div>
@@ -520,7 +520,7 @@
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" id="law_type_input" value="">
+                    <input type="hidden" id="law_type_input" name="type" value="">
                     
                     <div id="law_uid_wrapper" class="hidden animate-fade-in relative z-10">
                         <input id="law_uid_input" type="number" placeholder="Hedef Kişi ID" class="w-full bg-black/60 border border-white/10 text-white p-3.5 rounded-xl text-[11px] outline-none focus:border-indigo-500" {% if (isOhalActive and not isPresident) or not canUseProposalBox %}disabled{% endif %}>
@@ -914,44 +914,88 @@ window.resignPresidentialApplication = function() {
     });
 };
 
-window.toggleLawDropdown = function() {
+window.toggleLawDropdown = function(event) {
+    if (event) event.stopPropagation();
     var dropdown = document.getElementById('custom-law-dropdown');
     if (!dropdown) return;
 
     var isHidden = dropdown.classList.contains('hidden');
     dropdown.classList.toggle('hidden', !isHidden);
     dropdown.style.display = isHidden ? 'block' : 'none';
+    var trigger = document.getElementById('law-dropdown-trigger') || document.querySelector('.custom-dropdown-container > button');
+    if (trigger) trigger.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
 };
-$(document).on('click', function(e) { 
-    if (!$(e.target).closest('.custom-dropdown-container').length) { 
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-dropdown-container')) {
         var dropdown = document.getElementById('custom-law-dropdown');
         if (dropdown && !dropdown.classList.contains('hidden')) {
             dropdown.classList.add('hidden');
             dropdown.style.display = 'none';
+            var trigger = document.getElementById('law-dropdown-trigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
         }
-    } 
+    }
 });
 
-$('.law-option').on('click', function() {
-    if ($(this).data('roleLock') === 'congress') {
+document.querySelectorAll('.law-option').forEach(function(option) {
+    option.setAttribute('role', 'option');
+    option.setAttribute('tabindex', '0');
+    option.setAttribute('aria-selected', 'false');
+    option.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (option.getAttribute('data-role-lock') === 'congress') {
         Swal.fire('Bilgi', 'Bu yasa turu sadece aktif milletvekilleri tarafindan sunulabilir.', 'info');
         return;
     }
-    var val = $(this).data('value');
-    $('#law_type_input').val(val);
-    $('#selected-law-text').html($(this).html()).removeClass('text-slate-400').addClass('text-white');
-    $('#custom-law-dropdown').addClass('hidden');
+    var val = option.getAttribute('data-value');
+    var typeInput = document.getElementById('law_type_input');
+    var selectedText = document.getElementById('selected-law-text');
+    var dropdown = document.getElementById('custom-law-dropdown');
+    if (typeInput) typeInput.value = val || '';
+    document.querySelectorAll('.law-option').forEach(function(item) {
+        item.setAttribute('aria-selected', item === option ? 'true' : 'false');
+    });
+    if (selectedText) {
+        selectedText.innerHTML = option.innerHTML;
+        selectedText.classList.remove('text-slate-400');
+        selectedText.classList.add('text-white');
+    }
+    if (dropdown) {
+        dropdown.classList.add('hidden');
+        dropdown.style.display = 'none';
+    }
+    var trigger = document.getElementById('law-dropdown-trigger') || document.querySelector('.custom-dropdown-container > button');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
     
     // YENİ DÜZENLEME: Tüm kutuları gizle ve sıfırla (law_region eklendi)
-    $('#law_uid_wrapper, #law_country_wrapper, #law_amount_wrapper, #torba_wrapper, #law_region_wrapper').addClass('hidden');
-    $('#law_uid_input, #law_country_input, #law_amount_input, #law_region_input').val('');
+    ['law_uid_wrapper', 'law_country_wrapper', 'law_amount_wrapper', 'torba_wrapper', 'law_region_wrapper'].forEach(function(id) {
+        var wrapper = document.getElementById(id);
+        if (wrapper) wrapper.classList.add('hidden');
+    });
+    ['law_uid_input', 'law_country_input', 'law_amount_input', 'law_region_input'].forEach(function(id) {
+        var input = document.getElementById(id);
+        if (input) input.value = '';
+    });
     
-    var v = val.toString();
-    if(['3', '4', '6', '8', '13'].includes(v)) $('#law_amount_wrapper').removeClass('hidden');
-    if(['1', '2', '7', '13', '19'].includes(v)) $('#law_country_wrapper').removeClass('hidden');
-    if(['5', '6', '11', '15', '16'].includes(v)) $('#law_uid_wrapper').removeClass('hidden');
-    if(v === '17') $('#torba_wrapper').removeClass('hidden');
+    var v = String(val || '');
+    var show = function(id) {
+        var wrapper = document.getElementById(id);
+        if (wrapper) wrapper.classList.remove('hidden');
+    };
+    if (['3', '4', '6', '8', '13'].includes(v)) show('law_amount_wrapper');
+    if (['1', '2', '7', '13', '19'].includes(v)) show('law_country_wrapper');
+    if (['5', '6', '11', '15', '16'].includes(v)) show('law_uid_wrapper');
+    if (v === '17') show('torba_wrapper');
     if(v === '1') $('#law_region_wrapper').removeClass('hidden'); // SADECE SAVAŞ İLANINDA AÇILIR!
+    });
+    option.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            option.click();
+        }
+    });
 });
 
 window.filterLaws = function(status, tab) {
@@ -961,6 +1005,55 @@ window.filterLaws = function(status, tab) {
 };
 
 window.submitCustomLaw = function() {
+    if (!window.jQuery) {
+        var typeInput = document.getElementById('law_type_input');
+        var reasonInput = document.getElementById('law_reason_input');
+        var submitButton = document.getElementById('btn-submit-law');
+        var typeValue = typeInput ? typeInput.value : '';
+        var reasonValue = reasonInput ? reasonInput.value.trim() : '';
+        if (!typeValue || reasonValue.length < 5) {
+            Swal.fire('Hata', 'Tür seçin ve geçerli gerekçe yazın.', 'warning');
+            return;
+        }
+
+        var valueOf = function(id) {
+            var input = document.getElementById(id);
+            return input ? (input.value || '') : '';
+        };
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'İŞLENİYOR...';
+        }
+        fetch("{{ base_url() }}/api/congress/law/propose", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: new URLSearchParams({
+                type: typeValue,
+                reason: reasonValue,
+                amount: valueOf('law_amount_input') || 0,
+                currency: 'local',
+                country: valueOf('law_country_input') || 0,
+                uid: valueOf('law_uid_input') || 0,
+                region_id: valueOf('law_region_input') || '',
+                torba_w: valueOf('torba_w_input') || 0,
+                torba_m: valueOf('torba_m_input') || 0,
+                torba_mw: valueOf('torba_mw_input') || 0,
+                csrf_token: (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+            })
+        }).then(function(response) { return response.json(); }).then(function(result) {
+            if (result && result.error) {
+                Swal.fire('İşlem Reddedildi', result.message || 'Hata', 'error');
+                if (submitButton) submitButton.disabled = false;
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Başarılı!', text: 'Yasa sunuldu.', timer: 2000, showConfirmButton: false }).then(function() { location.reload(); });
+        }).catch(function() {
+            Swal.fire('Sistem Hatası', 'Bağlantı koptu veya sunucu isteği reddetti.', 'error');
+            if (submitButton) submitButton.disabled = false;
+        });
+        return;
+    }
+
     var $btn = $('#btn-submit-law'); var originalHtml = $btn.html();
     var typeVal = $('#law_type_input').val(); var reasonVal = $('#law_reason_input').val().trim();
     if(!typeVal || reasonVal.length < 5) { Swal.fire('Hata', 'Tür seçin ve geçerli gerekçe yazın.', 'warning'); return; }

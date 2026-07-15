@@ -584,20 +584,22 @@ class PoliticalParty extends Controller
             return ['error' => 1, 'message' => 'Baska bir parti icin bekleyen basvurunuz var.'];
         }
 
-        DB::table('party_join_applications')->insert([
+        DB::beginTransaction();
+        try {
+            DB::table('party_join_applications')->insert([
             'party_id' => $id,
             'uid' => App::user()->getUid(),
             'message' => $message,
             'status' => 'pending',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
-        ]);
-
-        try {
+            ]);
             $this->recordPartyDailyAction($id, App::user()->getUid(), 'join_application', [
                 'message' => $message,
             ]);
+            DB::commit();
         } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) DB::rollBack();
             return ['error' => 1, 'message' => 'Parti gunluk limit tablosu hazir degil. SQL guncellemesini once calistirin.'];
         }
 
@@ -650,13 +652,18 @@ class PoliticalParty extends Controller
             if ($dailyLimitError !== null) {
                 return $dailyLimitError;
             }
-            $this->addLog($id, $this->getSafeUserName() . ' ayrıldı.');
-            $aff->delete();
+            DB::beginTransaction();
             try {
                 $this->recordPartyDailyAction($id, App::user()->getUid(), 'leave');
+                if (!$aff->delete()) {
+                    throw new \RuntimeException('Party membership could not be removed.');
+                }
+                DB::commit();
             } catch (\Exception $e) {
+                if (DB::transactionLevel() > 0) DB::rollBack();
                 return ['error' => 1, 'message' => 'Parti gunluk limit tablosu hazir degil. SQL guncellemesini once calistirin.'];
             }
+            $this->addLog($id, $this->getSafeUserName() . ' ayrıldı.');
             return ['error' => 0];
         }
         return ['error' => 1];
@@ -841,13 +848,17 @@ class PoliticalParty extends Controller
             return $dailyLimitError;
         }
 
-        $member->delete();
-
+        DB::beginTransaction();
         try {
             $this->recordPartyDailyAction($partyId, $targetUid, 'member_removed', [
                 'removed_by' => (int) App::user()->getUid(),
             ]);
+            if (!$member->delete()) {
+                throw new \RuntimeException('Party member could not be removed.');
+            }
+            DB::commit();
         } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) DB::rollBack();
             return ['error' => 1, 'message' => 'Parti gunluk limit tablosu hazir degil. SQL guncellemesini once calistirin.'];
         }
 

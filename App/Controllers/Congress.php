@@ -78,7 +78,7 @@ class Congress extends Controller
             // --- BÖLGE HEDEFLİ SAVAŞ İLANI MESAJI ---
             case LawProposal::TYPE_NATURAL_ENEMY: 
                 $cName = Country::where('id', $tCountry)->first()->name ?? 'Bilinmeyen';
-                $rName = Region::where('id', $amount)->first()->name ?? 'Bölge ID: '.$amount;
+                $rName = Region::where('id', $amount)->first()->name ?? 'Bilinmeyen bölge';
                 $phrase = "⚔️ Savaş İlanı: " . $cName . " (" . $rName . ")"; 
                 break;
             
@@ -86,10 +86,10 @@ class Congress extends Controller
             case LawProposal::TYPE_WORK_TAX: $phrase = "Çalışma vergisini %" . $amount . " olarak belirle"; break;
             case LawProposal::TYPE_TRANSFER_FUNDS: 
                 if ($currency == "local") { $currency = strtoupper(Country::where('id', $cId)->first()->currency ?? ''); } 
-                $uName = User::where('id', $m)->first()->nick ?? 'ID: '.$m;
+                $uName = User::where('id', $m)->first()->nick ?? 'Bilinmeyen kullanıcı';
                 $phrase = $amount . " " . $currency . " fonun " . $uName . " hesabına transferi"; break;
             case LawProposal::TYPE_IMPEACHMENT: 
-                $uName = User::where('id', $m)->first()->nick ?? 'ID: '.$m;
+                $uName = User::where('id', $m)->first()->nick ?? 'Bilinmeyen kullanıcı';
                 $phrase = $uName . " isimli başkanın azledilmesi"; break;
             case 8: $phrase = "Asgari ücreti " . $amount . " birim olarak belirle"; break;
             case 9: $phrase = "🚨 OHAL İlanı (Oylamasız Geçiş)"; break;
@@ -1801,7 +1801,11 @@ class Congress extends Controller
         }
         $law = LawProposal::where('id', $id)->first();
         if (!$law) { throw new AppException(AppException::INVALID_DATA); }
-        if ($law->finished == 0) { $this->checkPendingLaws($law->country); $law = LawProposal::where('id', $id)->first(); }
+        if ($law->finished == 0) {
+            $this->checkPendingLaws($law->country);
+            $law = LawProposal::where('id', $id)->first();
+            if (!$law) { throw new AppException(AppException::INVALID_DATA); }
+        }
 
         $law->phrase = $this->buildLawPhrase($law);
         $law->expires_at_formatted = date('d.m.Y H:i', strtotime($law->created_at) + (24 * 3600));
@@ -1827,7 +1831,9 @@ class Congress extends Controller
         if ($myPartyId) {
             $party = DB::table('political_parties')->where('id', $myPartyId)->first();
             if ($party && $party->uid == App::user()->getUid()) { $isPartyLeader = true; }
-            $whip = DB::table('law_whips')->where('law_id', $id)->where('party_id', $myPartyId)->first();
+            $whip = $schema->hasTable('law_whips')
+                ? DB::table('law_whips')->where('law_id', $id)->where('party_id', $myPartyId)->first()
+                : null;
             if ($whip) { $whipDecision = $whip->decision; }
         }
 
@@ -1850,7 +1856,7 @@ class Congress extends Controller
             $this->checkPendingLaws($cId);
         }
         $uid = App::user()->getUid();
-        $isCongressist = $hasCongressMembersTable && CongressMember::where('uid', $uid)->exists();
+        $isCongressist = $hasCongressMembersTable && CongressMember::where(['uid' => $uid, 'country' => $cId])->exists();
 
         $countryObj = DB::table('countries')->where('id', $cId)->first();
         $actualPresId = $this->getActualPresidentId($cId);
@@ -2200,6 +2206,9 @@ class Congress extends Controller
 
     public function presidentialVeto() {
         $this->mustBePresident();
+        if (!DB::getSchemaBuilder()->hasTable('law_votes')) {
+            throw new AppException(AppException::ACTION_FAILED, 'Meclis oy sistemi henuz hazir degil.');
+        }
         $lawId = Input::getInteger('law_id');
         $law = LawProposal::where('id', $lawId)->first();
         if (!$law || $law->country != $this->getOwnCountry() || $law->finished == 1) { throw new AppException(AppException::INVALID_DATA, "Geçersiz yasa."); }
@@ -2217,6 +2226,9 @@ class Congress extends Controller
     }
 
     public function setWhip() {
+        if (!DB::getSchemaBuilder()->hasTable('law_whips')) {
+            throw new AppException(AppException::ACTION_FAILED, 'Grup karari sistemi henuz hazir degil.');
+        }
         $lawId = Input::getInteger("law_id");
         $decision = Input::getString("decision");
         if (!in_array($decision, ['yes', 'no'])) throw new AppException(AppException::INVALID_DATA);
@@ -2226,6 +2238,9 @@ class Congress extends Controller
         $party = DB::table('political_parties')->where('id', $myPartyId)->first();
         if (!$party || $party->uid != App::user()->getUid()) throw new AppException(AppException::ACTION_FAILED);
         $law = LawProposal::where('id', $lawId)->first();
+        if ($law && (int) $law->country !== (int) $this->getOwnCountry()) {
+            throw new AppException(AppException::ACCESS_DENIED);
+        }
         if (!$law || $law->finished == 1) throw new AppException(AppException::INVALID_DATA, "Karar alınamaz.");
         DB::table('law_whips')->updateOrInsert(['law_id' => $lawId, 'party_id' => $myPartyId], ['decision' => $decision, 'created_at' => date('Y-m-d H:i:s')]);
         return true;
@@ -2244,39 +2259,51 @@ class Congress extends Controller
         $lawProposal = LawProposal::where(["id" => $lawId])->first();
         if (!$lawProposal || $lawProposal->country != $this->getOwnCountry()) throw new AppException(AppException::INVALID_DATA);
         $this->checkPendingLaws($lawProposal->country);
-        $lawProposal = LawProposal::where(["id" => $lawId])->first();
-        if ($lawProposal->finished) throw new AppException(AppException::INVALID_DATA, "Oylama tamamlanmis.");
-        if (!$schema->hasTable('congress_members')) {
-            throw new AppException(AppException::ACTION_FAILED, 'Meclis uyelik sistemi henuz hazir degil.');
-        }
-        $isCurrentCongressMember = CongressMember::where([
-            "uid" => App::user()->getUid(),
-            "country" => $lawProposal->country,
-        ])->exists();
-        if (!$isCurrentCongressMember) throw new AppException(AppException::ACTION_FAILED, "Bu oylamada oy kullanma yetkiniz yok.");
-        $hasAlreadyVoted = LawVote::where(["law" => $lawId, "uid" => App::user()->getUid()])->first();
-        if ($hasAlreadyVoted) throw new AppException(AppException::INVALID_DATA);
-
-        if ($inFavor) { $lawProposal->yes++; } else { $lawProposal->no++; }
-        LawVote::create(["law" => $lawId, "uid" => App::user()->getUid(), "in_favor" => $inFavor]);
-
-        $currentCount = CongressMember::where(["country" => $lawProposal->country])->count();
-        $lawProposal->expected_votes = $currentCount;
-
-        $totalVotes = $lawProposal->yes + $lawProposal->no;
-        if ($totalVotes >= $lawProposal->expected_votes) { $lawProposal->finished = true; }
-
-        if ($lawProposal->save()) {
-            if ($lawProposal->finished) {
-                $reqMaj = $this->getLawMajorityRules($lawProposal->type, $lawProposal->is_vetoed, $lawProposal->country);
-                $yesRatio = ($totalVotes > 0) ? ($lawProposal->yes / $totalVotes) * 100 : 0;
-                if ($yesRatio >= $reqMaj && $lawProposal->yes > $lawProposal->no) {
-                    try { $this->applyLaw($lawProposal->id); } catch (\Exception $e) { }
-                }
+        DB::beginTransaction();
+        try {
+            $lawProposal = LawProposal::where(["id" => $lawId])->lockForUpdate()->first();
+            if (!$lawProposal || $lawProposal->country != $this->getOwnCountry()) {
+                throw new AppException(AppException::INVALID_DATA);
             }
-            return true;
+            if ($lawProposal->finished) throw new AppException(AppException::INVALID_DATA, "Oylama tamamlanmis.");
+            if (!$schema->hasTable('congress_members')) {
+                throw new AppException(AppException::ACTION_FAILED, 'Meclis uyelik sistemi henuz hazir degil.');
+            }
+
+            $isCurrentCongressMember = CongressMember::where([
+                "uid" => App::user()->getUid(),
+                "country" => $lawProposal->country,
+            ])->exists();
+            if (!$isCurrentCongressMember) throw new AppException(AppException::ACTION_FAILED, "Bu oylamada oy kullanma yetkiniz yok.");
+
+            $hasAlreadyVoted = LawVote::where(["law" => $lawId, "uid" => App::user()->getUid()])->exists();
+            if ($hasAlreadyVoted) throw new AppException(AppException::INVALID_DATA);
+
+            if ($inFavor) { $lawProposal->yes++; } else { $lawProposal->no++; }
+            LawVote::create(["law" => $lawId, "uid" => App::user()->getUid(), "in_favor" => $inFavor]);
+
+            $currentCount = CongressMember::where(["country" => $lawProposal->country])->count();
+            $lawProposal->expected_votes = $currentCount;
+            $totalVotes = $lawProposal->yes + $lawProposal->no;
+            if ($totalVotes >= $lawProposal->expected_votes) { $lawProposal->finished = true; }
+
+            if (!$lawProposal->save()) {
+                throw new AppException(AppException::ACTION_FAILED);
+            }
+            DB::commit();
+        } catch (\Throwable $e) {
+            if (DB::transactionLevel() > 0) DB::rollBack();
+            throw $e instanceof AppException ? $e : new AppException(AppException::ACTION_FAILED);
         }
-        return false;
+
+        if ($lawProposal->finished) {
+            $reqMaj = $this->getLawMajorityRules($lawProposal->type, $lawProposal->is_vetoed, $lawProposal->country);
+            $yesRatio = ($totalVotes > 0) ? ($lawProposal->yes / $totalVotes) * 100 : 0;
+            if ($yesRatio >= $reqMaj && $lawProposal->yes > $lawProposal->no) {
+                try { $this->applyLaw($lawProposal->id); } catch (\Exception $e) { }
+            }
+        }
+        return true;
     }
 
     public function applyLaw($id) {
@@ -2308,10 +2335,10 @@ class Congress extends Controller
                 try {
                     DB::table('countries')->where('id', $lawProposal->country)->update(['president' => $nextPresidentId]);
                 } catch(\Exception $e) {}
-                if($m > 0) { CongressMember::where(["uid" => $m])->delete(); $this->checkPendingLaws($lawProposal->country); }
+                if($m > 0) { CongressMember::where(["uid" => $m, "country" => $lawProposal->country])->delete(); $this->checkPendingLaws($lawProposal->country); }
                 break;
             case self::TYPE_ELECT_SPEAKER: if ($m > 0) { try { DB::table('countries')->where('id', $lawProposal->country)->update(['speaker_uid' => $m]); } catch (\Exception $e) {} } break;
-            case self::TYPE_LIFT_IMMUNITY: if($m > 0) { CongressMember::where(["uid" => $m])->delete(); $this->checkPendingLaws($lawProposal->country); } break;
+            case self::TYPE_LIFT_IMMUNITY: if($m > 0) { CongressMember::where(["uid" => $m, "country" => $lawProposal->country])->delete(); $this->checkPendingLaws($lawProposal->country); } break;
             case self::TYPE_ELECT_PRESIDENT: if ($m > 0) { try { DB::table('countries')->where('id', $lawProposal->country)->update(['president' => $m]); } catch (\Exception $e) {} } break;
             case self::TYPE_OMNIBUS: 
                 if (preg_match('/\[W:([0-9\.]+) M:([0-9\.]+) MW:([0-9\.]+)\]/', $lawProposal->reason, $mt)) {
@@ -2392,6 +2419,10 @@ class Congress extends Controller
         $validTypes = is_array(LawProposal::$validLawTypes) ? array_merge(LawProposal::$validLawTypes, [8, 9, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22]) : [1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,19,20,21,22];
         if (!in_array($type, $validTypes) || empty($reason)) throw new AppException(AppException::INVALID_DATA, "Geçersiz yasa veya boş gerekçe.");
         if (($type == self::TYPE_TRADE_EMBARGO || $type == LawProposal::TYPE_NATURAL_ENEMY) && $country < 1) throw new AppException(AppException::INVALID_DATA, "Hedef ülke seçmelisiniz.");
+        if (($type == self::TYPE_TRADE_EMBARGO || $type == LawProposal::TYPE_NATURAL_ENEMY)
+            && !DB::table('countries')->where('id', $country)->exists()) {
+            throw new AppException(AppException::INVALID_DATA, "Hedef ülke bulunamadı.");
+        }
 
         // BÖLGE MÜHRÜ: Eğer Savaş İlanıysa, bölge ID'sini "amount" (Miktar) sütununa gizlice kaydet.
         if ($type == LawProposal::TYPE_NATURAL_ENEMY && $region_id > 0) {
@@ -2401,7 +2432,7 @@ class Congress extends Controller
         $countryObj = DB::table('countries')->where('id', $lawsCountry)->first();
         $isOhalActive = $countryObj && property_exists($countryObj, 'ohal_until') && $countryObj->ohal_until && strtotime($countryObj->ohal_until) > time();
         $isPresident = $this->isPresident();
-        $isCongressist = $schema->hasTable('congress_members') && CongressMember::where('uid', $uid)->exists();
+        $isCongressist = $schema->hasTable('congress_members') && CongressMember::where(['uid' => $uid, 'country' => $lawsCountry])->exists();
 
         if ($isOhalActive && !$isPresident) throw new AppException(AppException::ACCESS_DENIED, "OHAL devrede! Sadece Başkan yasa sunabilir.");
         $this->assertLawProposalPermission($type, $isPresident, $isCongressist);
@@ -2447,7 +2478,9 @@ class Congress extends Controller
             $reason = "[W:$tW M:$tM MW:$tMW] " . $reason;
         }
 
-        $expectedVotes = CongressMember::where(["country" => $lawsCountry])->count();
+        $expectedVotes = $schema->hasTable('congress_members')
+            ? CongressMember::where(["country" => $lawsCountry])->count()
+            : 0;
         
         try {
             $proposalId = DB::table('law_proposals')->insertGetId([
@@ -2457,7 +2490,7 @@ class Congress extends Controller
                 "expected_votes" => $expectedVotes, "finished" => 0, "is_secret" => 0, "is_vetoed" => 0,
                 "created_at" => date('Y-m-d H:i:s'), "updated_at" => date('Y-m-d H:i:s')
             ]);
-        } catch (\Exception $e) { throw new AppException(AppException::ACTION_FAILED, "Veritabanı Hatası: " . $e->getMessage()); }
+        } catch (\Exception $e) { throw new AppException(AppException::ACTION_FAILED, "Tasarı kaydedilemedi."); }
 
         if ($proposalId) { 
             $created = LawProposal::where('id', $proposalId)->first();

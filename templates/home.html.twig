@@ -3332,7 +3332,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (shoutTabsRoot) {
         shoutTabsRoot.addEventListener('pointerdown', primeShoutViewportAnchor);
-        shoutTabsRoot.addEventListener('mousedown', primeShoutViewportAnchor);
         shoutTabsRoot.addEventListener('click', function (event) {
             var button = event.target.closest('[data-mode]');
             if (!button) return;
@@ -3407,7 +3406,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (shoutPaginationRoot) {
         shoutPaginationRoot.addEventListener('pointerdown', primeShoutViewportAnchor);
-        shoutPaginationRoot.addEventListener('mousedown', primeShoutViewportAnchor);
         shoutPaginationRoot.addEventListener('click', function (event) {
             var button = event.target.closest('[data-page]');
             if (!button || shoutFeedLoading) return;
