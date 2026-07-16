@@ -6,6 +6,7 @@ use App\System\App;
 use App\System\Controller;
 use App\System\DmPrivacy;
 use App\System\Logger;
+use App\System\Notify;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Schema\Blueprint;
 
@@ -260,6 +261,8 @@ class Messages extends Controller
                 'read_at' => null,
             ]);
 
+            Notify::forgetUnreadCache($to);
+
             if (class_exists('\\App\\System\\Notify')) {
                 \App\System\Notify::push($to, 'dm', 'Yeni mesaj', mb_substr($body, 0, 80) . '...', null, ['from_uid' => $uid]);
             }
@@ -389,6 +392,8 @@ class Messages extends Controller
                 ->whereNull('read_at')
                 ->update(['read_at' => date('Y-m-d H:i:s')]);
 
+            Notify::forgetUnreadCache($uid);
+
             return $this->jsonOut([
                 'error' => false,
                 'messages' => $rows,
@@ -418,6 +423,8 @@ class Messages extends Controller
             ->where('from_uid', $otherUid)
             ->whereNull('read_at')
             ->update(['read_at' => date('Y-m-d H:i:s')]);
+
+        Notify::forgetUnreadCache($uid);
 
         return $this->jsonOut(['error' => false]);
     }
@@ -578,22 +585,45 @@ class Messages extends Controller
                 ->limit($limit)
                 ->get();
 
+            if ($threads->isEmpty()) {
+                return [];
+            }
+
+            $lastIds = [];
+            $otherIds = [];
+            foreach ($threads as $thread) {
+                $lastIds[] = (int) $thread->last_id;
+                $otherIds[] = (int) $thread->other_uid;
+            }
+
+            $lastMessages = DB::table('messages')
+                ->whereIn('id', $lastIds)
+                ->get(['id', 'body', 'created_at', 'deleted_at'])
+                ->keyBy('id');
+            $users = DB::table('users')
+                ->whereIn('id', $otherIds)
+                ->get(['id', 'nick'])
+                ->keyBy('id');
+            $unreadCounts = DB::table('messages')
+                ->selectRaw('from_uid, COUNT(*) as unread')
+                ->where('to_uid', $uid)
+                ->whereIn('from_uid', $otherIds)
+                ->whereNull('read_at')
+                ->groupBy('from_uid')
+                ->pluck('unread', 'from_uid');
+
             $list = [];
             foreach ($threads as $thread) {
                 $otherUid = (int) $thread->other_uid;
-                $last = DB::table('messages')->where('id', $thread->last_id)->first();
-                $user = DB::table('users')->where('id', $otherUid)->first();
+                $last = $lastMessages->get((int) $thread->last_id);
+                $user = $users->get($otherUid);
 
                 $list[] = [
                     'other_uid' => $otherUid,
                     'other_name' => $user->nick ?? $user->nickname ?? $user->username ?? 'Bilinmeyen oyuncu',
                     'last_body' => $this->messageDisplayBody($last),
                     'last_at' => $last ? $last->created_at : '',
-                    'unread' => DB::table('messages')
-                        ->where('to_uid', $uid)
-                        ->where('from_uid', $otherUid)
-                        ->whereNull('read_at')
-                        ->count(),
+                    'unread' => (int) ($unreadCounts->get($otherUid) ?? 0),
                 ];
             }
 

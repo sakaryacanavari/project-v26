@@ -3,7 +3,6 @@
 namespace App\System;
 
 use Illuminate\Database\Capsule\Manager as DB;
-use Illuminate\Database\Schema\Blueprint;
 
 final class DmPrivacy
 {
@@ -36,19 +35,21 @@ final class DmPrivacy
             return $defaults;
         }
 
-        try {
-            $row = DB::table('dm_privacy_settings')->where('uid', $uid)->first();
-            if (!$row) {
+        return Cache::remember(Cache::userKey($uid, 'dm_privacy'), 30, function () use ($uid, $defaults) {
+            try {
+                $row = DB::table('dm_privacy_settings')->where('uid', $uid)->first();
+                if (!$row) {
+                    return $defaults;
+                }
+
+                return [
+                    'allow_from' => self::normalizeAllowFrom((string) ($row->allow_from ?? $defaults['allow_from'])),
+                    'message_requests_enabled' => (int) ($row->message_requests_enabled ?? $defaults['message_requests_enabled']),
+                ];
+            } catch (\Exception $e) {
                 return $defaults;
             }
-
-            return [
-                'allow_from' => self::normalizeAllowFrom((string) ($row->allow_from ?? $defaults['allow_from'])),
-                'message_requests_enabled' => (int) ($row->message_requests_enabled ?? $defaults['message_requests_enabled']),
-            ];
-        } catch (\Exception $e) {
-            return $defaults;
-        }
+        });
     }
 
     public static function savePreferences(int $uid, array $preferences): bool
@@ -68,11 +69,17 @@ final class DmPrivacy
         try {
             $exists = DB::table('dm_privacy_settings')->where('uid', $uid)->exists();
             if ($exists) {
-                return DB::table('dm_privacy_settings')->where('uid', $uid)->update($payload) !== false;
+                $written = DB::table('dm_privacy_settings')->where('uid', $uid)->update($payload) !== false;
+            } else {
+                $payload['created_at'] = $now;
+                $written = (bool) DB::table('dm_privacy_settings')->insert($payload);
             }
 
-            $payload['created_at'] = $now;
-            return (bool) DB::table('dm_privacy_settings')->insert($payload);
+            if ($written) {
+                Cache::forget(Cache::userKey($uid, 'dm_privacy'));
+            }
+
+            return $written;
         } catch (\Exception $e) {
             return false;
         }
@@ -102,17 +109,15 @@ final class DmPrivacy
     {
         try {
             $schema = DB::getSchemaBuilder();
-            if ($schema->hasTable('dm_privacy_settings')) {
-                return true;
+            if (!$schema->hasTable('dm_privacy_settings')) {
+                return false;
             }
 
-            $schema->create('dm_privacy_settings', function (Blueprint $table) {
-                $table->unsignedInteger('uid')->primary();
-                $table->string('allow_from', 20)->default(self::ALLOW_EVERYONE);
-                $table->tinyInteger('message_requests_enabled')->default(0);
-                $table->dateTime('created_at')->nullable();
-                $table->dateTime('updated_at')->nullable();
-            });
+            foreach (['uid', 'allow_from', 'message_requests_enabled'] as $column) {
+                if (!$schema->hasColumn('dm_privacy_settings', $column)) {
+                    return false;
+                }
+            }
 
             return true;
         } catch (\Exception $e) {
