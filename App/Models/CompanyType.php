@@ -55,7 +55,7 @@ class CompanyType
                     "product_amount" => 250,
                     "consume_amount" => 0,
                     "consume_product" => null,
-                    "price" => 35,
+                    "price" => 25,
                     "currency" => self::CURRENCY_GOLD,
                 ]
             ]
@@ -103,7 +103,7 @@ class CompanyType
                     "product_amount" => 250,
                     "consume_amount" => 0,
                     "consume_product" => null,
-                    "price" => 35,
+                    "price" => 25,
                     "currency" => self::CURRENCY_GOLD,
                 ]
             ]
@@ -151,7 +151,7 @@ class CompanyType
                     "product_amount" => 250,
                     "consume_amount" => 0,
                     "consume_product" => null,
-                    "price" => 35,
+                    "price" => 25,
                     "currency" => self::CURRENCY_GOLD,
                 ]
             ]
@@ -199,7 +199,7 @@ class CompanyType
                     "product_amount" => 250,
                     "consume_amount" => 100,
                     "consume_product" => Item::RAW_FOOD,
-                    "price" => 35,
+                    "price" => 25,
                     "currency" => self::CURRENCY_GOLD,
                 ]
             ]

@@ -6,6 +6,7 @@ use App\Models\CompanyType;
 use App\Models\User;
 use App\System\App;
 use App\System\ActionRateLimiter;
+use App\System\AppException;
 use App\System\Controller;
 use \App\Models\Company as CompanyModel;
 use App\System\Session;
@@ -13,9 +14,38 @@ use Illuminate\Database\Capsule\Manager as DB;
 
 class Company extends Controller
 {
+    private const CREATE_QUALITIES = [1, 3, 5];
+
+    private function prepareCompanyTypes()
+    {
+        $types = [];
+
+        foreach (CompanyType::$types as $id => $type) {
+            $type['display_name'] = $this->getCompanyDisplayName($type['name'] ?? '');
+            $types[$id] = $type;
+        }
+
+        return $types;
+    }
+
+    private function getCompanyDisplayName($name)
+    {
+        $displayNames = [
+            'raw food factory' => 'Ham Gida Tesisi',
+            'raw weapon factory' => 'Ham Silah Tesisi',
+            'raw house factory' => 'Ham Yapi Tesisi',
+            'food factory' => 'Gida Tesisi',
+        ];
+
+        $key = strtolower(trim((string) $name));
+
+        return $displayNames[$key] ?? $name;
+    }
+
     public function showMyCompanies()
     {
         $uid = App::session()->getUid();
+        $companyTypes = $this->prepareCompanyTypes();
 
         $list = CompanyModel::where([
             "uid" => $uid
@@ -93,12 +123,78 @@ class Company extends Controller
         $payrollSummaryMap = [];
         $recentActions = [];
         $companyMap = [];
+        $companyOperations = [];
+        $totalCapacity = 0;
+        $totalWorkersRequired = 0;
+        $totalAssignedWorkers = 0;
+        $totalVacantPositions = 0;
+        $totalOpenOffers = 0;
+        $totalOpenOfferPositions = 0;
+        $totalOfferGap = 0;
+        $usedCurrencyCodes = [];
+        $blockedFacilityCount = 0;
+        $payrollRiskCount = 0;
+        $inventoryByKey = [];
+
+        if (DB::getSchemaBuilder()->hasTable('user_items')) {
+            $inventoryRows = DB::table('user_items')
+                ->where('uid', $uid)
+                ->get();
+
+            foreach ($inventoryRows as $inventoryRow) {
+                $inventoryKey = (int) ($inventoryRow->item ?? 0) . ':' . (int) ($inventoryRow->quality ?? 0);
+                $inventoryByKey[$inventoryKey] = (int) ($inventoryRow->quantity ?? 0);
+            }
+        }
 
         foreach ($list as $companyRow) {
-            $companyMap[(int)($companyRow["id"] ?? 0)] = $companyRow;
+            $companyId = (int) ($companyRow["id"] ?? 0);
+            $companyMap[$companyId] = $companyRow;
+
+            $companyType = $companyTypes[(int) ($companyRow['type'] ?? 0)] ?? null;
+            $qualityData = !empty($companyType)
+                ? ($companyType['qualities'][(int) ($companyRow['quality'] ?? 0)] ?? null)
+                : null;
+
+            if (!empty($companyType) && !empty($qualityData)) {
+                $requiredWorkers = max(0, (int) ($qualityData['workers'] ?? 0));
+                $inputProduct = max(0, (int) ($qualityData['consume_product'] ?? 0));
+                $inputRequired = max(0, (int) ($qualityData['consume_amount'] ?? 0));
+                $outputAmount = max(0, (int) ($qualityData['product_amount'] ?? 0));
+                $inputKey = $inputProduct . ':' . (int) ($companyRow['quality'] ?? 0);
+
+                $companyOperations[$companyId] = [
+                    'required_workers' => $requiredWorkers,
+                    'assigned_workers' => 0,
+                    'open_positions' => 0,
+                    'open_offer_count' => 0,
+                    'offer_gap' => 0,
+                    'capacity' => $outputAmount,
+                    'input_product' => $inputProduct,
+                    'input_required' => $inputRequired,
+                    'input_stock' => $inputProduct > 0 ? ($inventoryByKey[$inputKey] ?? 0) : null,
+                    'status' => 'ready',
+                ];
+
+                $totalCapacity += $outputAmount;
+                $totalWorkersRequired += $requiredWorkers;
+            } else {
+                $companyOperations[$companyId] = [
+                    'required_workers' => 0,
+                    'assigned_workers' => 0,
+                    'open_positions' => 0,
+                    'open_offer_count' => 0,
+                    'offer_gap' => 0,
+                    'capacity' => 0,
+                    'input_product' => 0,
+                    'input_required' => 0,
+                    'input_stock' => null,
+                    'status' => 'control_required',
+                ];
+            }
 
             if (!empty($companyRow["created_at"])) {
-                $companyTypeName = CompanyType::$types[$companyRow["type"]]["name"] ?? ("Tesis #" . (int)($companyRow["id"] ?? 0));
+                $companyTypeName = $companyTypes[(int) ($companyRow["type"] ?? 0)]["display_name"] ?? ("Tesis #" . $companyId);
                 $recentActions[] = [
                     "type" => "Tesis kuruldu",
                     "label" => $companyTypeName,
@@ -107,7 +203,7 @@ class Company extends Controller
             }
         }
 
-        if (!empty($companyIds)) {
+        if (!empty($companyIds) && DB::getSchemaBuilder()->hasTable('work_offers')) {
             $offers = DB::table('work_offers')
                 ->whereIn('company', $companyIds)
                 ->orderBy('id', 'desc')
@@ -116,6 +212,21 @@ class Company extends Controller
             foreach ($offers as $offer) {
                 $offerCountryId = (int)($offer->country ?? 0);
                 $offerCurrency = strtoupper(trim((string)($offer->currency ?? '')));
+
+                if ($offerCurrency !== '') {
+                    $usedCurrencyCodes[$offerCurrency] = true;
+                }
+
+                $offerCompanyId = (int) ($offer->company ?? 0);
+                if (isset($companyOperations[$offerCompanyId])) {
+                    if ($offer->worker === null) {
+                        $companyOperations[$offerCompanyId]['open_offer_count']++;
+                        $companyOperations[$offerCompanyId]['open_positions']++;
+                    } else {
+                        $companyOperations[$offerCompanyId]['assigned_workers']++;
+                        $totalAssignedWorkers++;
+                    }
+                }
 
                 $offerData = [
                     "id" => (int)$offer->id,
@@ -154,8 +265,8 @@ class Company extends Controller
                 }
 
                 $companyRow = $companyMap[(int)$offer->company] ?? null;
-                $companyTypeName = (!empty($companyRow) && isset(CompanyType::$types[$companyRow["type"]]["name"]))
-                    ? CompanyType::$types[$companyRow["type"]]["name"]
+                $companyTypeName = (!empty($companyRow) && isset($companyTypes[(int) ($companyRow["type"] ?? 0)]["display_name"]))
+                    ? $companyTypes[(int) $companyRow["type"]]["display_name"]
                     : ("Tesis #" . (int)$offer->company);
                 $offerData["company_name"] = $companyTypeName;
                 $offerData["company_quality"] = !empty($companyRow) ? (int)($companyRow["quality"] ?? 0) : 0;
@@ -164,14 +275,15 @@ class Company extends Controller
                 if (!empty($actionTimestamp)) {
                     $recentActions[] = [
                         "type" => (($offer->updated_at ?? null) && ($offer->created_at ?? null) && $offer->updated_at !== $offer->created_at)
-                            ? "Ilan guncellendi"
-                            : "Ilan acildi",
+                            ? "İlan güncellendi"
+                            : "İlan açıldı",
                         "label" => $companyTypeName,
                         "timestamp" => $actionTimestamp,
                     ];
                 }
 
                 if ($offer->worker === null) {
+                    $totalOpenOffers++;
                     if (!isset($payrollSummaryMap[$offerData["currency"]])) {
                         $payrollSummaryMap[$offerData["currency"]] = [
                             "code" => $offerData["currency"],
@@ -190,6 +302,77 @@ class Company extends Controller
             }
         }
 
+        foreach ($companyOperations as &$operation) {
+            if (($operation['status'] ?? 'ready') === 'control_required') {
+                $blockedFacilityCount++;
+                continue;
+            }
+
+            $operation['open_positions'] = max(
+                (int) ($operation['required_workers'] ?? 0) - (int) ($operation['assigned_workers'] ?? 0),
+                0
+            );
+            $operation['offer_gap'] = max(
+                (int) ($operation['open_positions'] ?? 0) - (int) ($operation['open_offer_count'] ?? 0),
+                0
+            );
+            $totalVacantPositions += $operation['open_positions'];
+            $totalOpenOfferPositions += (int) ($operation['open_offer_count'] ?? 0);
+            $totalOfferGap += (int) ($operation['offer_gap'] ?? 0);
+
+            if (($operation['input_required'] ?? 0) > 0 && ($operation['input_stock'] ?? 0) < $operation['input_required']) {
+                $operation['status'] = 'input_missing';
+                $blockedFacilityCount++;
+            } elseif (($operation['required_workers'] ?? 0) > ($operation['assigned_workers'] ?? 0)) {
+                $operation['status'] = 'workforce_missing';
+                $blockedFacilityCount++;
+            } else {
+                $operation['status'] = 'ready';
+            }
+        }
+        unset($operation);
+
+        $priorityAction = null;
+        $priorityRank = PHP_INT_MAX;
+        foreach ($list as $companyRow) {
+            $companyId = (int) ($companyRow['id'] ?? 0);
+            $operation = $companyOperations[$companyId] ?? null;
+            if (empty($operation)) {
+                continue;
+            }
+
+            $companyType = $companyTypes[(int) ($companyRow['type'] ?? 0)] ?? [];
+            $companyName = $companyType['display_name'] ?? ('Tesis #' . $companyId);
+            $action = null;
+            $actionRank = PHP_INT_MAX;
+
+            if (($operation['status'] ?? '') === 'input_missing') {
+                $action = ['key' => 'marketplace', 'label' => 'Eksik girdiyi markette ara', 'icon' => 'fa-store'];
+                $actionRank = 1;
+            } elseif (($operation['status'] ?? '') === 'workforce_missing' || ($operation['offer_gap'] ?? 0) > 0) {
+                $action = ['key' => 'work_offers', 'label' => 'İş gücünü tamamla', 'icon' => 'fa-briefcase'];
+                $actionRank = 2;
+            } elseif (($operation['status'] ?? '') === 'control_required') {
+                $action = ['key' => 'none', 'label' => 'Tesis verisini kontrol et', 'icon' => 'fa-triangle-exclamation'];
+                $actionRank = 3;
+            }
+
+            if ($action !== null && $actionRank < $priorityRank) {
+                $priorityAction = $action + ['company_name' => $companyName];
+                $priorityRank = $actionRank;
+            }
+        }
+
+        if ($priorityAction === null && empty($list)) {
+            $priorityAction = [
+                'key' => 'create_company',
+                'label' => 'İlk tesisini kur',
+                'icon' => 'fa-plus',
+                'company_name' => '',
+            ];
+        }
+
+        ksort($usedCurrencyCodes);
         ksort($currencyMap);
         $currencyList = array_values($currencyMap);
         ksort($payrollSummaryMap);
@@ -216,6 +399,9 @@ class Company extends Controller
             $summary["coverage_days"] = (float) $summary["total_salary"] > 0
                 ? floor($balance / (float) $summary["total_salary"])
                 : 0;
+            if (!$summary["is_sufficient"]) {
+                $payrollRiskCount++;
+            }
         }
         unset($summary);
 
@@ -232,7 +418,8 @@ class Company extends Controller
 
         return $this->render('user/companies.html.twig', [
             "companies" => $list,
-            "companyTypes" => CompanyType::$types,
+            "companyTypes" => $companyTypes,
+            "companyOperations" => $companyOperations,
             "openOffers" => $openOffers,
             "defaultCountryId" => $defaultCountryId,
             "countryList" => $countryList,
@@ -242,7 +429,17 @@ class Company extends Controller
             "recentActions" => $recentActions,
             "firstOpenOffer" => $firstOpenOffer,
             "totalCompanies" => count($list),
-            "totalOpenOffers" => count($openOffers),
+            "totalOpenOffers" => $totalOpenOffers,
+            "totalCapacity" => $totalCapacity,
+            "totalWorkersRequired" => $totalWorkersRequired,
+            "totalAssignedWorkers" => $totalAssignedWorkers,
+            "totalVacantPositions" => $totalVacantPositions,
+            "totalOpenOfferPositions" => $totalOpenOfferPositions,
+            "totalOfferGap" => $totalOfferGap,
+            "usedCurrencyCount" => count($usedCurrencyCodes),
+            "blockedFacilityCount" => $blockedFacilityCount,
+            "payrollRiskCount" => $payrollRiskCount,
+            "priorityAction" => $priorityAction,
             "totalDailyPayroll" => array_reduce($payrollSummary, function ($carry, $item) {
                 return $carry + (float) ($item["total_salary"] ?? 0);
             }, 0.0),
@@ -252,7 +449,9 @@ class Company extends Controller
     public function showCreate()
     {
         $list = [];
-        foreach (CompanyType::$types as $company) {
+        $availableQualities = array_fill_keys(self::CREATE_QUALITIES, true);
+        foreach ($this->prepareCompanyTypes() as $company) {
+            $company['qualities'] = array_intersect_key($company['qualities'] ?? [], $availableQualities);
             $list[$company["sector"]][] = $company;
         }
 
@@ -279,7 +478,7 @@ class Company extends Controller
         $id = isset($_POST["id"]) ? (int)$_POST["id"] : 0;
         $quality = isset($_POST["quality"]) ? (int)$_POST["quality"] : 0;
 
-        if ($id < 1 || $quality < 1) {
+        if ($id < 1 || !in_array($quality, self::CREATE_QUALITIES, true)) {
             return ["error" => true, "message" => "Sistem Hatası: Geçersiz tesis veya kalite parametresi."];
         }
 
@@ -292,14 +491,24 @@ class Company extends Controller
             return ["error" => true, "message" => "Veri Hatası: Şirket modeli yüklenemedi."];
         }
 
-        if (!App::user()->buy($companyDetails["price"], $companyDetails["currency"], Session::PURCHASE_TYPE_COMPANY)) {
-            return [
-                "error" => true,
-                "message" => "Bakiyeniz yetersiz! Kurulum maliyeti: " . $companyDetails["price"] . " " . strtoupper($companyDetails["currency"])
-            ];
-        }
-
+        DB::beginTransaction();
         try {
+            if (DB::getSchemaBuilder()->hasTable('user_money')) {
+                DB::table('user_money')
+                    ->where('uid', $uid)
+                    ->lockForUpdate()
+                    ->first();
+            }
+
+            if (!App::user()->buy($companyDetails["price"], $companyDetails["currency"], Session::PURCHASE_TYPE_COMPANY)) {
+                DB::rollBack();
+
+                return [
+                    "error" => true,
+                    "message" => "Bakiyeniz yetersiz. Kurulum tamamlanamadı."
+                ];
+            }
+
             $created = CompanyModel::create([
                 "uid" => App::user()->getUid(),
                 "type" => $id,
@@ -307,10 +516,23 @@ class Company extends Controller
             ]);
 
             if ($created) {
+                DB::commit();
                 return ["success" => true, "message" => "Tesis inşaatı tamamlandı!"];
             }
         } catch (\Exception $e) {
-            return ["error" => true, "message" => "Veritabanı Hatası: " . $e->getMessage()];
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            if ($e->getCode() === AppException::NO_ENOUGH_MONEY) {
+                return ["error" => true, "message" => "Bakiyeniz yetersiz. Kurulum tamamlanamadı."];
+            }
+
+            return ["error" => true, "message" => "Tesis kurulumu tamamlanamadı. Lütfen tekrar deneyin."];
+        }
+
+        if (DB::transactionLevel() > 0) {
+            DB::rollBack();
         }
 
         return ["error" => true, "message" => "İnşaat sırasında bilinmeyen bir hata oluştu."];

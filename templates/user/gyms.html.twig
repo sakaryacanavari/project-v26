@@ -3,326 +3,1205 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-    /* =============================
-       GYM v26.300 â€” SHARP-GLASS HUD (Net ve Keskin)
-       ============================= */
-    :root {
-        --bug-accent: var(--brand-primary);
-        --bug-accent-text: color-mix(in srgb, var(--brand-primary) 90%, #ffffff);
-        --bug-accent-border: color-mix(in srgb, var(--brand-primary) 30%, transparent);
+    .daily-training-page {
+        --training-surface-base: var(--surface-strong, var(--panel-bg, rgba(8, 12, 20, .96)));
+        --training-surface-soft-base: var(--surface-soft, rgba(15, 23, 42, .76));
+        --training-border-base: var(--border-subtle, color-mix(in srgb, var(--text-main, #fff) 10%, transparent));
+        --training-muted-base: var(--text-muted, #94a3b8);
+        --training-text-base: var(--text-main, #fff);
+        --training-surface: var(--training-surface-base);
+        --training-surface-soft: var(--training-surface-soft-base);
+        --training-border: var(--training-border-base);
+        --training-muted: var(--training-muted-base);
+        --training-text: var(--training-text-base);
+        --training-error: var(--status-error, var(--brand-primary));
+        --training-shadow: var(--shadow-panel, 0 12px 28px color-mix(in srgb, var(--training-surface) 36%, transparent));
+        --training-shadow-soft: var(--shadow-panel-soft, 0 8px 20px color-mix(in srgb, var(--training-surface) 32%, transparent));
+        max-width: 1180px;
+        margin-inline: auto;
+        display: grid;
+        gap: 12px;
     }
 
-    /* --- Core Layout & Sharp Glass Panel --- */
-    .home-theme-surface .glass-panel {
-        background: linear-gradient(145deg, rgba(8, 12, 20, 0.85) 0%, rgba(2, 4, 10, 0.98) 100%) !important;
-        backdrop-filter: blur(12px); /* BulanÄ±klÄ±k dÃ¼ÅŸÃ¼rÃ¼ldÃ¼, netlik artÄ±rÄ±ldÄ± */
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.8);
+    .daily-training-hero,
+    .daily-training-addon,
+    .daily-training-bubble {
+        background: var(--training-surface);
+        border: 1px solid var(--training-border);
         border-radius: 16px;
+        box-shadow: var(--training-shadow);
     }
 
-    /* --- Table Rows (Sharp & Compact) --- */
-    .v2-table-row {
-        background: rgba(0, 0, 0, 0.4);
-        transition: all 0.2s ease;
+    .daily-training-hero {
+        align-items: center;
+        background: color-mix(in srgb, var(--training-surface-soft) 72%, var(--training-surface));
+        border: 1px solid var(--training-border);
+        border-radius: 12px;
+        box-shadow: var(--training-shadow-soft);
+        gap: 10px;
+        justify-self: start;
+        max-width: 100%;
+        min-width: 240px;
+        padding: 10px 14px;
+        width: fit-content;
     }
-    .v2-table-row:hover {
-        background: color-mix(in srgb, var(--brand-primary) 8%, rgba(0,0,0,0.6));
-        transform: translateX(4px);
+
+    /* Theme modes and palettes are provided by the shared root theme layer. */
+    html.theme-archive .daily-training-page {
+        --training-surface: color-mix(in srgb, var(--brand-primary) 6%, var(--training-surface-base));
+        --training-surface-soft: color-mix(in srgb, var(--brand-primary) 10%, var(--training-surface-soft-base));
+        --training-border: var(--eye-comfort-border, var(--training-border-base));
+        --training-muted: color-mix(in srgb, var(--brand-primary) 16%, var(--training-muted-base));
+        --training-text: color-mix(in srgb, var(--brand-primary) 8%, var(--training-text-base));
+        --training-error: var(--eye-comfort-error, var(--status-error, var(--brand-primary)));
     }
-    .v2-table-row td {
-        border-top: 1px solid rgba(255,255,255,0.03);
-        border-bottom: 1px solid rgba(255,255,255,0.03);
+
+    html.theme-liquid .daily-training-page {
+        --training-surface: var(--glass-content-bg, var(--training-surface-base));
+        --training-surface-soft: var(--glass-content-bg-alt, var(--training-surface-soft-base));
+        --training-border: var(--glass-control-border, var(--training-border-base));
+        --training-muted: var(--glass-control-muted, var(--training-muted-base));
+        --training-text: var(--glass-control-text, var(--training-text-base));
+    }
+
+    .daily-training-hero > div:first-child {
+        gap: 10px;
+    }
+
+    .daily-training-hero > div:first-child > div:first-child {
+        align-items: center;
+        background: color-mix(in srgb, var(--brand-primary) 12%, var(--training-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 24%, var(--training-border));
+        border-radius: 8px;
+        display: flex;
+        height: 32px;
+        justify-content: center;
+        width: 32px;
+    }
+
+    .daily-training-hero h1 {
+        font-size: 18px;
+        line-height: 1.1;
+        letter-spacing: .04em;
+        text-transform: none;
+    }
+
+    .daily-training-hero p {
+        font-size: 11px;
+        line-height: 1.25;
+        margin-top: 2px;
+    }
+
+    .daily-training-hero i {
+        font-size: 14px;
+    }
+
+    .daily-training-streak {
+        align-items: center;
+        color: var(--training-muted);
+        display: inline-flex;
+        flex: 0 0 auto;
+        font-size: 11px;
+        font-weight: 700;
+        gap: 5px;
+        letter-spacing: .02em;
+        text-transform: none;
+    }
+
+    .daily-training-streak strong {
+        color: var(--brand-primary);
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    .daily-training-card {
+        align-content: start;
+        background: var(--training-surface);
+        border: 1px solid var(--training-border);
+        border-radius: 16px;
+        display: grid;
+        gap: 6px;
+        padding: 16px;
+        box-shadow: var(--training-shadow);
+    }
+
+    .daily-training-card h2,
+    .daily-training-addon h2 {
+        letter-spacing: .04em;
+        text-transform: none;
+    }
+
+    .daily-training-main-grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 4px;
+    }
+
+    .daily-training-left-column {
+        align-content: start;
+        display: grid;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .daily-training-card > .daily-training-bubble {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .daily-training-card > .daily-training-bubble:first-child {
+        padding: 2px 4px 0;
+    }
+
+    .daily-training-main-action {
+        align-items: center;
+        background: color-mix(in srgb, var(--training-surface-soft) 82%, var(--training-surface));
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--training-border));
+        border-radius: 12px;
+        box-shadow: var(--training-shadow-soft);
+        display: flex;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        min-height: 58px;
+        padding: 10px 14px !important;
+        text-align: left;
+        width: fit-content;
+    }
+
+    .daily-training-action-copy {
+        flex: 0 1 auto;
+        max-width: 360px;
+        min-width: 0;
+    }
+
+    .daily-training-action-copy p {
+        color: var(--training-text);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.25;
+        margin: 0;
+    }
+
+    .daily-training-action-gain {
+        color: var(--brand-primary);
+        display: inline-flex;
+        font-size: 12px;
+        font-weight: 900;
+        margin-top: 3px;
+    }
+
+    .daily-training-action-copy .daily-training-streak {
+        margin-left: 8px;
+    }
+
+    .daily-training-main-action .daily-training-action {
+        min-width: 190px;
+        min-height: 44px;
+    }
+
+    .daily-training-main-action.is-completed {
+        background: color-mix(in srgb, var(--training-surface) 88%, var(--training-surface-soft));
+        border-color: var(--training-border);
+        min-height: 48px;
+    }
+
+    .daily-training-action-reset {
+        color: var(--training-muted);
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.25;
+        margin-top: 4px;
+    }
+
+    .daily-training-action-reset strong {
+        color: var(--training-text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        margin-left: 3px;
+    }
+
+    .daily-training-stats {
+        background: color-mix(in srgb, var(--training-surface-soft) 48%, transparent) !important;
+        border: 0 !important;
+        border-radius: 10px !important;
+        gap: 3px !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 4px !important;
+    }
+
+    .daily-training-stats > .daily-training-stat {
+        background: color-mix(in srgb, var(--training-surface) 34%, transparent);
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+
+    .daily-training-stats > .daily-training-stat + .daily-training-stat {
+        border-left: 0;
+    }
+
+    .daily-training-helper {
+        background: color-mix(in srgb, var(--training-surface-soft) 34%, transparent);
+        border: 0;
+        border-radius: 10px;
+        box-shadow: none;
+        gap: 0 !important;
+        margin-top: 0;
+        padding: 4px !important;
+    }
+
+    .daily-training-helper > .daily-training-stat {
+        background: color-mix(in srgb, var(--training-surface) 14%, transparent);
+        border-radius: 8px;
+        padding: 9px 12px;
+    }
+
+    .daily-training-helper > .daily-training-stat + .daily-training-stat {
+        background: color-mix(in srgb, var(--training-surface) 22%, transparent);
+        border-left: 1px solid color-mix(in srgb, var(--training-border) 70%, transparent);
+    }
+
+    .daily-training-stat {
+        background: color-mix(in srgb, var(--training-surface-soft) 72%, transparent);
+        border: 0;
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .daily-training-stat-label {
+        color: var(--training-muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: none;
+    }
+
+    .daily-training-stat-value {
+        color: var(--training-text);
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1.15;
+        margin-top: 6px;
+    }
+
+    .daily-training-history {
+        background: color-mix(in srgb, var(--training-surface-soft) 48%, var(--training-surface));
+        align-self: start;
+        border: 1px solid var(--training-border);
+        border-radius: 12px;
+        margin-top: 0;
+        min-height: 0;
+        overflow: hidden;
+        padding: 0 12px;
+    }
+
+    .daily-training-history-content {
+        border-top: 1px solid var(--training-border);
+        min-height: 0;
+        padding: 0 0 10px;
+    }
+
+    .daily-training-history-trigger {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: var(--training-text);
+        cursor: pointer;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        min-height: 60px;
+        margin-inline: -12px;
+        padding: 12px;
+        text-align: left;
+        transition: background-color .18s ease;
+        width: calc(100% + 24px);
+    }
+
+    .daily-training-history-trigger:hover {
+        background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+    }
+
+    .daily-training-history-trigger:focus-visible {
+        outline: 2px solid var(--focus-ring, var(--brand-primary));
+        outline-offset: -3px;
+    }
+
+    .daily-training-history-icon {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        color: var(--training-muted);
+        display: inline-flex;
+        flex: 0 0 20px;
+        height: 20px;
+        justify-content: center;
+        width: 20px;
+    }
+
+    .daily-training-history-copy {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+    }
+
+    .daily-training-history-title {
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: none;
+    }
+
+    .daily-training-history-description {
+        color: var(--training-muted);
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+    .daily-training-history-action {
+        align-items: center;
+        color: var(--training-muted);
+        display: inline-flex;
+        flex: 0 0 auto;
+        font-size: 11px;
+        font-weight: 800;
+        gap: 8px;
+        letter-spacing: .02em;
+        text-transform: none;
+    }
+
+    .daily-training-history-arrow {
+        font-size: 10px;
+        transition: transform .18s ease;
+    }
+
+    .daily-training-history-content[hidden],
+    .daily-training-completed[hidden],
+    .daily-training-feedback[hidden] {
+        display: none;
+    }
+
+    .daily-training-completed {
+        color: var(--brand-primary);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .04em;
+    }
+
+    .daily-training-feedback {
+        background: color-mix(in srgb, var(--brand-primary) 12%, var(--training-surface-soft));
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 34%, var(--training-border));
+        border-radius: 10px;
+        color: var(--training-text);
+        margin-top: 14px;
+        padding: 10px 12px;
+    }
+
+    .daily-training-feedback strong {
+        color: var(--brand-primary);
+        font-size: 15px;
+    }
+
+    .daily-training-feedback.is-error {
+        border-color: color-mix(in srgb, var(--training-error) 40%, var(--training-border));
+    }
+
+    .daily-wheel-result {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        margin-top: 0;
+        padding: 0;
+    }
+
+    .daily-wheel-result-label {
+        color: var(--training-muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: none;
+    }
+
+    .daily-wheel-result-value {
+        color: var(--brand-primary);
+        font-size: 16px;
+        font-weight: 950;
+        white-space: nowrap;
+    }
+
+    .daily-wheel-result-note {
+        color: var(--training-muted);
+        font-size: 10px;
+        font-weight: 700;
+        margin-left: auto;
+        white-space: nowrap;
+    }
+
+    .daily-training-history-row {
+        align-items: center;
+        border-bottom: 1px solid var(--training-border);
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        min-height: 36px;
+        padding: 6px 0;
+    }
+
+    .daily-training-history-row:last-child {
+        border-bottom: 0;
+    }
+
+    .daily-training-history-empty {
+        color: var(--training-muted);
+        font-size: 11px;
+        font-weight: 600;
+        margin: 0;
+        padding: 12px 0 2px;
+    }
+
+    .daily-training-addon {
+        align-self: start;
+        background: color-mix(in srgb, var(--training-surface-soft) 58%, var(--training-surface));
+        border-radius: 12px;
+        box-shadow: none;
+        min-height: 0;
+        padding: 14px;
+    }
+
+    .daily-training-wheel-panel {
+        background: color-mix(in srgb, var(--training-surface-soft) 44%, var(--training-surface));
         padding: 12px 14px;
     }
-    .v2-table-row:hover td {
-        border-color: color-mix(in srgb, var(--brand-primary) 25%, transparent);
-    }
-    .v2-table-row td:first-child {
-        border-left: 3px solid transparent;
-        border-top-left-radius: 12px;
-        border-bottom-left-radius: 12px;
-    }
-    .v2-table-row:hover td:first-child {
-        border-left: 3px solid var(--brand-primary);
-    }
-    .v2-table-row td:last-child {
-        border-right: 1px solid rgba(255,255,255,0.03);
-        border-top-right-radius: 12px;
-        border-bottom-right-radius: 12px;
-    }
-    .v2-table-row:hover td:last-child {
-        border-right-color: color-mix(in srgb, var(--brand-primary) 25%, transparent);
+
+    .daily-training-addon-grid {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    /* --- Zarif Scrollbar Sadece Mobilde Ã‡Ä±ksÄ±n Diye --- */
-    .custom-scrollbar::-webkit-scrollbar { height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--brand-primary) 30%, transparent); border-radius: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
-
-    /* --- Badges & Pills --- */
-    .tech-badge {
-        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-        padding: 6px 12px; border-radius: 8px; font-family: 'JetBrains Mono', 'Courier New', monospace;
-        font-weight: 900; font-size: 12px; border: 1px solid transparent;
-        background: rgba(0,0,0,0.3);
+    .daily-training-addon-stat {
+        color: var(--training-muted);
+        font-size: 11px;
+        font-weight: 700;
     }
-    .tech-badge.green { color: #34d399; border-color: rgba(16, 185, 129, 0.2); }
-    .tech-badge.red { color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
-    .tech-badge.gold { color: #facc15; border-color: rgba(234, 179, 8, 0.2); }
-    .tech-badge.neutral { color: #cbd5e1; border-color: rgba(255, 255, 255, 0.1); }
 
-    /* --- Buttons --- */
-    .btn-create-primary {
-        background: var(--brand-primary);
-        color: #000;
+    .daily-training-addon-stat strong {
+        color: var(--training-text);
+        display: block;
+        font-size: 18px;
         font-weight: 900;
-        transition: all 0.2s ease;
-        border: none;
-    }
-    .btn-create-primary:hover:not(:disabled) {
-        filter: brightness(1.1);
-        transform: translateY(-2px);
-    }
-    .btn-create-primary:active:not(:disabled) {
-        transform: translateY(0);
-    }
-    .btn-create-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-    .game-action-hero { padding: 22px; }
-    .game-action-title { color: var(--text-main, #fff); }
-    .game-action-copy { color: color-mix(in srgb, var(--text-muted, #94a3b8) 86%, #fff); line-height: 1.45; }
-    .game-action-panel { padding: 18px; }
-    .game-status-note { color: color-mix(in srgb, var(--text-muted, #94a3b8) 82%, #fff); }
-
-    @media (max-width: 768px) {
-        .game-action-hero { padding: 18px; }
-        .game-action-panel { padding: 14px; }
-        .btn-create-primary { min-height: 42px; width: 100%; justify-content: center; }
-        .v2-table-row td { padding: 10px 12px; }
-        .tech-badge { width: auto !important; min-width: 82px; }
+        margin-top: 4px;
     }
 
-    /* SweetAlert V26 Sharp */
-    .cyber-modal-popup { background: rgba(12, 16, 24, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; border-radius: 16px !important; padding: 2rem 1.5rem !important; }
-    .cyber-modal-title { color: #f8fafc !important; text-transform: uppercase !important; letter-spacing: 0.15em !important; font-weight: 900 !important; font-size: 14px !important; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 14px !important; margin-bottom: 18px !important; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; }
-    .cyber-confirm-btn { background: var(--brand-primary) !important; color: #000 !important; font-weight: 900 !important; text-transform: uppercase !important; border-radius: 8px !important; padding: 12px 24px !important; font-size: 11px !important; border: none !important; }
+    .daily-training-addon .border-t {
+        border-color: var(--training-border) !important;
+    }
+
+    .daily-training-secondary-action {
+        align-items: center;
+        background: transparent;
+        border: 1px solid var(--training-border);
+        border-radius: 8px;
+        color: var(--training-text);
+        display: inline-flex;
+        font-size: 11px;
+        font-weight: 900;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        text-transform: none;
+        transition: border-color .18s ease, opacity .18s ease, transform .18s ease;
+    }
+
+    .daily-training-secondary-action:hover:not(:disabled) {
+        border-color: color-mix(in srgb, var(--brand-primary) 55%, var(--training-border));
+        transform: translateY(-1px);
+    }
+
+    .daily-training-secondary-action:disabled {
+        background: var(--training-surface);
+        border-color: color-mix(in srgb, var(--brand-primary) 24%, var(--training-border));
+        cursor: not-allowed;
+        opacity: .82;
+    }
+
+    .daily-training-secondary-action:focus-visible {
+        outline: 2px solid var(--focus-ring, var(--brand-primary));
+        outline-offset: 3px;
+    }
+
+    .daily-wheel-visual {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        color: var(--training-muted);
+        display: flex;
+        height: 20px;
+        justify-content: center;
+        width: 20px;
+    }
+
+    .daily-wheel-visual i {
+        font-size: 18px;
+    }
+
+    .daily-wheel-visual.is-processing {
+        animation: daily-wheel-pulse .7s ease-in-out infinite alternate;
+    }
+
+    @keyframes daily-wheel-pulse {
+        from { opacity: .65; transform: scale(.98); }
+        to { opacity: 1; transform: scale(1.02); }
+    }
+
+    @media (max-width: 640px) {
+        .daily-training-addon {
+            padding: 14px;
+        }
+
+        .daily-training-addon-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .daily-training-secondary-action {
+            width: 100%;
+        }
+    }
+
+    @media (min-width: 641px) {
+        .daily-training-helper {
+            grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+        }
+    }
+
+    .daily-training-action {
+        align-items: center;
+        background: color-mix(in srgb, var(--brand-primary) 82%, var(--training-surface));
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 64%, var(--training-border));
+        border-radius: 10px;
+        color: var(--brand-primary-contrast, var(--training-surface));
+        display: inline-flex;
+        font-size: 11px;
+        font-weight: 900;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 22px;
+        text-transform: none;
+        transition: filter .18s ease, transform .18s ease, opacity .18s ease;
+    }
+
+    .daily-training-action:hover:not(:disabled) {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+    }
+
+    .daily-training-action:disabled {
+        cursor: not-allowed;
+        opacity: .55;
+    }
+
+    .daily-training-action[hidden] {
+        display: none !important;
+    }
+
+    .daily-training-action:focus-visible {
+        outline: 2px solid var(--focus-ring, var(--brand-primary));
+        outline-offset: 3px;
+    }
+
+    @media (max-width: 640px) {
+        .daily-training-hero {
+            justify-self: stretch;
+            padding: 8px 10px;
+            width: 100%;
+        }
+
+        .daily-training-card {
+            padding: 13px;
+        }
+
+        .daily-training-action {
+            width: 100%;
+        }
+
+        .daily-training-stat {
+            padding: 12px;
+        }
+
+        .daily-training-main-action {
+            flex-direction: column !important;
+            align-items: stretch;
+            gap: 10px !important;
+            text-align: left;
+            width: 100%;
+        }
+
+        .daily-training-action-reset {
+            margin-top: 5px;
+        }
+
+        .daily-wheel-result {
+            flex-wrap: wrap;
+        }
+
+        .daily-wheel-result-note {
+            flex-basis: 100%;
+            margin-left: 0;
+        }
+
+        .daily-training-action-copy {
+            max-width: none;
+            width: 100%;
+        }
+
+        .daily-training-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .daily-training-stats > .daily-training-status-stat {
+            border-left: 0;
+            border-top: 0;
+            grid-column: 1 / -1;
+        }
+
+        .daily-training-helper > .daily-training-stat + .daily-training-stat {
+            border-left: 0;
+            border-top: 1px solid var(--training-border);
+        }
+    }
+
+    @media (min-width: 900px) {
+        .daily-training-page {
+            max-width: 1280px;
+        }
+
+        .daily-training-main-grid {
+            grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr);
+            align-items: start;
+        }
+
+        .daily-training-left-column {
+            grid-column: 1;
+            width: 100%;
+        }
+
+        .daily-training-addon-grid {
+            align-self: start;
+            align-content: start;
+            grid-column: 2;
+            max-width: none;
+            width: 100%;
+            margin-inline: 0;
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .daily-training-history-trigger {
+            align-items: flex-start;
+            min-height: 58px;
+            padding: 10px 12px;
+        }
+
+        .daily-training-history-content {
+            padding-inline: 0;
+        }
+
+        .daily-training-history-action {
+            font-size: 10px;
+            gap: 5px;
+        }
+    }
+
+    @media (min-width: 900px) {
+        .daily-training-page {
+            grid-template-columns: minmax(240px, max-content) minmax(0, 1fr);
+        }
+
+        .daily-training-hero {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .daily-training-main-action {
+            align-self: start;
+            grid-column: 2;
+            grid-row: 1;
+            margin-top: 0;
+            justify-self: start;
+            max-width: 100%;
+            width: fit-content;
+        }
+
+        .daily-training-main-grid {
+            grid-column: 1 / -1;
+            grid-row: 2;
+            width: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .daily-training-action,
+        .daily-training-secondary-action,
+        .daily-wheel-visual {
+            transition: none;
+            animation: none;
+        }
+
+        .daily-training-page .fa-spin {
+            animation: none;
+        }
+
+        .daily-training-history-arrow,
+        .daily-training-history-trigger {
+            transition: none;
+        }
+    }
 </style>
 
-<div class="home-theme-surface space-y-6 animate-fade-in w-full max-w-[1400px] mx-auto overflow-hidden">
-    
-    {# ===== HERO PANEL ===== #}
-    <div class="glass-panel game-action-hero flex flex-col md:flex-row justify-between items-start md:items-center gap-5 relative">
-        <i class="fa-solid fa-dumbbell absolute -right-6 -bottom-6 text-[100px] text-[color:var(--brand-primary)] opacity-[0.03] pointer-events-none rotate-[-15deg]"></i>
-
-        <div class="flex items-center gap-4 relative z-10">
-            <div class="w-12 h-12 rounded-xl bg-[color:var(--brand-primary)]/10 flex items-center justify-center">
-                <i class="fa-solid fa-dumbbell text-2xl text-[color:var(--brand-primary)]"></i>
+<main class="daily-training-page home-theme-surface animate-fade-in" aria-labelledby="daily-training-title">
+    <section class="daily-training-hero flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[color:var(--brand-primary)]/10" aria-hidden="true">
+                <i class="fa-solid fa-dumbbell text-xl text-[color:var(--brand-primary)]"></i>
             </div>
             <div>
-                <h1 class="game-action-title text-xl font-black uppercase tracking-wider leading-tight">
-                    {{ t('gyms.hero.title') }}
-                </h1>
-                <p class="text-[10px] text-[color:var(--brand-primary)] font-bold uppercase tracking-[0.15em] mt-1.5 flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 bg-[color:var(--brand-primary)] rounded-full animate-pulse shadow-[0_0_5px_var(--brand-primary)]"></span> {{ t('gyms.hero.subtitle') }}
-                </p>
-                <p class="game-action-copy text-[10px] font-bold tracking-widest mt-1.5 uppercase">
-                    {{ t('gyms.hero.limit') }}
-                </p>
+                <h1 id="daily-training-title" class="text-xl font-black uppercase tracking-wider text-[color:var(--training-text)]">Antrenman</h1>
+                <p class="mt-1 text-sm font-semibold text-[color:var(--training-muted)]">Günlük ücretsiz eğitimle gücünü artır.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="daily-training-main-action daily-training-action-bubble{% if dailyTraining.completed %} is-completed{% endif %}" aria-label="Günlük eğitim aksiyonu" aria-live="polite">
+        <div class="daily-training-action-copy">
+            <p id="daily-training-copy">
+                {% if dailyTraining.completed %}
+                    Bugünkü eğitim tamamlandı
+                {% else %}
+                    Günlük eğitim hazır
+                {% endif %}
+            </p>
+            <span id="daily-training-action-gain" class="daily-training-action-gain">{% if dailyTraining.completed %}+{{ dailyTraining.strengthGain }} Güç kazanıldı{% else %}+{{ dailyTraining.strengthGain }} Güç{% endif %}</span>
+            <span id="daily-training-streak" class="daily-training-streak"{% if dailyTraining.trainingStreak|default(0) < 1 %} hidden{% endif %}>· Seri <strong id="daily-training-streak-value">{{ dailyTraining.trainingStreak|default(0) }}</strong> gün</span>
+            <span id="daily-training-action-reset" class="daily-training-action-reset"{% if not dailyTraining.completed %} hidden{% endif %}>Sonraki eğitim: <strong id="daily-training-action-reset-value">00:00:00</strong></span>
+        </div>
+        <button id="daily-training-button" type="button" class="daily-training-action" aria-describedby="daily-training-copy daily-training-action-gain"{% if dailyTraining.completed %} hidden disabled aria-disabled="true"{% endif %}>
+            Eğitim Yap
+        </button>
+    </div>
+
+    <div class="daily-training-main-grid">
+    <div class="daily-training-left-column">
+    <section class="daily-training-card" aria-labelledby="daily-training-card-title">
+        <div class="daily-training-bubble flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 id="daily-training-card-title" class="text-base font-black uppercase tracking-wider text-[color:var(--training-text)]">Günlük gelişim</h2>
             </div>
         </div>
 
-        <div class="flex flex-col md:items-end w-full md:w-auto relative z-10">
-            <span class="text-[8px] text-slate-500 font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-rotate text-[color:var(--brand-primary)] opacity-70"></i> {{ t('gyms.hero.reset') }}
+        <div class="daily-training-bubble daily-training-stats grid gap-2">
+            <div class="daily-training-stat">
+                <div class="daily-training-stat-label">Mevcut güç</div>
+                <div id="daily-training-current-strength" class="daily-training-stat-value">{{ dailyTraining.currentStrength }}</div>
+            </div>
+            <div class="daily-training-stat">
+                <div class="daily-training-stat-label">Eğitim kazanımı</div>
+                <div id="daily-training-gain" class="daily-training-stat-value text-[color:var(--brand-primary)]">+{{ dailyTraining.strengthGain }} Güç</div>
+            </div>
+            <div class="daily-training-stat daily-training-status-stat">
+                <div class="daily-training-stat-label">Günlük durum</div>
+                <div id="daily-training-status" class="daily-training-stat-value text-base">
+                    {% if dailyTraining.completed %}Hak kullanıldı{% else %}Kullanılabilir{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div id="daily-training-feedback" class="daily-training-feedback" role="status" aria-live="polite" hidden></div>
+
+        <div class="daily-training-bubble daily-training-helper grid gap-2 sm:grid-cols-2">
+            <div class="daily-training-stat flex items-center justify-between gap-4">
+                        <div>
+                            <div class="daily-training-stat-label">Son eğitim</div>
+                            <div class="mt-2 text-sm font-black text-[color:var(--training-text)]">
+                                {% if dailyTraining.lastTraining %}
+                                    {{ dailyTraining.lastTraining.trainingType|default('Eğitim') }}
+                                    <span class="block text-[11px] font-semibold text-[color:var(--training-muted)]">{{ dailyTraining.lastTraining.dateLabel }}</span>
+                                {% else %}
+                            Henüz kayıt yok
+                        {% endif %}
+                    </div>
+                </div>
+                {% if dailyTraining.lastTraining %}
+                    <div class="shrink-0 text-right">
+                        <span class="block text-sm font-black text-[color:var(--brand-primary)]">+{{ dailyTraining.lastTraining.strengthGain }} Güç</span>
+                        {% if dailyTraining.lastTraining.strengthAfter is not null %}
+                            <span class="mt-1 block text-[10px] font-semibold text-[color:var(--training-muted)]">Toplam {{ dailyTraining.lastTraining.strengthAfter }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="daily-training-stat" aria-live="polite">
+                <div class="daily-training-stat-label">Yenilenme</div>
+                <div id="daily-training-reset" data-reset-at="{{ dailyTraining.resetAt }}" data-server-now="{{ dailyTraining.serverNow }}" class="mt-2 font-mono text-lg font-black text-[color:var(--training-text)]">00:00:00</div>
+                <p class="mt-1 text-[10px] font-semibold text-[color:var(--training-muted)]">Sunucu saatine göre her gün 00:00'da yenilenir.</p>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="daily-training-history daily-training-history-standalone" aria-labelledby="training-history-title">
+        <button id="training-history-toggle" type="button" class="daily-training-history-trigger" aria-label="Güç gelişimini aç" aria-expanded="false" aria-controls="training-history-content">
+            <span class="daily-training-history-icon" aria-hidden="true"><i class="fa-solid fa-chart-line"></i></span>
+            <span class="daily-training-history-copy">
+                <span id="training-history-title" class="daily-training-history-title">Güç gelişimi</span>
+                {% if dailyTraining.weekly.count|default(0) > 0 %}
+                    <span id="training-history-weekly-summary" class="daily-training-history-description" data-count="{{ dailyTraining.weekly.count|default(0) }}" data-gain="{{ dailyTraining.weekly.gain|default(0) }}">Bu hafta +{{ dailyTraining.weekly.gain }} Güç · {{ dailyTraining.weekly.count }} eğitim</span>
+                {% else %}
+                    <span id="training-history-weekly-summary" class="daily-training-history-description" data-count="0" data-gain="0">Son eğitimlerini ve toplam güç değişimini görüntüle.</span>
+                {% endif %}
             </span>
-            <div class="bg-black/40 px-5 py-2.5 rounded-xl flex items-center gap-3 border border-white/5">
-                <i class="fa-solid fa-clock text-[color:var(--brand-primary)] animate-pulse text-sm"></i>
-                <span id="reset-timer" class="font-mono text-lg font-black tracking-widest text-white">00:00:00</span>
+            <span class="daily-training-history-action">
+                <span id="training-history-action-label">Geçmiş</span>
+                <i id="training-history-arrow" class="daily-training-history-arrow fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </span>
+        </button>
+        <div id="training-history-content" class="daily-training-history-content" hidden>
+            {% if dailyTraining.history %}
+                {% for training in dailyTraining.history %}
+                    <div class="daily-training-history-row">
+                        <div class="min-w-0">
+                            <span class="block truncate text-xs font-semibold text-[color:var(--training-muted)]">{{ training.dateLabel }}</span>
+                            <span class="mt-1 block text-[10px] font-semibold text-[color:var(--brand-primary)]">{{ training.trainingType|default('Günlük Eğitim') }}</span>
+                            {% if training.strengthAfter is not null %}
+                                <span class="mt-1 block text-[10px] font-semibold text-[color:var(--training-muted)]">Eğitim sonrası toplam: {{ training.strengthAfter }} Güç</span>
+                            {% endif %}
+                        </div>
+                        <span class="shrink-0 text-xs font-black text-[color:var(--brand-primary)]">+{{ training.strengthGain }} Güç</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="daily-training-history-empty">Henüz görüntülenecek eğitim kaydı yok.</p>
+            {% endif %}
+        </div>
+    </section>
+    </div>
+
+    <div class="daily-training-addon-grid">
+    <section class="daily-training-addon daily-training-extra-panel" aria-labelledby="extra-training-title">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 id="extra-training-title" class="text-base font-black uppercase tracking-wider text-[color:var(--training-text)]">Ek Eğitim</h2>
+                <p class="mt-1 text-xs font-semibold text-[color:var(--training-muted)]">Daha düşük kazanımlı, günde 1 kez ek eğitim.</p>
             </div>
         </div>
-    </div>
 
-    {# ===== TABLE PANEL ===== #}
-    <div class="glass-panel game-action-panel">
-        <h2 class="text-[11px] font-black text-[color:var(--text-main,#fff)] uppercase tracking-[0.18em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
-            <i class="fa-solid fa-server text-[color:var(--brand-primary)] opacity-80"></i> {{ t('gyms.panel.title') }}
-        </h2>
-
-        <div class="w-full overflow-x-auto custom-scrollbar pb-2">
-            <table class="w-full text-left border-collapse whitespace-nowrap lg:whitespace-normal" style="border-spacing: 0 6px; border-collapse: separate;">
-                <thead class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                    <tr>
-                        <th class="p-3 pl-5 bg-black/40 rounded-l-[12px] border-y border-l border-white/5">{{ t('gyms.table.level') }}</th>
-                        <th class="p-3 bg-black/40 border-y border-white/5 text-center">{{ t('gyms.table.strength') }}</th>
-                        <th class="p-3 bg-black/40 border-y border-white/5 text-center">{{ t('gyms.table.energy') }}</th>
-                        <th class="p-3 bg-black/40 border-y border-white/5 text-center">{{ t('gyms.table.cost') }}</th>
-                        <th class="p-3 pr-5 bg-black/40 rounded-r-[12px] border-y border-r border-white/5 text-right">{{ t('gyms.table.status') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="text-[11px] font-bold text-white">
-                    {% for quality, gym in gyms %}
-                        <tr class="v2-table-row group">
-                            <td class="p-3 pl-5">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 bg-black/60 rounded-[10px] flex items-center justify-center group-hover:bg-black/80 transition-colors">
-                                        <img src="img/gyms/{{ gym.quality }}.png" class="w-6 h-6 opacity-90 group-hover:scale-110 transition-transform">
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="uppercase tracking-widest text-[12px] text-slate-200 font-black group-hover:text-white transition-colors">{% filter upper %}{{ quality }}{% endfilter %}</span>
-                                        <span class="text-[color:var(--brand-primary)] text-[8px] font-black mt-1 tracking-widest uppercase opacity-80">{{ t('gyms.table.approved') }}</span>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <td class="p-3 text-center">
-                                <div class="tech-badge green w-24 mx-auto">
-                                    <img class="w-3.5 h-3.5 opacity-90" src="img/icons/strength.png" alt="GÃ¼Ã§">
-                                    <span class="text-[12px]">+{{ gym.strength }}</span>
-                                </div>
-                            </td>
-
-                            <td class="p-3 text-center">
-                                <div class="tech-badge red w-24 mx-auto">
-                                    <i class="fa-solid fa-bolt text-[10px] opacity-80"></i>
-                                    <span class="text-[12px]">-{{ gym.energy }}</span>
-                                </div>
-                            </td>
-
-                            <td class="p-3 text-center">
-                                {% if gym.cost > 0 %}
-                                    <div class="tech-badge gold w-24 mx-auto">
-                                        <span class="text-[12px]">{{ gym.cost }}</span>
-                                        <img class="w-3.5 h-3.5" src="img/icons/gold.png" alt="AltÄ±n">
-                                    </div>
-                                {% else %}
-                                    <div class="tech-badge neutral w-24 mx-auto text-[9px]">
-                                        {{ t('gyms.table.free') }}
-                                    </div>
-                                {% endif %}
-                            </td>
-
-                            <td class="p-3 text-right pr-5">
-                                {% if gym.hasTrainedToday %}
-                                    {% if gym.trainedQualityToday %}
-                                        <span class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest" title="{{ t('gyms.table.done') }}">
-                                            <i class="fa-solid fa-check"></i> {{ t('gyms.table.done') }}
-                                        </span>
-                                    {% else %}
-                                        <span class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest" title="{{ t('gyms.table.limit_full') }}">
-                                            <i class="fa-solid fa-lock"></i> {{ t('gyms.table.limit_full') }}
-                                        </span>
-                                    {% endif %}
-                                {% else %}
-                                    <button onclick="window.startTraining({{ gym.quality }})" class="btn-create-primary px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[0.1em] flex items-center justify-end ml-auto gap-2">
-                                        <i class="fa-solid fa-play opacity-80 text-[10px]"></i> {{ t('gyms.table.start') }}
-                                    </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+            <div class="daily-training-addon-stat">Ücret<strong>{{ dailyTraining.extra.cost }} Gold</strong></div>
+            <div class="daily-training-addon-stat">Kazanım<strong>+{{ dailyTraining.extra.strengthGain }} Güç</strong></div>
+            <div class="daily-training-addon-stat">Mevcut bakiye<strong>{{ dailyTraining.goldBalance|number_format(2, '.', '') }} Gold</strong><span class="mt-1 block text-[10px] font-semibold text-[color:var(--training-muted)]">{% if dailyTraining.extra.canPurchase %}İşlem sonrası: {{ dailyTraining.extra.remainingBalance|number_format(2, '.', '') }} Gold · {{ dailyTraining.currentStrength + dailyTraining.extra.strengthGain }} Güç{% elseif dailyTraining.goldBalance < dailyTraining.extra.cost %}{{ dailyTraining.extra.missingGold|number_format(2, '.', '') }} Gold eksik{% elseif dailyTraining.extra.completed %}Bugün kullanıldı{% else %}Şu anda kullanılamıyor{% endif %}</span></div>
         </div>
+
+        <div class="mt-4 flex flex-col gap-3 border-t border-[color:var(--training-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+            {% if dailyTraining.extra.completed or not dailyTraining.extra.available or dailyTraining.goldBalance < dailyTraining.extra.cost %}
+                <p class="text-xs font-semibold text-[color:var(--training-muted)]">
+                    {% if dailyTraining.extra.completed %}
+                        Yarın tekrar kullanılabilir.
+                    {% elseif not dailyTraining.extra.available %}
+                        Ek eğitim şu anda kullanılamıyor.
+                    {% else %}
+                        Bakiye yetersiz
+                    {% endif %}
+                </p>
+            {% endif %}
+            <button id="extra-training-button" type="button" class="daily-training-secondary-action"{% if not dailyTraining.extra.canPurchase %} disabled aria-disabled="true"{% endif %}>
+                <i class="fa-solid fa-bolt mr-2" aria-hidden="true"></i>
+                {% if dailyTraining.extra.completed %}Kullanıldı{% elseif not dailyTraining.extra.available %}Şu anda kullanılamıyor{% elseif dailyTraining.goldBalance < dailyTraining.extra.cost %}Yetersiz bakiye{% else %}Ek Eğitim Yap{% endif %}
+            </button>
+        </div>
+    </section>
+
+    <section class="daily-training-addon daily-training-wheel-panel" aria-labelledby="daily-wheel-title">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-4">
+                <div id="daily-wheel-visual" class="daily-wheel-visual" aria-hidden="true">
+                    <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h2 id="daily-wheel-title" class="text-base font-black uppercase tracking-wider text-[color:var(--training-text)]">Günlük Çark</h2>
+                    <p class="mt-1 text-xs font-semibold text-[color:var(--training-muted)]">Gold, ESP veya Güç kazan.</p>
+                </div>
+            </div>
+            <button id="daily-wheel-button" type="button" class="daily-training-secondary-action sm:w-auto"{% if not dailyTraining.wheel.canSpin %} disabled aria-disabled="true"{% endif %}>
+                <i class="fa-solid fa-rotate mr-2" aria-hidden="true"></i>
+                {% if dailyTraining.wheel.completed %}Kullanıldı{% elseif not dailyTraining.wheel.available %}Şu anda kullanılamıyor{% else %}Çarkı Çevir{% endif %}
+            </button>
+        </div>
+        <div class="mt-3 border-t border-[color:var(--training-border)] pt-3 text-xs font-semibold text-[color:var(--training-muted)]">
+            {% if dailyTraining.wheel.reward %}
+                <div id="daily-wheel-result" class="daily-wheel-result" role="status" aria-live="polite">
+                    <span class="daily-wheel-result-label">Bugünkü ödül:</span>
+                    <strong class="daily-wheel-result-value">{{ dailyTraining.wheel.reward }}</strong>
+                    <span class="daily-wheel-result-note">Yarın yeniden kullanılabilir</span>
+                </div>
+            {% elseif dailyTraining.wheel.completed %}
+                <div id="daily-wheel-result" class="daily-wheel-result" role="status" aria-live="polite">
+                    <span class="daily-wheel-result-label">Durum</span>
+                    <strong class="daily-wheel-result-value">Bugün kullanıldı</strong>
+                </div>
+            {% else %}
+                <div id="daily-wheel-result" class="daily-wheel-result" role="status" aria-live="polite">
+                    <span class="daily-wheel-result-label">Durum</span>
+                    <strong class="daily-wheel-result-value">Hazır · 1 hak</strong>
+                </div>
+            {% endif %}
+        </div>
+    </section>
     </div>
+</div>
+</main>
 
-    {# ===== WARNING PANEL ===== #}
-    <div class="glass-panel p-4 bg-red-950/20 border-t-2 border-red-500/40 flex items-center justify-center gap-3">
-        <i class="fa-solid fa-triangle-exclamation text-red-500 text-lg animate-pulse"></i>
-        <p class="game-status-note text-[10px] font-bold uppercase tracking-[0.12em] leading-relaxed">
-            <span class="text-white font-black">{{ t('gyms.warning.title') }}</span> {{ t('gyms.warning.copy') }}
-        </p>
-    </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const timer = document.getElementById('daily-training-reset');
+    const dailyButton = document.getElementById('daily-training-button');
+    const mainAction = document.querySelector('.daily-training-main-action');
+    const feedback = document.getElementById('daily-training-feedback');
+    const streak = document.getElementById('daily-training-streak');
+    const streakValue = document.getElementById('daily-training-streak-value');
+    const actionReset = document.getElementById('daily-training-action-reset');
+    const actionResetValue = document.getElementById('daily-training-action-reset-value');
+    const historyToggle = document.getElementById('training-history-toggle');
+    const historyContent = document.getElementById('training-history-content');
+    const historyActionLabel = document.getElementById('training-history-action-label');
+    const historyArrow = document.getElementById('training-history-arrow');
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    let serverOffset = 0;
+    let statusCheckInFlight = false;
+    let lastStatusCheck = 0;
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            function updateResetTimer() {
-                const now = new Date();
-                const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-                const diff = tomorrow - now;
+    function normalizeApiResponse(response) {
+        if (typeof response === 'string') {
+            try { response = JSON.parse(response); } catch (error) { return {}; }
+        }
 
-                if (diff <= 0) {
-                    document.getElementById('reset-timer').innerText = "00:00:00";
-                    setTimeout(() => location.reload(), 2000);
+        if (response && response.result && typeof response.result === 'object') {
+            return response.result;
+        }
+
+        return response || {};
+    }
+
+    if (timer && timer.dataset.serverNow) {
+        const serverNow = new Date(timer.dataset.serverNow).getTime();
+        if (!Number.isNaN(serverNow)) serverOffset = serverNow - Date.now();
+    }
+
+    function setFeedback(message, isError) {
+        if (!feedback) return;
+        feedback.classList.toggle('is-error', Boolean(isError));
+        feedback.innerHTML = message;
+        feedback.hidden = false;
+    }
+
+    function updateWeeklySummary(gain) {
+        const summary = document.getElementById('training-history-weekly-summary');
+        const amount = Number(gain);
+        if (!summary || !Number.isFinite(amount) || amount <= 0) return;
+
+        const count = (Number(summary.dataset.count) || 0) + 1;
+        const totalGain = (Number(summary.dataset.gain) || 0) + amount;
+        summary.dataset.count = count;
+        summary.dataset.gain = totalGain;
+        summary.textContent = 'Bu hafta +' + totalGain + ' Güç · ' + count + ' eğitim';
+    }
+
+    function renderDailyState(data, justCompleted) {
+        const strength = document.getElementById('daily-training-current-strength');
+        const gain = document.getElementById('daily-training-gain');
+        const actionGain = document.getElementById('daily-training-action-gain');
+        const status = document.getElementById('daily-training-status');
+        const copy = document.getElementById('daily-training-copy');
+        const currentGain = Number(data.strengthGain);
+        const currentStreak = Number(data.trainingStreak || 0);
+        if (strength && Number.isFinite(Number(data.currentStrength))) strength.textContent = Number(data.currentStrength);
+        if (gain && Number.isFinite(Number(data.strengthGain))) gain.textContent = '+' + Number(data.strengthGain) + ' Güç';
+        if (actionGain && Number.isFinite(currentGain)) actionGain.textContent = data.completed ? '+' + currentGain + ' Güç kazanıldı' : '+' + currentGain + ' Güç';
+        if (streakValue && Number.isFinite(currentStreak)) streakValue.textContent = currentStreak;
+        if (streak) streak.hidden = !Number.isFinite(currentStreak) || currentStreak < 1;
+        if (timer && data.resetAt) timer.dataset.resetAt = data.resetAt;
+        if (actionReset) actionReset.hidden = !data.completed;
+
+        if (data.completed) {
+            if (status) status.textContent = 'Hak kullanıldı';
+            if (copy) copy.textContent = 'Bugünkü eğitim tamamlandı';
+            if (mainAction) mainAction.classList.add('is-completed');
+            if (justCompleted) updateWeeklySummary(currentGain);
+            if (dailyButton) {
+                dailyButton.hidden = true;
+                dailyButton.disabled = true;
+                dailyButton.setAttribute('aria-disabled', 'true');
+            }
+        } else {
+            if (status) status.textContent = 'Kullanılabilir';
+            if (copy) copy.textContent = 'Günlük eğitim hazır';
+            if (mainAction) mainAction.classList.remove('is-completed');
+            if (dailyButton) {
+                dailyButton.hidden = false;
+                dailyButton.disabled = false;
+                dailyButton.dataset.pending = '0';
+                dailyButton.removeAttribute('aria-disabled');
+                dailyButton.removeAttribute('aria-busy');
+            }
+        }
+    }
+
+    function refreshDailyStatus() {
+        if (statusCheckInFlight || Date.now() - lastStatusCheck < 5000) return;
+        statusCheckInFlight = true;
+        lastStatusCheck = Date.now();
+        $.ajax({ url: "{{ base_url() }}/api/gym/status", type: 'GET' })
+            .done(function (response) {
+                response = normalizeApiResponse(response);
+                if (!response.error && response.success) {
+                    if (timer && response.serverNow) {
+                        const serverNow = new Date(response.serverNow).getTime();
+                        if (!Number.isNaN(serverNow)) serverOffset = serverNow - Date.now();
+                    }
+                    renderDailyState(response);
+                }
+            })
+            .always(function () { statusCheckInFlight = false; });
+    }
+
+    function updateResetTimer() {
+        if (!timer) return;
+        const resetAt = new Date(timer.dataset.resetAt).getTime();
+        const remaining = Math.max(0, resetAt - (Date.now() + serverOffset));
+        const hours = Math.floor(remaining / 3600000).toString().padStart(2, '0');
+        const minutes = Math.floor((remaining % 3600000) / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+        const countdown = `${hours}:${minutes}:${seconds}`;
+        timer.textContent = countdown + ' sonra yenilenir';
+        if (actionResetValue) actionResetValue.textContent = countdown;
+        if (remaining === 0) refreshDailyStatus();
+    }
+
+    function showActionError(button, message, visual) {
+        button.dataset.pending = '0';
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
+        if (visual) visual.classList.remove('is-processing');
+        setFeedback('<strong>İşlem tamamlanamadı.</strong> ' + (message || 'Lütfen tekrar deneyin.'), true);
+        if (window.Swal) Swal.fire({ icon: 'error', title: 'İşlem tamamlanamadı', text: message || 'Lütfen tekrar deneyin.' });
+    }
+
+    function lockDailyAction(button, visual) {
+        button.dataset.pending = '0';
+        button.disabled = true;
+        button.setAttribute('aria-disabled', 'true');
+        button.removeAttribute('aria-busy');
+        if (visual) visual.classList.remove('is-processing');
+        button.innerHTML = '<i class="fa-solid fa-check mr-2" aria-hidden="true"></i>Kullanıldı';
+    }
+
+    function submitDailyTraining() {
+        if (!dailyButton || dailyButton.disabled || dailyButton.dataset.pending === '1') return;
+        dailyButton.dataset.originalHtml = dailyButton.innerHTML;
+        dailyButton.dataset.pending = '1';
+        dailyButton.disabled = true;
+        dailyButton.setAttribute('aria-busy', 'true');
+        dailyButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2" aria-hidden="true"></i>İşleniyor';
+        $.ajax({ url: "{{ base_url() }}/api/gym/train", type: 'POST', data: { csrf_token: csrfToken } })
+            .done(function (response) {
+                response = normalizeApiResponse(response);
+                if (response.error || !response.success) {
+                    showActionError(dailyButton, response.message, null);
                     return;
                 }
-
-                const h = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
-                const m = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
-                const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
-
-                document.getElementById('reset-timer').innerText = `${h}:${m}:${s}`;
-            }
-
-            updateResetTimer();
-            setInterval(updateResetTimer, 1000);
-        });
-
-        // SweetAlert2 V26 Uyumlu Ã‡aÄŸrÄ±lar
-        window.startTraining = function(quality) {
-            Swal.fire({
-                title: '<i class="fa-solid fa-fingerprint text-[color:var(--brand-primary)] mr-2"></i> EÄŸitim BaÅŸlatÄ±lÄ±yor',
-                html: '<div class="text-[12px] font-bold text-slate-400 mt-2 uppercase tracking-widest">Biyometrik veriler iÅŸleniyor, lÃ¼tfen bekleyin.</div>',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' },
-                background: '#0a0c14',
-                color: '#f8fafc',
-                didOpen: () => {
-                    Swal.showLoading();
+                const gain = Number(response.strengthGain);
+                const total = Number(response.newStrength);
+                if (Number.isFinite(gain) && Number.isFinite(total)) {
+                    setFeedback('<strong>+' + gain + ' Güç</strong> kazanıldı. Yeni toplam güç: <strong>' + total + '</strong>.', false);
                 }
-            });
+                renderDailyState(response, true);
+            })
+            .fail(function () { showActionError(dailyButton, 'Bağlantı kurulamadı. Eğitim hakkın korunuyor.', null); });
+    }
 
-            $.ajax({
-                url: "{{ base_url() }}/api/gym/train",
-                type: "POST",
-                data: {
-                    quality: quality,
-                    csrf_token: $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(res) {
-                    if (typeof res === 'string') {
-                        try { res = JSON.parse(res); } catch (e) {}
+    function submitDailyAction(button, url, successTitle, successText, visual) {
+        if (!button || button.disabled || button.dataset.pending === '1') return;
+        button.dataset.originalHtml = button.innerHTML;
+        button.dataset.pending = '1';
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2" aria-hidden="true"></i>İşleniyor';
+        if (visual) visual.classList.add('is-processing');
+        $.ajax({ url: url, type: 'POST', data: { csrf_token: csrfToken } })
+            .done(function (response) {
+                response = normalizeApiResponse(response);
+                if (response.error || !response.success) {
+                    if (response.alreadyUsed) {
+                        lockDailyAction(button, visual);
+                        setFeedback('<strong>Bugün kullanıldı.</strong> Bu hak yarın yeniden kullanılabilir.', false);
+                        return;
                     }
-
-                    if (res.error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '<i class="fa-solid fa-ban text-red-500 mr-2"></i> EÄÄ°TÄ°M BAÅARISIZ',
-                            text: res.message,
-                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
-                            background: '#0a0c14', color: '#f8fafc'
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '<i class="fa-solid fa-check-circle text-[color:var(--brand-primary)] mr-2"></i> EÄÄ°TÄ°M TAMAMLANDI',
-                            html: '<div class="text-emerald-400 font-mono text-[16px] font-black mt-3">+ GÃœÃ‡ KAZANILDI</div>',
-                            timer: 2000,
-                            showConfirmButton: false,
-                            customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title' },
-                            background: '#0a0c14', color: '#f8fafc'
-                        }).then(() => location.reload());
-                    }
-                },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '<i class="fa-solid fa-plug-circle-xmark text-red-500 mr-2"></i> BAÄLANTI HATASI',
-                        text: 'Sunucuya ulaÅŸÄ±lamadÄ±.',
-                        customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
-                        background: '#0a0c14', color: '#f8fafc'
-                    });
+                    showActionError(button, response.message, visual);
+                    return;
                 }
-            });
-        };
+                lockDailyAction(button, visual);
+                const text = response.reward || response.message || successText;
+                if (window.Swal) {
+                    Swal.fire({ icon: 'success', title: successTitle, text: text }).then(function () { window.location.reload(); });
+                } else {
+                    window.location.reload();
+                }
+            })
+            .fail(function () { showActionError(button, 'İşlem tamamlanamadı. Lütfen tekrar deneyin.', visual); });
+    }
 
-        $(function () {
-            if (typeof peque !== 'undefined' && peque.gym) {
-                peque.gym.init();
+    if (historyToggle && historyContent) {
+        historyToggle.addEventListener('click', function () {
+            const expanded = historyToggle.getAttribute('aria-expanded') === 'true';
+            historyToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+            historyToggle.setAttribute('aria-label', expanded ? 'Güç gelişimini aç' : 'Güç gelişimini kapat');
+            historyContent.hidden = expanded;
+            if (historyActionLabel) historyActionLabel.textContent = expanded ? 'Geçmiş' : 'Kapat';
+            if (historyArrow) {
+                historyArrow.classList.toggle('fa-chevron-down', expanded);
+                historyArrow.classList.toggle('fa-chevron-up', !expanded);
             }
         });
-    </script>
-</div>
+    }
+    if (dailyButton) dailyButton.addEventListener('click', submitDailyTraining);
+    updateResetTimer();
+    window.setInterval(updateResetTimer, 1000);
+    const extraButton = document.getElementById('extra-training-button');
+    if (extraButton) {
+        extraButton.addEventListener('click', function () {
+            submitDailyAction(extraButton, "{{ base_url() }}/api/gym/train-extra", 'Ek eğitim tamamlandı', 'Ek güç kazanımın uygulandı.');
+        });
+    }
+    const wheelButton = document.getElementById('daily-wheel-button');
+    if (wheelButton) {
+        wheelButton.addEventListener('click', function () {
+            submitDailyAction(wheelButton, "{{ base_url() }}/api/gym/spin-wheel", 'Günlük çark tamamlandı', 'Ödül hesabına uygulandı.', document.getElementById('daily-wheel-visual'));
+        });
+    }
+});
+</script>
 {% endblock %}

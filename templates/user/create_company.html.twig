@@ -1,6 +1,7 @@
 {% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="space-y-6 animate-fade-in w-full overflow-hidden" id="v2-investment-center">
     <style>
         /* =============================
@@ -27,10 +28,8 @@
         }
 
         /* Zarif Scrollbar (Sadece gerektiğinde, telefonda vs. cıkar) */
-        .custom-scrollbar::-webkit-scrollbar { height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--brand-primary) 30%, transparent); border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+        .custom-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .custom-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
         .hero-grid, .selected-summary, .quality-head, .guide-grid, .selected-detail-grid { display: grid; gap: 16px; }
         .hero-grid { grid-template-columns: minmax(0,1fr) auto; align-items: center; }
@@ -167,8 +166,9 @@
         .quality-table-wrap { position: relative; z-index: 1; margin-top: 16px; overflow-x: auto; }
         
         /* Table (Masaüstü sorunsuz, width düzenlemesi yapıldı) */
-        .quality-table { width: 100%; border-spacing: 0 6px; border-collapse: separate; table-layout: auto; }
+        .quality-table { width: 100%; border-spacing: 0 6px; border-collapse: separate; table-layout: fixed; }
         .quality-table thead th { padding: 0 14px 6px; font-size: 9px; color: #64748b; white-space: nowrap; text-align: left; }
+        .quality-table thead th:last-child { text-align: center; padding-right: 14px; }
         
         /* V26 Table Row Styling */
         .quality-row { background: rgba(0,0,0,0.3); transition: all .2s ease; }
@@ -211,7 +211,15 @@
         
         .empty-state { position: relative; z-index: 1; padding: 24px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px dashed rgba(255,255,255,.05); text-align: center; }
         .empty-title { margin-top: 12px; font-size: 11px; color: #e2e8f0; }
-        .empty-copy { margin-top: 6px; }
+    .empty-copy { margin-top: 6px; }
+
+    .setup-progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .setup-progress-step { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 9px 10px; border-radius: 10px; background: rgba(0,0,0,.24); color: #64748b; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .setup-progress-step strong { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: 0 0 20px; border-radius: 999px; background: rgba(255,255,255,.05); color: #cbd5e1; }
+    .setup-progress-step.is-current { background: color-mix(in srgb, var(--company-accent) 9%, rgba(0,0,0,.3)); color: var(--company-accent-text); }
+    .setup-progress-step.is-current strong { background: var(--company-accent); color: #050505; }
+    @media (max-width: 700px) { .setup-progress { grid-template-columns: repeat(2, minmax(0, 1fr)); } .setup-progress-step { font-size: 8px; } }
+    @media (max-width: 420px) { .setup-progress { grid-template-columns: 1fr; } }
         
         /* SweetAlert V26 Modals */
         .cyber-modal-popup { background: rgba(12, 16, 24, 0.98) !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; border-radius: 16px !important; padding: 2rem 1.5rem !important; }
@@ -219,6 +227,108 @@
         .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; }
         .cyber-confirm-btn { background: var(--brand-primary) !important; color: #000 !important; font-weight: 900 !important; text-transform: uppercase !important; border-radius: 8px !important; padding: 12px 24px !important; font-size: 11px !important; border: none !important; }
         .cyber-cancel-btn { background: rgba(0,0,0,0.5) !important; color: #cbd5e1 !important; border: 1px solid rgba(255,255,255,0.1) !important; font-weight: 900 !important; text-transform: uppercase !important; border-radius: 8px !important; padding: 12px 24px !important; font-size: 11px !important; }
+
+        /* Liquid Glass: setup content remains an opaque reading surface. */
+        html.theme-liquid #v2-investment-center {
+            --company-surface-bg: rgba(9, 14, 23, .97);
+            --company-surface-border: rgba(161, 181, 198, .16);
+            --company-surface-text: #eef3f7;
+            --company-surface-muted: #aebbc7;
+            --company-stat-bg: rgba(20, 29, 42, .97);
+            --company-stat-border: rgba(161, 181, 198, .18);
+            --company-step-bg: rgba(17, 26, 39, .96);
+            --company-step-active-bg: rgba(38, 51, 67, .98);
+            --company-step-text: #e8eef3;
+            --company-step-muted: #aebbc7;
+        }
+        html.theme-liquid #v2-investment-center .holo-panel,
+        html.theme-liquid #v2-investment-center .hero-stat,
+        html.theme-liquid #v2-investment-center .guide-card,
+        html.theme-liquid #v2-investment-center .selected-summary,
+        html.theme-liquid #v2-investment-center .selected-detail,
+        html.theme-liquid #v2-investment-center .detail-card,
+        html.theme-liquid #v2-investment-center .quality-row {
+            background: var(--company-surface-bg) !important;
+            background-image: none !important;
+            border-color: var(--company-surface-border) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: inset 0 1px 0 rgba(210, 225, 236, .045), 0 8px 20px rgba(0, 0, 0, .18) !important;
+        }
+        html.theme-liquid #v2-investment-center .hero-stat,
+        html.theme-liquid #v2-investment-center .guide-card,
+        html.theme-liquid #v2-investment-center .detail-card,
+        html.theme-liquid #v2-investment-center .quality-row {
+            background: var(--company-stat-bg) !important;
+            border-color: var(--company-stat-border) !important;
+        }
+        html.theme-liquid #v2-investment-center .setup-progress-step {
+            background: var(--company-step-bg) !important;
+            border: 1px solid var(--company-surface-border);
+            color: var(--company-step-muted) !important;
+        }
+        html.theme-liquid #v2-investment-center .setup-progress-step strong {
+            background: rgba(174, 187, 199, .12) !important;
+            color: var(--company-step-text) !important;
+        }
+        html.theme-liquid #v2-investment-center .setup-progress-step.is-current {
+            background: var(--company-step-active-bg) !important;
+            border-color: color-mix(in srgb, var(--brand-primary) 44%, var(--company-surface-border)) !important;
+            color: var(--company-step-text) !important;
+            box-shadow: inset 3px 0 0 var(--brand-primary), inset 1px 1px 0 rgba(220, 232, 240, .08) !important;
+        }
+        html.theme-liquid #v2-investment-center .setup-progress-step.is-current strong {
+            background: var(--brand-primary) !important;
+            color: #071018 !important;
+        }
+        html.theme-liquid #v2-investment-center .hero-title,
+        html.theme-liquid #v2-investment-center .guide-head-title,
+        html.theme-liquid #v2-investment-center .guide-title,
+        html.theme-liquid #v2-investment-center .company-name,
+        html.theme-liquid #v2-investment-center .selected-title,
+        html.theme-liquid #v2-investment-center .quality-head-title,
+        html.theme-liquid #v2-investment-center .hero-stat-value {
+            color: var(--company-surface-text) !important;
+        }
+        html.theme-liquid #v2-investment-center .hero-sub,
+        html.theme-liquid #v2-investment-center .guide-head-copy,
+        html.theme-liquid #v2-investment-center .guide-copy,
+        html.theme-liquid #v2-investment-center .company-desc,
+        html.theme-liquid #v2-investment-center .selected-sub,
+        html.theme-liquid #v2-investment-center .quality-head-sub,
+        html.theme-liquid #v2-investment-center .detail-card-copy,
+        html.theme-liquid #v2-investment-center .quality-table thead th,
+        html.theme-liquid #v2-investment-center .metric-caption,
+        html.theme-liquid #v2-investment-center .empty-copy {
+            color: var(--company-surface-muted) !important;
+            opacity: 1 !important;
+        }
+        html.theme-liquid #v2-investment-center .company-card,
+        html.theme-liquid #v2-investment-center .quality-row,
+        html.theme-liquid #v2-investment-center .build-btn {
+            border-color: var(--company-surface-border) !important;
+        }
+        html.theme-liquid #v2-investment-center .company-card:hover,
+        html.theme-liquid #v2-investment-center .company-card.tech-slot-active,
+        html.theme-liquid #v2-investment-center .quality-row:hover {
+            background: var(--glass-control-bg-active) !important;
+            border-color: color-mix(in srgb, var(--brand-primary) 48%, var(--company-surface-border)) !important;
+        }
+        html.theme-liquid #v2-investment-center .company-card:focus-visible,
+        html.theme-liquid #v2-investment-center .build-btn:focus-visible,
+        html.theme-liquid #v2-investment-center .quality-row:focus-within {
+            outline: 2px solid color-mix(in srgb, var(--brand-primary) 76%, #ffffff) !important;
+            outline-offset: 3px;
+        }
+        @media (max-width: 640px) {
+            html.theme-liquid #v2-investment-center .hero-title,
+            html.theme-liquid #v2-investment-center .guide-title,
+            html.theme-liquid #v2-investment-center .company-name,
+            html.theme-liquid #v2-investment-center .selected-title,
+            html.theme-liquid #v2-investment-center .quality-head-title {
+                overflow-wrap: anywhere;
+            }
+        }
 
         @media (max-width: 1180px) {
             .hero-grid, .selected-summary, .quality-head, .selected-detail-grid { grid-template-columns: 1fr; }
@@ -262,6 +372,13 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="setup-progress" aria-label="Tesis kurulum adımları">
+        <div class="setup-progress-step is-current"><strong>1</strong><span>Sektör seç</span></div>
+        <div class="setup-progress-step"><strong>2</strong><span>Modeli seç</span></div>
+        <div class="setup-progress-step"><strong>3</strong><span>Kademeyi seç</span></div>
+        <div class="setup-progress-step"><strong>4</strong><span>Maliyeti onayla</span></div>
     </div>
 
     {# ===== GUIDE PANEL ===== #}
@@ -372,8 +489,10 @@
                                 type="button"
                                 onclick="window.openCompanyOptions(event, {{ company.id }})"
                                 class="company-card company-slot-btn-js"
+                                aria-pressed="false"
+                                aria-label="{{ company.display_name|default(company.name)|e('html_attr') }} tesisini seç"
                                 data-company-id="{{ company.id }}"
-                                data-company-name="{{ company.name|e('html_attr') }}"
+                                data-company-name="{{ company.display_name|default(company.name)|e('html_attr') }}"
                                 data-sector-name="{{ companyTypeLabel|e('html_attr') }}"
                                 data-quality-count="{{ company.qualities|length }}"
                                 data-company-icon="img/companies/{{ company.id }}.png"
@@ -384,10 +503,10 @@
                                 data-requirement-text="{{ requirementText|e('html_attr') }}">
                                 <div class="sector-head-main">
                                     <div class="company-icon">
-                                        <img src="img/companies/{{ company.id }}.png" alt="{{ company.name }}">
+                                        <img src="img/companies/{{ company.id }}.png" alt="{{ company.display_name|default(company.name) }}">
                                     </div>
                                     <div class="min-w-0">
-                                        <div class="company-name">{{ company.name }}</div>
+                                        <div class="company-name">{{ company.display_name|default(company.name) }}</div>
                                         <div class="company-desc">{{ companyDescription }}</div>
                                         <div class="company-meta">
                                             <span class="small-chip"><i class="fa-solid fa-layer-group"></i>{{ company.qualities|length }} KDM</span>
@@ -469,9 +588,9 @@
                 <div data-id="{{ company.id }}" class="company-qualities holo-panel p-6 quality-panel hidden">
                     <div class="quality-head">
                         <div class="quality-head-main">
-                            <div class="quality-head-icon"><img src="img/companies/{{ company.id }}.png" alt="{{ company.name }}"></div>
+                            <div class="quality-head-icon"><img src="img/companies/{{ company.id }}.png" alt="{{ company.display_name|default(company.name) }}"></div>
                             <div>
-                                <div class="quality-head-title">{{ company.name }} Kurulum Seçenekleri</div>
+                                <div class="quality-head-title">{{ company.display_name|default(company.name) }} Kurulum Seçenekleri</div>
                                 <div class="quality-head-sub">{{ companyTypeLabel }} / {{ company.qualities|length }} kademe seçeneği</div>
                             </div>
                         </div>
@@ -479,12 +598,17 @@
 
                     <div class="quality-table-wrap custom-scrollbar">
                         <table class="quality-table">
+                            <colgroup>
+                                <col style="width: 42%;">
+                                <col style="width: 22%;">
+                                <col style="width: 20%;">
+                                <col style="width: 16%;">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th>Şirket Modülü ve Kademe</th>
-                                    <th>Üretim Getirisi</th>
-                                    <th>İstihdam İhtiyacı</th>
-                                    <th>Kurulum Maliyeti</th>
+                                    <th>Tesis / Kademe</th>
+                                    <th>Kapasite</th>
+                                    <th>Maliyet</th>
                                     <th class="text-right">İşlem</th>
                                 </tr>
                             </thead>
@@ -493,9 +617,9 @@
                                     <tr class="quality-row">
                                         <td>
                                             <div class="module-cell">
-                                                <div class="module-icon"><img src="img/companies/{{ company.id }}.png" alt="{{ company.name }}"></div>
+                                                <div class="module-icon"><img src="img/companies/{{ company.id }}.png" alt="{{ company.display_name|default(company.name) }}"></div>
                                                 <div class="module-copy">
-                                                    <div class="module-title">{{ company.name }}</div>
+                                                    <div class="module-title">{{ company.display_name|default(company.name) }}</div>
                                                     <div class="module-meta">
                                                         <span class="module-chip quality-badge {{ quality == 1 ? 'q1' : (quality == 2 ? 'q2' : (quality == 3 ? 'q3' : (quality == 4 ? 'q4' : (quality == 5 ? 'q5' : 'q-plus')))) }}">Q{{ quality }}</span>
                                                         <span class="module-chip"><i class="fa-solid fa-boxes-stacked"></i>{{ data.product_amount }} Br.</span>
@@ -514,23 +638,17 @@
                                         </td>
                                         <td>
                                             <div class="metric-stack">
-                                                <div class="metric-pill gray"><i class="fa-solid fa-users"></i>{{ data.workers }}</div>
-                                                <div class="metric-caption">İşçi İhtiyacı</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="metric-stack">
                                                 {% if data.currency == "gold" %}
                                                     <div class="metric-pill gold"><img src="img/icons/gold.png" alt="Gold">{{ data.price }}</div>
                                                 {% else %}
                                                     <div class="metric-pill local"><img src="img/flags/{{ my.location.country.id }}.png" alt="Flag">{{ data.price }}</div>
                                                 {% endif %}
-                                                <div class="metric-caption">Yatırım Bedeli</div>
+                                                <div class="metric-caption">Kurulum bedeli</div>
                                             </div>
                                         </td>
                                         <td class="text-right">
                                             <div class="action-cell">
-                                                <button type="button" onclick="window.buildCompany({{ company.id }}, {{ quality }}, '{{ company.name|e('js') }} Q{{ quality }}')" class="cyber-btn build-btn">
+                                                <button type="button" aria-label="{{ company.display_name|default(company.name) }} Q{{ quality }} tesisini kur" onclick="window.buildCompany({{ company.id }}, {{ quality }}, '{{ company.display_name|default(company.name)|e('js') }} Q{{ quality }}')" class="cyber-btn build-btn">
                                                     <i class="fa-solid fa-hammer"></i> Kur
                                                 </button>
                                             </div>
@@ -561,12 +679,16 @@
             event.preventDefault();
             $('.company-qualities').addClass('hidden').removeClass('animate-fade-in');
             $('.company-slot-btn-js').removeClass('tech-slot-active');
+            $('.company-slot-btn-js').attr('aria-pressed', 'false');
             const $button = $(event.currentTarget);
             const $targetPanel = $('.company-qualities[data-id="' + targetId + '"]');
             
             $button.addClass('tech-slot-active');
+            $button.attr('aria-pressed', 'true');
             $targetPanel.removeClass('hidden').addClass('animate-fade-in');
             $('#company-options-empty').addClass('hidden');
+            $('.setup-progress-step').removeClass('is-current');
+            $('.setup-progress-step').eq(2).addClass('is-current');
             
             $('#selected-company-name').text($button.data('company-name') || 'Secili Tesis');
             $('#selected-company-sub').text('Seçenekler hazır / ' + ($button.data('quality-count') || 0) + ' kademe');
@@ -595,7 +717,12 @@
             }
         };
 
+        window.companyBuildPending = false;
         window.buildCompany = function(companyId, quality, name) {
+            if (window.companyBuildPending) {
+                return;
+            }
+
             Swal.fire({
                 title: '<i class="fa-solid fa-hammer text-[color:var(--brand-primary)] mr-2"></i> Kurulum Onayı',
                 html: `<div class="text-xs text-slate-300 font-bold leading-relaxed mb-2"><b>${name}</b> tesisinin inşasını onaylıyor musunuz?</div><div class="text-[10px] text-amber-400 font-black uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg inline-block">Gerekli bakiye tahsil edilecektir.</div>`,
@@ -615,6 +742,9 @@
                 if (!result.isConfirmed) {
                     return;
                 }
+
+                window.companyBuildPending = true;
+                $('.build-btn').prop('disabled', true);
 
                 Swal.fire({
                     title: '<i class="fa-solid fa-spinner fa-spin text-[color:var(--brand-primary)] mr-2"></i> İnşa Ediliyor...',
@@ -636,7 +766,22 @@
                         if (typeof res === 'string') {
                             try { res = JSON.parse(res); } catch (e) {}
                         }
+                        if (!res || typeof res !== 'object') {
+                            window.companyBuildPending = false;
+                            $('.build-btn').prop('disabled', false);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kurulum tamamlanamadı',
+                                text: 'Sunucudan geçerli bir yanıt alınamadı.',
+                                background: '#0a0c14', color: '#f8fafc',
+                                customClass: { popup: 'cyber-modal-popup', title: 'cyber-modal-title', confirmButton: 'cyber-confirm-btn' },
+                                buttonsStyling: false
+                            });
+                            return;
+                        }
                         if (res.error) {
+                            window.companyBuildPending = false;
+                            $('.build-btn').prop('disabled', false);
                             Swal.fire({
                                 icon: 'error',
                                 title: '<i class="fa-solid fa-ban text-red-500 mr-2"></i> İNŞAAT DURDURULDU',
@@ -659,6 +804,8 @@
                         });
                     },
                     error: function() {
+                        window.companyBuildPending = false;
+                        $('.build-btn').prop('disabled', false);
                         Swal.fire({
                             icon: 'error',
                             title: '<i class="fa-solid fa-plug-circle-xmark text-red-500 mr-2"></i> BAĞLANTI KOPTU',

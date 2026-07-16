@@ -509,6 +509,21 @@ $app->group('/api', function () use ($app, $adminOnly) {
         $ct->json('train');
     });
 
+    $app->get('/gym/status', function($req, $res) use ($app) {
+        $ct = new Gym($app, $res);
+        return $ct->json('status');
+    });
+
+    $app->post('/gym/train-extra', function($req, $res) use ($app) {
+        $ct = new Gym($app, $res);
+        $ct->json('extraTrain');
+    });
+
+    $app->post('/gym/spin-wheel', function($req, $res) use ($app) {
+        $ct = new Gym($app, $res);
+        $ct->json('spinWheel');
+    });
+
     $app->post('/war/fight', function($req, $res) use ($app) {
         $ct = new War($app, $res);
         $ct->json('fight');

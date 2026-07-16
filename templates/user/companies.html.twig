@@ -24,37 +24,20 @@
         border-radius: 20px;
     }
 
-    /* --- Finance Cards (Zenith Mat) --- */
-    .finance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; position: relative; z-index: 10; }
-    .finance-card {
-        border-radius: 16px; padding: 18px;
-        background: rgba(0,0,0,0.4);
-        border: 1px solid rgba(255,255,255,0.03);
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        position: relative; overflow: hidden;
-    }
-    .finance-card::after {
-        content: ''; position: absolute; inset: 0; pointer-events: none;
-        background: radial-gradient(circle at top right, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent 60%);
-    }
-    .finance-card:hover {
-        background: color-mix(in srgb, var(--brand-primary) 5%, rgba(0,0,0,0.6));
-        transform: translateY(-2px);
-        border-color: color-mix(in srgb, var(--brand-primary) 20%, transparent);
-    }
-    .finance-kicker { font-size: 10px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .finance-kicker i { color: var(--company-accent); opacity: 0.8; }
-    .finance-value { font-size: 24px; line-height: 1; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: .05em; drop-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    .finance-sub { margin-top: 8px; font-size: 10px; line-height: 1.4; color: #475569; font-weight: 800; }
+    .company-state { display: inline-flex; align-items: center; gap: 5px; width: fit-content; margin-top: 7px; padding: 4px 7px; border-radius: 7px; font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .company-state.is-ready { color: #86efac; background: rgba(34,197,94,.08); }
+    .company-state.is-workforce_missing, .company-state.is-input_missing, .company-state.is-control_required { color: #fcd34d; background: rgba(245,158,11,.08); }
 
     /* --- V26.200 Payroll Layout --- */
-    .payroll-layout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
-    .payroll-summary-wrap { display: grid; gap: 16px; grid-column: span 2; }
-    @media (max-width: 900px) { .payroll-layout { grid-template-columns: 1fr; } .payroll-summary-wrap { grid-column: span 1; } }
+    .company-finance-section { width: 100%; }
+    .company-finance-section .company-payroll-panel { width: 100%; }
+    .company-finance-section > .glass-panel { padding: 14px !important; }
+    .payroll-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-items: start; }
+    .payroll-summary-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; grid-column: 1 / -1; }
+    @media (max-width: 900px) { .payroll-layout { grid-template-columns: 1fr; } .payroll-summary-wrap { grid-column: span 1; grid-template-columns: 1fr; } }
 
     .payroll-summary-card {
-        border-radius: 16px; padding: 18px;
+        border-radius: 14px; padding: 12px;
         background: rgba(0,0,0,0.3);
         border: 1px solid rgba(255,255,255,0.03);
         box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
@@ -65,7 +48,7 @@
         background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), transparent 70%);
     }
 
-    .payroll-summary-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 12px; }
+    .payroll-summary-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 9px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 9px; }
     .currency-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 900; color: #fff; letter-spacing: .1em; text-transform: uppercase; drop-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     .currency-meta { margin-top: 4px; font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
     .currency-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
@@ -75,7 +58,7 @@
     .summary-status.low { color: #fcd34d; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.15); }
 
     .summary-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .summary-line { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.02); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+    .summary-line { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 9px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.02); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
     .summary-line strong { color: #fff; font-weight: 900; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
     .summary-line span { font-size: 8px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: #64748b; }
 
@@ -163,11 +146,214 @@
     .cyber-modal-popup { background: rgba(8, 10, 14, 0.98) !important; backdrop-filter: blur(32px); border: 1px solid rgba(255, 255, 255, 0.03) !important; border-radius: 24px !important; padding: 2rem 1.5rem !important; box-shadow: 0 35px 70px -15px rgba(0,0,0,0.95) !important; }
     .cyber-modal-title { color: #f8fafc !important; text-transform: uppercase !important; letter-spacing: 0.15em !important; font-weight: 900 !important; font-size: 14px !important; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 14px !important; margin-bottom: 18px !important; display: flex; align-items: center; gap: 8px; }
     .cyber-modal-content { color: #94a3b8 !important; font-size: 12px !important; font-weight: 600 !important; }
+    .cyber-confirm-btn {
+        min-height: 40px !important; min-width: 150px; padding: 0 18px !important;
+        display: inline-flex !important; align-items: center; justify-content: center; gap: 8px;
+        border: 1px solid color-mix(in srgb, var(--brand-primary) 55%, transparent) !important;
+        border-radius: 10px !important;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 88%, #ffffff), var(--brand-primary)) !important;
+        color: #071018 !important; font-size: 10px !important; font-weight: 900 !important;
+        letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
+        box-shadow: 0 6px 16px color-mix(in srgb, var(--brand-primary) 22%, transparent), inset 0 1px 0 rgba(255,255,255,.25) !important;
+        transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+    }
+    .cyber-confirm-btn:hover:not(:disabled) {
+        filter: brightness(1.06); transform: translateY(-1px);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,.3) !important;
+    }
+    .cyber-confirm-btn:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--brand-primary) 78%, #ffffff) !important;
+        outline-offset: 3px;
+    }
+    .cyber-confirm-btn:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
     .swal-tech-label { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; color: #cbd5e1; }
     .swal-tech-help { font-size: 11px; color: #64748b; margin-bottom: 10px; font-weight: 600; line-height: 1.4; }
+
+    /* Liquid Glass: company data stays opaque; only controls receive the glass material. */
+    html.theme-liquid .home-theme-surface {
+        --company-surface-bg: rgba(9, 14, 23, .97);
+        --company-surface-border: rgba(161, 181, 198, .16);
+        --company-surface-text: #eef3f7;
+        --company-surface-muted: #aebbc7;
+        --company-stat-bg: rgba(20, 29, 42, .97);
+        --company-stat-border: rgba(161, 181, 198, .18);
+    }
+    html.theme-liquid .home-theme-surface .glass-panel,
+    html.theme-liquid .home-theme-surface .payroll-summary-card,
+    html.theme-liquid .home-theme-surface .summary-line,
+    html.theme-liquid .home-theme-surface .company-attention-item,
+    html.theme-liquid .home-theme-surface .company-table-scroll,
+    html.theme-liquid .home-theme-surface .v2-table-row {
+        background: var(--company-surface-bg) !important;
+        background-image: none !important;
+        border-color: var(--company-surface-border) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: inset 0 1px 0 rgba(210, 225, 236, .045), 0 8px 20px rgba(0, 0, 0, .18) !important;
+    }
+    html.theme-liquid .home-theme-surface .summary-line {
+        background: var(--company-stat-bg) !important;
+        border-color: var(--company-stat-border) !important;
+    }
+    html.theme-liquid .home-theme-surface .currency-meta,
+    html.theme-liquid .home-theme-surface .summary-line span,
+    html.theme-liquid .home-theme-surface .summary-footer-label {
+        color: var(--company-surface-muted) !important;
+    }
+    html.theme-liquid .home-theme-surface .currency-tag,
+    html.theme-liquid .home-theme-surface .summary-line strong {
+        color: var(--company-surface-text) !important;
+    }
+    html.theme-liquid .home-theme-surface .finance-action-btn {
+        background: var(--glass-control-bg) !important;
+        border: 1px solid var(--glass-control-border) !important;
+        color: var(--glass-control-text) !important;
+        box-shadow: inset 1px 1px 0 var(--glass-control-highlight), var(--glass-control-shadow) !important;
+        backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+    }
+    html.theme-liquid .home-theme-surface .company-filter-control,
+    html.theme-liquid .home-theme-surface .company-filter-clear,
+    html.theme-liquid .home-theme-surface .company-priority-action-link,
+    html.theme-liquid .home-theme-surface .company-attention-action {
+        background: var(--glass-control-bg) !important;
+        border-color: var(--glass-control-border) !important;
+        color: var(--glass-control-text) !important;
+        box-shadow: inset 1px 1px 0 var(--glass-control-highlight), var(--glass-control-shadow) !important;
+        backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation)) !important;
+    }
+    html.theme-liquid .home-theme-surface .finance-action-btn:focus-visible,
+    html.theme-liquid .home-theme-surface .company-table-scroll a:focus-visible,
+    html.theme-liquid .home-theme-surface .company-table-scroll button:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--brand-primary) 76%, #ffffff) !important;
+        outline-offset: 3px;
+    }
+
+    .company-filter-bar {
+        display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+        margin: -8px 0 14px; padding: 10px; border-radius: 12px;
+        background: rgba(0, 0, 0, .22); border: 1px solid rgba(255,255,255,.04);
+    }
+    .company-filter-field { min-width: 0; }
+    .company-filter-label { display: block; margin: 0 0 5px 2px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .company-filter-control {
+        width: 100%; min-height: 34px; padding: 0 10px; border-radius: 8px;
+        background: rgba(6, 10, 18, .72); border: 1px solid rgba(148,163,184,.14);
+        color: #dbe5ec; font-size: 10px; font-weight: 800; outline: none;
+    }
+    .company-filter-control:focus-visible { border-color: color-mix(in srgb, var(--brand-primary) 62%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent); }
+    .company-filter-actions { display: flex; align-items: end; }
+    .company-filter-clear { width: 100%; min-height: 34px; padding: 0 10px; border: 1px solid rgba(148,163,184,.14); border-radius: 8px; background: rgba(6, 10, 18, .48); color: #aebbc7; font-size: 9px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .company-filter-clear:hover { color: var(--company-accent-text); border-color: var(--company-accent-border); }
+    .company-filter-empty { display: none; padding: 16px 10px; color: #aebbc7; font-size: 10px; font-weight: 800; text-align: center; }
+    .company-priority-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 11px 13px; border-radius: 10px; background: var(--company-accent-soft); border: 1px solid var(--company-accent-border); }
+    .company-priority-action-copy { min-width: 0; }
+    .company-priority-action-title { color: #e8eef3; font-size: 10px; font-weight: 900; }
+    .company-priority-action-sub { margin-top: 3px; color: #aebbc7; font-size: 9px; line-height: 1.35; }
+    .company-priority-action-link { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; padding: 0 10px; border-radius: 8px; background: var(--company-accent-soft); color: var(--company-accent-text); font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+    .company-priority-action-link:hover { background: color-mix(in srgb, var(--company-accent) 22%, rgba(0,0,0,.35)); }
+    .company-operation-link { display: inline-flex; align-items: center; gap: 5px; width: fit-content; margin-top: 5px; color: var(--brand-primary); font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .company-operation-link:hover { color: color-mix(in srgb, var(--brand-primary) 76%, #fff); }
+    .company-attention { display: grid; gap: 10px; }
+    .company-attention-item { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 10px; background: rgba(10, 16, 26, .58); border: 1px solid rgba(255,255,255,.05); }
+    .company-attention-icon { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: color-mix(in srgb, var(--brand-primary) 10%, rgba(0,0,0,.35)); color: var(--brand-primary); }
+    .company-attention-title { color: #e8eef3; font-size: 10px; font-weight: 900; }
+    .company-attention-copy { margin-top: 3px; color: #aebbc7; font-size: 9px; line-height: 1.35; }
+    .company-attention-action { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; padding: 0 9px; border-radius: 8px; background: color-mix(in srgb, var(--brand-primary) 12%, rgba(0,0,0,.35)); color: var(--brand-primary); font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .company-attention-action:hover { background: color-mix(in srgb, var(--brand-primary) 22%, rgba(0,0,0,.35)); }
+    .company-attention-ok { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 10px; background: rgba(16, 185, 129, .06); color: #9de2c2; font-size: 10px; font-weight: 800; }
+    .company-activity-panel .glass-panel { padding: 14px !important; }
+    .company-activity-list { display: grid; gap: 8px; }
+    .company-activity-item { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .company-activity-item:last-child { border-bottom: 0; }
+    .company-activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary); box-shadow: 0 0 8px color-mix(in srgb, var(--brand-primary) 35%, transparent); }
+    .company-activity-type { color: #e8eef3; font-size: 9px; font-weight: 900; }
+    .company-activity-label { margin-top: 3px; color: #aebbc7; font-size: 9px; }
+    .company-activity-time { color: #8f9daa; font-size: 8px; white-space: nowrap; }
+    .company-assets-panel { padding: 18px !important; }
+    .company-assets-panel .section-head { margin-bottom: 12px !important; padding-bottom: 10px !important; }
+    .company-assets-panel .v2-table-row { transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+    .company-assets-panel .v2-table-row:hover { transform: translateX(2px); }
+    .company-assets-panel .v2-table-row td { padding-top: 11px; padding-bottom: 11px; }
+    .company-assets-panel .company-unit { gap: 12px !important; }
+    .company-payroll-panel > .flex.justify-between { margin-bottom: 10px !important; padding-bottom: 10px !important; }
+    .company-payroll-panel .summary-list { gap: 6px; }
+    .company-payroll-panel .summary-line { padding: 7px 8px; }
+    .company-offer-actions { gap: 6px !important; }
+    .company-offer-actions .finance-action-btn { min-height: 32px !important; }
+    .company-layout-table .company-unit > div:last-child { min-width: 0; overflow-wrap: anywhere; }
+    .company-finance-section,
+    .company-activity-panel { min-width: 0; }
+    .company-dashboard-columns { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, .85fr); gap: 14px; align-items: start; }
+    .company-main-column,
+    .company-side-column { display: grid; gap: 14px; align-content: start; min-width: 0; }
+    .home-theme-surface > .glass-panel { padding: 18px !important; }
+    .home-theme-surface > .glass-panel:first-child { padding: 18px 22px !important; }
+    .home-theme-surface > .glass-panel:first-child { gap: 12px !important; }
+    .home-theme-surface > .glass-panel:first-child > i { font-size: 90px !important; opacity: .01 !important; }
+    .home-theme-surface .section-head { margin-bottom: 14px !important; padding-bottom: 10px !important; }
+    .home-theme-surface .v2-table-row td { padding-top: 10px; padding-bottom: 10px; }
+    .home-theme-surface.gx-density-compact { gap: 12px; }
+    .home-theme-surface.gx-density-compact .company-dashboard-columns,
+    .home-theme-surface.gx-density-compact .company-main-column,
+    .home-theme-surface.gx-density-compact .company-side-column { gap: 12px; }
+    .home-theme-surface.gx-density-compact > .glass-panel { padding: 12px !important; }
+    .home-theme-surface.gx-density-compact > .glass-panel:first-child { padding: 12px 16px !important; }
+    .home-theme-surface.gx-density-compact .payroll-summary-wrap { gap: 7px; }
+    .home-theme-surface.gx-density-compact .payroll-summary-card { padding: 10px; }
+    .home-theme-surface.gx-density-comfortable { gap: 22px; }
+    .home-theme-surface.gx-density-comfortable .company-dashboard-columns,
+    .home-theme-surface.gx-density-comfortable .company-main-column,
+    .home-theme-surface.gx-density-comfortable .company-side-column { gap: 22px; }
+    .home-theme-surface.gx-density-comfortable > .glass-panel { padding: 22px !important; }
+    .home-theme-surface.gx-density-comfortable > .glass-panel:first-child { padding: 22px 26px !important; }
+    @media (max-width: 680px) {
+        .home-theme-surface > .glass-panel,
+        .home-theme-surface > .glass-panel:first-child { padding: 14px !important; }
+        .home-theme-surface.gx-density-compact > .glass-panel,
+        .home-theme-surface.gx-density-compact > .glass-panel:first-child { padding: 10px !important; }
+    }
+    @media (max-width: 900px) {
+        .company-dashboard-columns { display: block; }
+        .company-main-column,
+        .company-side-column { display: grid; gap: 14px; }
+        .company-side-column { margin-top: 14px; }
+        .home-theme-surface.gx-density-compact > * + * { margin-top: 12px !important; }
+        .home-theme-surface.gx-density-comfortable > * + * { margin-top: 22px !important; }
+        .home-theme-surface.gx-density-compact .company-side-column { margin-top: 12px; }
+        .home-theme-surface.gx-density-comfortable .company-side-column { margin-top: 22px; }
+    }
+    @media (max-width: 1100px) { .company-filter-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 900px) { .company-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 680px) {
+        .company-filter-bar { grid-template-columns: 1fr; margin-top: -4px; }
+        .company-filter-actions { align-items: stretch; }
+        .company-table-scroll { padding: 8px !important; overflow-x: visible; }
+        .company-layout-table, .company-layout-table thead, .company-layout-table tbody, .company-layout-table tr, .company-layout-table td { display: block; width: 100%; }
+        .company-layout-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+        .company-layout-table tbody { display: grid; gap: 10px; }
+        .company-layout-table .v2-table-row { display: flex; flex-direction: column; padding: 8px; transform: none !important; }
+        .company-layout-table .v2-table-row td,
+        .company-layout-table .v2-table-row td:first-child,
+        .company-layout-table .v2-table-row td:last-child { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 8px 4px; border: 0; border-radius: 0; }
+        .company-layout-table .v2-table-row td:first-child { order: 1; }
+        .company-layout-table .v2-table-row td:nth-child(4) { order: 2; }
+        .company-layout-table .v2-table-row td:nth-child(3) { order: 3; }
+        .company-layout-table .v2-table-row td:nth-child(2) { order: 4; }
+        .company-layout-table .v2-table-row td::before { content: attr(data-label); flex: 0 0 29%; padding-top: 4px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+        .company-layout-table .v2-table-row td > * { min-width: 0; flex: 1 1 auto; }
+        .company-layout-table .company-unit { justify-content: flex-start; }
+        .company-layout-table .company-unit > div:last-child { min-width: 0; }
+        .company-layout-table .v2-table-row td:last-child .company-offer-actions { max-width: 100%; }
+        .company-attention-item { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+        .company-attention-action { grid-column: 2; width: fit-content; }
+        .company-priority-action { align-items: flex-start; flex-direction: column; }
+        .company-priority-action-link { width: 100%; }
+    }
 </style>
 
-<div class="home-theme-surface space-y-6 animate-fade-in w-full max-w-full overflow-hidden">
+<div class="home-theme-surface gx-density-{{ gameExperienceSettings.ui_density|default('balanced') }} space-y-6 animate-fade-in w-full max-w-full overflow-hidden">
     
     {# ===== HERO PANEL ===== #}
     <div class="glass-panel p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
@@ -188,30 +374,334 @@
         </div>
     </div>
 
-    {# ===== STATS GRID ===== #}
-    <div class="finance-grid">
-        <div class="finance-card">
-            <div class="finance-kicker"><i class="fa-solid fa-industry"></i> {{ t('companies.stats.total_facilities') }}</div>
-            <div class="finance-value">{{ totalCompanies|default(companies|length) }}</div>
-            <div class="finance-sub">{{ t('companies.stats.total_facilities_hint') }}</div>
+    {% if priorityAction %}
+        <div class="company-priority-action company-priority-panel" aria-label="Sıradaki yönetim adımı">
+            <div class="company-priority-action-copy">
+                <div class="company-priority-action-title"><i class="fa-solid {{ priorityAction.icon }} text-[color:var(--brand-primary)] mr-1"></i> Sıradaki yönetim adımı</div>
+                <div class="company-priority-action-sub">{% if priorityAction.company_name %}{{ priorityAction.company_name }} için {% endif %}{{ priorityAction.label }}.</div>
+            </div>
+            {% if priorityAction.key == 'marketplace' %}
+                <a href="{{ path_for('marketplace') }}" class="company-priority-action-link" aria-label="{{ priorityAction.label }}"><i class="fa-solid fa-arrow-right mr-1"></i> Markete git</a>
+            {% elseif priorityAction.key == 'work_offers' %}
+                <a href="{{ base_url() }}/work-offers" class="company-priority-action-link" aria-label="{{ priorityAction.label }}"><i class="fa-solid fa-arrow-right mr-1"></i> İlanları yönet</a>
+            {% elseif priorityAction.key == 'create_company' %}
+                <a href="{{ path_for('createCompany') }}" class="company-priority-action-link" aria-label="{{ priorityAction.label }}"><i class="fa-solid fa-arrow-right mr-1"></i> Tesis kur</a>
+            {% else %}
+                <span class="company-priority-action-link" aria-label="{{ priorityAction.label }}"><i class="fa-solid fa-eye mr-1"></i> İncele</span>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="company-dashboard-columns">
+        <div class="company-main-column">
+
+    {# ===== ATTENTION CENTER ===== #}
+    <section class="glass-panel p-5 md:p-6 relative company-attention-panel" aria-labelledby="company-attention-title">
+        <div class="flex items-center justify-between gap-3 mb-4 border-b border-white/5 pb-3">
+            <div>
+                <h2 id="company-attention-title" class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-[color:var(--brand-primary)]"></i> Dikkat Merkezi
+                </h2>
+                <p class="text-[9px] text-slate-400 mt-1">Sorun varsa gereken işlemi gösterir.</p>
+            </div>
+            {% if (blockedFacilityCount|default(0) + payrollRiskCount|default(0)) > 0 %}
+                <span class="summary-status low"><i class="fa-solid fa-eye"></i> {{ blockedFacilityCount|default(0) + payrollRiskCount|default(0) }} kontrol</span>
+            {% endif %}
+        </div>
+        <div class="company-attention">
+            {% for company in companies %}
+                {% set attentionType = companyTypes[company.type]|default({}) %}
+                {% set attentionOps = companyOperations[company.id]|default({}) %}
+                {% set attentionName = attentionType.display_name|default(attentionType.name|default('Tesis')) %}
+                {% set attentionStatus = attentionOps.status|default('control_required') %}
+                {% set isPriorityAttention = priorityAction and priorityAction.company_name|default('') == attentionName and priorityAction.key|default('') != 'none' %}
+                {% if attentionStatus != 'ready' %}
+                    <div class="company-attention-item">
+                        <span class="company-attention-icon"><i class="fa-solid {{ attentionStatus == 'input_missing' ? 'fa-box-open' : 'fa-triangle-exclamation' }}"></i></span>
+                        <div>
+                            <div class="company-attention-title">{{ attentionName }} · {{ attentionStatus == 'input_missing' ? 'Girdi eksik' : (attentionStatus == 'workforce_missing' ? 'İş gücü eksik' : 'Kurulum verisi eksik') }}</div>
+                            <div class="company-attention-copy">
+                                {% if attentionStatus == 'input_missing' %}Girdi stoğu yetersiz.{% elseif attentionStatus == 'workforce_missing' %}Gerekli çalışan tamamlanmadı.{% else %}Operasyon verisi eksik.{% endif %}
+                            </div>
+                        </div>
+                        {% if not isPriorityAttention and attentionStatus == 'input_missing' %}
+                            <a href="{{ path_for('storage') }}" class="company-attention-action" aria-label="{{ attentionName }} için depoyu kontrol et">Depoyu kontrol et</a>
+                        {% elseif not isPriorityAttention and attentionStatus == 'workforce_missing' %}
+                            <a href="{{ base_url() }}/work-offers" class="company-attention-action" aria-label="{{ attentionName }} için iş ilanlarına git">İlanlara git</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            {% if companies|length == 0 %}
+                <div class="company-attention-ok"><i class="fa-solid fa-circle-info"></i> Henüz kurulmuş bir tesis yok. İlk tesisini kurarak üretim alanını başlatabilirsin.</div>
+            {% elseif blockedFacilityCount|default(0) == 0 and payrollRiskCount|default(0) == 0 %}
+                <div class="company-attention-ok"><i class="fa-solid fa-circle-check"></i> Tüm tesisler operasyonel görünüyor.</div>
+            {% endif %}
+            {% for summary in payrollSummary %}
+                {% if not summary.is_sufficient %}
+                    <div class="company-attention-item">
+                        <span class="company-attention-icon"><i class="fa-solid fa-wallet"></i></span>
+                        <div>
+                            <div class="company-attention-title">{{ summary.code }} maaş bakiyesi düşük</div>
+                            <div class="company-attention-copy">Bakiye günlük maaş yükünü karşılamıyor.</div>
+                        </div>
+                        <a href="{{ base_url() }}/work-offers" class="company-attention-action" aria-label="{{ summary.code }} ilanlarını yönet">İlanları yönet</a>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+
+    {# ===== MAIN TABLE PANEL ===== #}
+    <div class="glass-panel p-6 relative company-assets-panel">
+        <div class="section-head mb-6 border-b border-white/5 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 drop-shadow-sm">
+                <i class="fa-solid fa-city text-[color:var(--brand-primary)] opacity-80"></i> {{ t('companies.panel.title') }}
+                <span class="text-[8px] bg-black/40 px-2 py-1 rounded-md border border-white/5 shadow-inner text-slate-500 ml-2">{{ t('companies.panel.badge') }}</span>
+            </h2>
+
+            <a href="{{ path_for('createCompany') }}" class="btn-create-primary px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus opacity-80 text-xs"></i> {{ t('companies.actions.create_facility') }}
+            </a>
         </div>
 
-        <div class="finance-card">
-            <div class="finance-kicker"><i class="fa-solid fa-briefcase"></i> {{ t('companies.stats.open_offers') }}</div>
-            <div class="finance-value">{{ totalOpenOffers|default(0) }}</div>
-            <div class="finance-sub">{{ t('companies.stats.open_offers_hint') }}</div>
-        </div>
+        {% if companies|length > 0 %}
+            {% if companies|length > 1 %}
+                <div class="company-filter-bar" id="company-filters" aria-label="Tesis filtreleri">
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-status">Durum</label>
+                        <select id="company-filter-status" class="company-filter-control" aria-label="Tesis durumuna göre filtrele">
+                            <option value="all">Tümü</option>
+                            <option value="ready">Üretime hazır</option>
+                            <option value="workforce_missing">İş gücü eksik</option>
+                            <option value="input_missing">Girdi eksik</option>
+                        </select>
+                    </div>
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-sector">Sektör</label>
+                        <select id="company-filter-sector" class="company-filter-control" aria-label="Sektöre göre filtrele">
+                            <option value="all">Tüm sektörler</option>
+                        </select>
+                    </div>
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-quality">Kalite</label>
+                        <select id="company-filter-quality" class="company-filter-control" aria-label="Kalite seviyesine göre filtrele">
+                            <option value="all">Tüm kademeler</option>
+                        </select>
+                    </div>
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-workforce">İş gücü</label>
+                        <select id="company-filter-workforce" class="company-filter-control" aria-label="İş gücü ihtiyacına göre filtrele">
+                            <option value="all">Tüm durumlar</option>
+                            <option value="missing">Eksik iş gücü</option>
+                            <option value="ready">İş gücü tamam</option>
+                        </select>
+                    </div>
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-input">Girdi</label>
+                        <select id="company-filter-input" class="company-filter-control" aria-label="Girdi durumuna göre filtrele">
+                            <option value="all">Tüm girdiler</option>
+                            <option value="missing">Girdi eksik</option>
+                            <option value="ready">Girdi hazır</option>
+                            <option value="not_needed">Girdi gerekmiyor</option>
+                        </select>
+                    </div>
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-offer">İş ilanı</label>
+                        <select id="company-filter-offer" class="company-filter-control" aria-label="İş ilanı durumuna göre filtrele">
+                            <option value="all">Tüm ilanlar</option>
+                            <option value="open">Açık ilan var</option>
+                            <option value="none">İlan yok</option>
+                        </select>
+                    </div>
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-name">Tesis adı</label>
+                        <input id="company-filter-name" class="company-filter-control" type="search" placeholder="Tesis ara..." aria-label="Tesis adına göre ara">
+                    </div>
+                    <div class="company-filter-field">
+                        <label class="company-filter-label" for="company-filter-sort">Sıralama</label>
+                        <select id="company-filter-sort" class="company-filter-control" aria-label="Tesisleri sırala">
+                            <option value="name">Ada göre</option>
+                            <option value="quality">Kaliteye göre</option>
+                            <option value="capacity">Kapasiteye göre</option>
+                            <option value="newest">En yeni tesis</option>
+                            <option value="vacancies">Boş pozisyona göre</option>
+                            <option value="status">Dikkat gerekenler önce</option>
+                        </select>
+                    </div>
+                    <div class="company-filter-actions">
+                        <button type="button" id="company-filter-clear" class="company-filter-clear" aria-label="Tesis filtrelerini temizle">Filtreleri temizle</button>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="company-table-scroll bg-black/20 p-4 rounded-2xl border border-white/5 shadow-inner">
+                <table id="my-companies" class="w-full text-left company-layout-table">
+                    <thead class="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">
+                        <tr>
+                            <th class="p-3 pb-2 pl-5" style="width: 34%;">{{ t('companies.table.company') }}</th>
+                            <th class="p-3 pb-2 text-left" style="width: 24%;">{{ t('companies.table.logistics') }}</th>
+                            <th class="p-3 pb-2 text-left" style="width: 20%;">{{ t('companies.table.output') }}</th>
+                            <th class="p-3 pb-2 text-left" style="width: 22%;">{{ t('companies.table.offer') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-xs text-white font-bold">
+                        {% for company in companies %}
+                            {% set offer = openOffers[company.id] is defined ? openOffers[company.id] : null %}
+                            {% set companyType = companyTypes[company.type]|default({}) %}
+                            {% set qualityData = companyType.qualities[company.quality]|default({}) %}
+                            {% set consumeProduct = qualityData.consume_product|default(0) %}
+                            {% set consumeAmount = qualityData.consume_amount|default(0) %}
+                            {% set outputProduct = companyType.product|default(0) %}
+                            {% set outputAmount = qualityData.product_amount|default(0) %}
+                            {% set ops = companyOperations[company.id]|default({}) %}
+                            {% set companyName = companyType.display_name|default(companyType.name|default('Tesis')) %}
+                            {% set companyStatus = ops.status|default('control_required') %}
 
-        <div class="finance-card">
-            <div class="finance-kicker"><i class="fa-solid fa-wallet"></i> {{ t('companies.stats.budget_groups') }}</div>
-            <div class="finance-value">{{ payrollSummary|length }}</div>
-            <div class="finance-sub">{{ t('companies.stats.budget_groups_hint') }}</div>
-        </div>
+                            <tr class="v2-table-row group"
+                                data-company-name="{{ companyName|lower|e('html_attr') }}"
+                                data-company-sector="{{ companyName|e('html_attr') }}"
+                                data-company-quality="{{ company.quality }}"
+                                data-company-workforce="{{ (ops.required_workers|default(0)) > (ops.assigned_workers|default(0)) ? 'missing' : 'ready' }}"
+                                data-company-input="{{ consumeProduct > 0 ? ((ops.input_stock|default(0)) < consumeAmount ? 'missing' : 'ready') : 'not_needed' }}"
+                                data-company-offer="{{ offer ? 'open' : 'none' }}"
+                                data-company-capacity="{{ outputAmount }}"
+                                data-company-created="{{ company.created_at|default('')|e('html_attr') }}"
+                                data-company-vacancies="{{ ops.open_positions|default(0) }}"
+                                data-company-status="{{ companyStatus }}">
+                                <td class="p-4 pl-5" data-label="{{ t('companies.table.company') }}">
+                                    <div class="flex items-center gap-4 company-cell company-unit">
+                                        <div class="w-14 h-14 bg-black/80 rounded-xl flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] group-hover:shadow-[inset_0_2px_8px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)] transition-all">
+                                            <img src="img/companies/{{ company.type }}.png" class="w-8 h-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="uppercase tracking-widest text-[12px] font-black text-slate-200 group-hover:text-white transition-colors">{{ companyName }}</span>
+                                            <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-md tracking-widest bg-black/50 border border-white/5 shadow-inner text-[color:var(--brand-primary)]">Q{{ company.quality }}</span>
+                                                <span class="bg-black/50 border border-white/5 text-slate-500 text-[9px] font-black tracking-widest px-2 py-0.5 rounded shadow-inner">{{ t('companies.table.active') }}</span>
+                                            </div>
+                                            <span class="company-state is-{{ companyStatus }}">
+                                                <i class="fa-solid {{ companyStatus == 'ready' ? 'fa-check' : 'fa-triangle-exclamation' }}"></i>
+                                                {% if companyStatus == 'input_missing' %}Girdi eksik{% elseif companyStatus == 'workforce_missing' %}İş gücü eksik{% elseif companyStatus == 'control_required' %}Kontrol gerekli{% else %}Üretime hazır{% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-left" data-label="{{ t('companies.table.logistics') }}">
+                                    <div class="flex flex-col gap-1.5">
+                                        {% if consumeProduct > 0 %}
+                                            <div class="tech-badge red w-fit">
+                                                <span class="text-[12px]">-{{ consumeAmount }}</span>
+                                                <img class="w-4 h-4 object-contain drop-shadow-sm" src="img/products/{{ consumeProduct }}.png">
+                                            </div>
+                                            <div class="text-[9px] font-bold text-slate-500">Stok: {{ ops.input_stock|default(0) }}</div>
+                                        {% else %}
+                                            <span class="bg-black/40 border border-white/5 px-3 py-1.5 rounded-lg text-slate-600 font-mono font-black tracking-widest text-[10px] shadow-inner w-fit">{{ t('companies.table.no_input') }}</span>
+                                        {% endif %}
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                            {% if consumeProduct > 0 %}Girdi tüketir{% else %}{{ t('companies.table.no_input_label') }}{% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-left" data-label="{{ t('companies.table.output') }}">
+                                    <div class="flex flex-col gap-1.5">
+                                        <div class="tech-badge green w-fit">
+                                            <strong class="text-[14px]">+{{ outputAmount }}</strong>
+                                            <img class="w-4 h-4 drop-shadow-sm" src="img/products/{{ outputProduct }}.png">
+                                        </div>
+                                        <div class="text-[9px] font-bold text-slate-500">Günlük kapasite: {{ ops.capacity|default(outputAmount) }}</div>
+                                        <div class="text-[9px] font-bold text-slate-500">Çalışan: {{ ops.assigned_workers|default(0) }} / {{ ops.required_workers|default(0) }} · Boş: {{ ops.open_positions|default(0) }}</div>
+                                        <div class="flex items-center gap-1.5">
+                                            {% if consumeProduct > 0 %}
+                                                <span class="text-[9px] font-black uppercase tracking-widest bg-red-950/30 text-red-400 px-2 py-0.5 rounded border border-red-500/20 shadow-inner">
+                                                    <i class="fa-solid fa-arrow-down opacity-70"></i> -{{ consumeAmount }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-[9px] font-black uppercase tracking-widest bg-black/40 text-slate-400 px-2 py-0.5 rounded border border-white/5 shadow-inner">
+                                                    <i class="fa-solid fa-box-open opacity-70"></i> {{ t('companies.table.direct') }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-left" data-label="{{ t('companies.table.offer') }}">
+                                    <div class="mb-2 text-[9px] font-black text-slate-400">Açık ilan: {{ ops.open_offer_count|default(0) }} · İhtiyaç: {{ ops.offer_gap|default(0) }}</div>
+                                    {% if companyStatus == 'input_missing' %}
+                                        <div class="mb-2">
+                                            <div class="flex flex-wrap gap-x-3">
+                                                <a href="{{ path_for('marketplace') }}" class="company-operation-link" aria-label="{{ companyName }} için eksik girdiyi markette ara"><i class="fa-solid fa-store"></i> Girdiyi ara</a>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% if companyStatus == 'control_required' %}
+                                        <span class="text-[9px] font-black uppercase tracking-widest text-slate-500">Veri kontrolü gerekli</span>
+                                    {% elseif offer %}
+                                        <div class="company-offer-actions flex flex-col gap-2 w-full max-w-[140px]">
+                                            <button
+                                                type="button"
+                                                class="finance-action-btn primary !py-2.5 !text-[9px] !rounded-lg w-full flex items-center justify-center gap-2"
+                                                onclick="openOfferModal({
+                                                    mode: 'edit',
+                                                    companyId: {{ company.id }},
+                                                    companyName: '{{ companyName|e('js') }}',
+                                                    companyQuality: {{ company.quality }},
+                                                    requiredSkill: {{ offer.required_skill|default(0) }},
+                                                    salary: {{ offer.salary|default(0) }},
+                                                    currency: '{{ offer.currency|default('')|upper|e('js') }}'
+                                                })">
+                                                <i class="fa-solid fa-pen-to-square"></i> {{ t('companies.table.edit') }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="finance-action-btn w-full !min-h-[30px] !py-2 !text-[9px] justify-center"
+                                                onclick="cancelWorkOffer({{ company.id }})">
+                                                <i class="fa-solid fa-xmark text-sm text-red-500 opacity-80"></i> {{ t('companies.table.remove') }}
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <div class="company-offer-actions w-full max-w-[140px]">
+                                            <button
+                                                type="button"
+                                                class="{{ companyStatus == 'input_missing' ? 'finance-action-btn' : 'btn-create-primary' }} !py-3 !text-[10px] !rounded-xl w-full flex items-center justify-center gap-2 shadow-lg"
+                                                onclick="openOfferModal({
+                                                    mode: 'create',
+                                                    companyId: {{ company.id }},
+                                                    companyName: '{{ companyName|e('js') }}',
+                                                    companyQuality: {{ company.quality }},
+                                                    requiredSkill: {{ company.quality }},
+                                                    salary: 1.00,
+                                                    currency: '{{ currencyList|length > 0 ? currencyList[0].code|upper|e('js') : '' }}'
+                                                })">
+                                                <i class="fa-solid fa-bullhorn text-sm opacity-80"></i> {{ t('companies.table.open_offer') }}
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="py-16 text-center bg-black/30 rounded-2xl border border-white/5 shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] mt-4 relative z-10 flex flex-col items-center justify-center">
+                <div class="w-16 h-16 bg-black/60 rounded-[14px] flex items-center justify-center mb-4 border border-white/5 shadow-inner">
+                    <i class="fa-solid fa-industry text-2xl text-slate-500 opacity-60"></i>
+                </div>
+                <p class="text-slate-300 text-[13px] font-black uppercase tracking-[0.2em] mb-2 drop-shadow-sm">{{ t('companies.empty.title') }}</p>
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.1em]">{{ t('companies.empty.subtitle') }}</p>
+            </div>
+        {% endif %}
     </div>
 
-    {# ===== PAYROLL SUMMARY & QUICK ACTIONS ===== #}
+        </div>
+        <div class="company-side-column">
+
+    {# ===== FINANCE ===== #}
     {% if payrollSummary|length > 0 %}
-        <div class="glass-panel p-6 relative">
+    <section class="company-finance-section" aria-label="Finans görünümü">
+        <div class="glass-panel p-6 relative company-payroll-panel {{ payrollSummary|length == 1 ? 'is-single' : '' }}">
             <div class="flex justify-between items-center mb-6 relative z-10 border-b border-white/5 pb-4">
                 <h2 class="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2 drop-shadow-sm">
                     <i class="fa-solid fa-vault text-[color:var(--brand-primary)]"></i> {{ t('companies.payroll.title') }}
@@ -256,213 +746,48 @@
                                     <strong>{{ summary.coverage_days }}</strong>
                                 </div>
                             </div>
-
-                            <div class="summary-footer">
-                                <span class="summary-footer-label">{{ t('companies.payroll.flow') }}</span>
-                                <span class="summary-footer-value">{{ summary.total_salary|number_format(2) }} {{ summary.code }}</span>
-                            </div>
                         </div>
                     {% endfor %}
                 </div>
-
-                <div class="finance-side-stack" style="grid-column: span 1; display:flex; flex-direction:column; gap:16px;">
-                    <div class="finance-side-card quick-actions">
-                        <div class="finance-side-title">
-                            <div class="w-6 h-6 rounded bg-[color:var(--brand-primary)]/10 flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.5)]"><i class="fa-solid fa-bolt text-xs text-[color:var(--brand-primary)]"></i></div> {{ t('companies.actions.title') }}
-                        </div>
-                        <div class="finance-side-list" style="grid-auto-rows: min-content;">
-                            <a href="{{ path_for('createCompany') }}" class="finance-action-btn primary">
-                                <i class="fa-solid fa-plus opacity-80"></i> {{ t('companies.actions.create_facility') }}
-                            </a>
-                            <a href="{{ base_url() }}/work-offers" class="finance-action-btn">
-                                <i class="fa-solid fa-briefcase opacity-80"></i> {{ t('companies.actions.job_market') }}
-                            </a>
-                            <button type="button" class="finance-action-btn" onclick="openOfferQuickActionPicker()" {% if openOffers|length == 0 %}disabled{% endif %}>
-                                <i class="fa-solid fa-pen-to-square opacity-80"></i> {{ t('companies.actions.edit_offer') }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="finance-side-card activity-log flex-1">
-                        <div class="finance-side-title">
-                            <div class="w-6 h-6 rounded bg-[color:var(--brand-primary)]/10 flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.5)]"><i class="fa-solid fa-clock-rotate-left text-xs text-[color:var(--brand-primary)]"></i></div> {{ t('companies.activity.title') }}
-                        </div>
-                        <div class="finance-side-list">
-                            {% if recentActions|length > 0 %}
-                                {% for action in recentActions %}
-                                    <div class="finance-log-item">
-                                        <span class="finance-log-dot"></span>
-                                        <div class="finance-log-copy">
-                                            <div class="finance-log-title">{{ action.type }}</div>
-                                            <div class="finance-log-sub">{{ action.label }}</div>
-                                            {% if action.timestamp %}
-                                                <div class="finance-log-time">{{ action.timestamp|date('d.m.Y H:i') }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="finance-log-item border-none">
-                                    <span class="finance-log-dot bg-slate-600 shadow-none opacity-50"></span>
-                                    <div class="finance-log-copy">
-                                        <div class="finance-log-title text-slate-500">{{ t('companies.activity.empty') }}</div>
-                                        <div class="finance-log-sub">{{ t('companies.activity.empty_hint') }}</div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
+    </section>
     {% endif %}
 
-    {# ===== MAIN TABLE PANEL ===== #}
-    <div class="glass-panel p-6 relative">
-        <div class="section-head mb-6 border-b border-white/5 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 drop-shadow-sm">
-                <i class="fa-solid fa-city text-[color:var(--brand-primary)] opacity-80"></i> {{ t('companies.panel.title') }}
-                <span class="text-[8px] bg-black/40 px-2 py-1 rounded-md border border-white/5 shadow-inner text-slate-500 ml-2">{{ t('companies.panel.badge') }}</span>
-            </h2>
-
-            <a href="{{ path_for('createCompany') }}" class="btn-create-primary px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-center gap-2">
-                <i class="fa-solid fa-plus opacity-80 text-xs"></i> {{ t('companies.actions.create_facility') }}
-            </a>
-        </div>
-
-        {% if companies|length > 0 %}
-            <div class="company-table-scroll bg-black/20 p-4 rounded-2xl border border-white/5 shadow-inner">
-                <table id="my-companies" class="w-full text-left company-layout-table">
-                    <thead class="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">
-                        <tr>
-                            <th class="p-3 pb-2 pl-5" style="width: 34%;">{{ t('companies.table.company') }}</th>
-                            <th class="p-3 pb-2 text-left" style="width: 24%;">{{ t('companies.table.logistics') }}</th>
-                            <th class="p-3 pb-2 text-left" style="width: 20%;">{{ t('companies.table.output') }}</th>
-                            <th class="p-3 pb-2 text-left" style="width: 22%;">{{ t('companies.table.offer') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-xs text-white font-bold">
-                        {% for company in companies %}
-                            {% set offer = openOffers[company.id] is defined ? openOffers[company.id] : null %}
-                            {% set companyType = companyTypes[company.type] %}
-                            {% set qualityData = companyType.qualities[company.quality] %}
-                            {% set consumeProduct = qualityData.consume_product|default(0) %}
-                            {% set consumeAmount = qualityData.consume_amount|default(0) %}
-                            {% set outputProduct = companyType.product %}
-                            {% set outputAmount = qualityData.product_amount|default(0) %}
-
-                            <tr class="v2-table-row group">
-                                <td class="p-4 pl-5">
-                                    <div class="flex items-center gap-4 company-cell company-unit">
-                                        <div class="w-14 h-14 bg-black/80 rounded-xl flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] group-hover:shadow-[inset_0_2px_8px_color-mix(in_srgb,var(--brand-primary)_20%,transparent)] transition-all">
-                                            <img src="img/companies/{{ company.type }}.png" class="w-8 h-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">
-                                        </div>
-                                        <div class="flex flex-col">
-                                            <span class="uppercase tracking-widest text-[12px] font-black text-slate-200 group-hover:text-white transition-colors">{{ companyType.name }}</span>
-                                            <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-md tracking-widest bg-black/50 border border-white/5 shadow-inner text-[color:var(--brand-primary)]">Q{{ company.quality }}</span>
-                                                <span class="bg-black/50 border border-white/5 text-slate-500 text-[9px] font-black tracking-widest px-2 py-0.5 rounded shadow-inner">{{ t('companies.table.active') }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td class="p-4 text-left">
-                                    <div class="flex flex-col gap-1.5">
-                                        {% if consumeProduct > 0 %}
-                                            <div class="tech-badge red w-fit">
-                                                <span class="text-[12px]">-{{ consumeAmount }}</span>
-                                                <img class="w-4 h-4 object-contain drop-shadow-sm" src="img/products/{{ consumeProduct }}.png">
-                                            </div>
-                                        {% else %}
-                                            <span class="bg-black/40 border border-white/5 px-3 py-1.5 rounded-lg text-slate-600 font-mono font-black tracking-widest text-[10px] shadow-inner w-fit">{{ t('companies.table.no_input') }}</span>
-                                        {% endif %}
-                                        <div class="text-[9px] font-black uppercase tracking-widest text-slate-500">
-                                            {% if consumeProduct > 0 %}Girdi TÃƒÂ¼ketir{% else %}{{ t('companies.table.no_input_label') }}{% endif %}
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td class="p-4 text-left">
-                                    <div class="flex flex-col gap-1.5">
-                                        <div class="tech-badge green w-fit">
-                                            <strong class="text-[14px]">+{{ outputAmount }}</strong>
-                                            <img class="w-4 h-4 drop-shadow-sm" src="img/products/{{ outputProduct }}.png">
-                                        </div>
-                                        <div class="flex items-center gap-1.5">
-                                            {% if consumeProduct > 0 %}
-                                                <span class="text-[9px] font-black uppercase tracking-widest bg-red-950/30 text-red-400 px-2 py-0.5 rounded border border-red-500/20 shadow-inner">
-                                                    <i class="fa-solid fa-arrow-down opacity-70"></i> -{{ consumeAmount }}
-                                                </span>
-                                            {% else %}
-                                                <span class="text-[9px] font-black uppercase tracking-widest bg-black/40 text-slate-400 px-2 py-0.5 rounded border border-white/5 shadow-inner">
-                                                    <i class="fa-solid fa-box-open opacity-70"></i> {{ t('companies.table.direct') }}
-                                                </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td class="p-4 text-left">
-                                    {% if offer %}
-                                        <div class="flex flex-col gap-2 w-full max-w-[140px]">
-                                            <button
-                                                type="button"
-                                                class="btn-create-primary !py-2.5 !text-[9px] !rounded-lg w-full flex items-center justify-center gap-2"
-                                                onclick="openOfferModal({
-                                                    mode: 'edit',
-                                                    companyId: {{ company.id }},
-                                                    companyName: '{{ companyType.name|e('js') }}',
-                                                    companyQuality: {{ company.quality }},
-                                                    requiredSkill: {{ offer.required_skill|default(0) }},
-                                                    salary: {{ offer.salary|default(0) }},
-                                                    currency: '{{ offer.currency|default('')|upper|e('js') }}'
-                                                })">
-                                                <i class="fa-solid fa-pen-to-square"></i> {{ t('companies.table.edit') }}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                class="finance-action-btn w-full !min-h-[30px] !py-2 !text-[9px] justify-center"
-                                                onclick="cancelWorkOffer({{ company.id }})">
-                                                <i class="fa-solid fa-xmark text-sm text-red-500 opacity-80"></i> {{ t('companies.table.remove') }}
-                                            </button>
-                                        </div>
-                                    {% else %}
-                                        <div class="w-full max-w-[140px]">
-                                            <button
-                                                type="button"
-                                                class="btn-create-primary !py-3 !text-[10px] !rounded-xl w-full flex items-center justify-center gap-2 shadow-lg"
-                                                onclick="openOfferModal({
-                                                    mode: 'create',
-                                                    companyId: {{ company.id }},
-                                                    companyName: '{{ companyType.name|e('js') }}',
-                                                    companyQuality: {{ company.quality }},
-                                                    requiredSkill: {{ company.quality }},
-                                                    salary: 1.00,
-                                                    currency: '{{ currencyList|length > 0 ? currencyList[0].code|upper|e('js') : '' }}'
-                                                })">
-                                                <i class="fa-solid fa-bullhorn text-sm opacity-80"></i> {{ t('companies.table.open_offer') }}
-                                            </button>
-                                        </div>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="py-16 text-center bg-black/30 rounded-2xl border border-white/5 shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] mt-4 relative z-10 flex flex-col items-center justify-center">
-                <div class="w-16 h-16 bg-black/60 rounded-[14px] flex items-center justify-center mb-4 border border-white/5 shadow-inner">
-                    <i class="fa-solid fa-industry text-2xl text-slate-500 opacity-60"></i>
+    {# ===== RECENT ACTIVITY ===== #}
+    <section class="company-activity-panel" aria-label="Son şirket hareketleri">
+        <div class="glass-panel p-5">
+            <div class="flex items-center justify-between gap-3 mb-3 border-b border-white/5 pb-3">
+                <div>
+                    <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-[color:var(--brand-primary)]"></i> Son şirket hareketleri
+                    </h2>
+                    <p class="text-[9px] text-slate-400 mt-1">Tesis ve ilan kayıtlarından son hareketler.</p>
                 </div>
-                <p class="text-slate-300 text-[13px] font-black uppercase tracking-[0.2em] mb-2 drop-shadow-sm">{{ t('companies.empty.title') }}</p>
-                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.1em] mb-6">{{ t('companies.empty.subtitle') }}</p>
-                <a href="{{ path_for('createCompany') }}" class="btn-create-primary px-8 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2">
-                    <i class="fa-solid fa-hammer opacity-80"></i> {{ t('companies.empty.cta') }}
-                </a>
             </div>
-        {% endif %}
+            <div class="company-activity-list">
+                {% if recentActions|length > 0 %}
+                    {% for action in recentActions %}
+                        <div class="company-activity-item">
+                            <span class="company-activity-dot" aria-hidden="true"></span>
+                            <div>
+                                <div class="company-activity-type">
+                                    {% if action.type|default('') in ['Ilan acildi', 'İlan açıldı'] %}İş ilanı açıldı
+                                    {% elseif action.type|default('') in ['Ilan guncellendi', 'İlan güncellendi'] %}İş ilanı güncellendi
+                                    {% else %}{{ action.type|default('Şirket hareketi') }}{% endif %}
+                                </div>
+                                <div class="company-activity-label">{{ action.label|default('Tesis') }}</div>
+                            </div>
+                            {% if action.timestamp %}<time class="company-activity-time" datetime="{{ action.timestamp|e('html_attr') }}">{{ action.timestamp|date('d.m.Y H:i') }}</time>{% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="company-attention-ok"><i class="fa-solid fa-circle-info"></i> Henüz gösterilecek bir şirket hareketi yok.</div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+        </div>
     </div>
 </div>
 
@@ -960,6 +1285,105 @@
             });
         });
     }
+
+    (function() {
+        const table = document.getElementById('my-companies');
+        const statusFilter = document.getElementById('company-filter-status');
+        const sectorFilter = document.getElementById('company-filter-sector');
+        const qualityFilter = document.getElementById('company-filter-quality');
+        const workforceFilter = document.getElementById('company-filter-workforce');
+        const inputFilter = document.getElementById('company-filter-input');
+        const offerFilter = document.getElementById('company-filter-offer');
+        const nameFilter = document.getElementById('company-filter-name');
+        const sortFilter = document.getElementById('company-filter-sort');
+        const clearFilter = document.getElementById('company-filter-clear');
+        if (!table || !statusFilter || !sectorFilter || !qualityFilter || !workforceFilter || !inputFilter || !offerFilter || !nameFilter || !sortFilter || !clearFilter) return;
+
+        const rows = Array.from(table.querySelectorAll('tbody .v2-table-row'));
+        const tbody = table.querySelector('tbody');
+        const emptyState = document.createElement('div');
+        emptyState.className = 'company-filter-empty';
+        emptyState.setAttribute('role', 'status');
+        emptyState.setAttribute('aria-live', 'polite');
+        emptyState.textContent = 'Bu filtrelerle eşleşen tesis bulunamadı.';
+        table.parentElement.appendChild(emptyState);
+
+        const addOptions = function(select, values, prefix) {
+            Array.from(values).sort((a, b) => a.localeCompare(b, 'tr')).forEach(function(value) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = prefix ? prefix + value : value;
+                select.appendChild(option);
+            });
+        };
+
+        addOptions(sectorFilter, new Set(rows.map(row => row.dataset.companySector)), '');
+        addOptions(qualityFilter, new Set(rows.map(row => row.dataset.companyQuality)), 'Q');
+
+        const applyFilters = function() {
+            const status = statusFilter.value;
+            const sector = sectorFilter.value;
+            const quality = qualityFilter.value;
+            const workforce = workforceFilter.value;
+            const input = inputFilter.value;
+            const offer = offerFilter.value;
+            const name = nameFilter.value.trim().toLocaleLowerCase('tr-TR');
+            let visibleCount = 0;
+
+            rows.forEach(function(row) {
+                const matches = (status === 'all' || row.dataset.companyStatus === status)
+                    && (sector === 'all' || row.dataset.companySector === sector)
+                    && (quality === 'all' || row.dataset.companyQuality === quality)
+                    && (workforce === 'all' || row.dataset.companyWorkforce === workforce)
+                    && (input === 'all' || row.dataset.companyInput === input)
+                    && (offer === 'all' || row.dataset.companyOffer === offer)
+                    && (!name || row.dataset.companyName.indexOf(name) !== -1);
+                row.hidden = !matches;
+                if (matches) visibleCount++;
+            });
+
+            const sortMode = sortFilter.value;
+            rows.sort(function(a, b) {
+                if (sortMode === 'quality') {
+                    return Number(b.dataset.companyQuality) - Number(a.dataset.companyQuality);
+                }
+                if (sortMode === 'capacity') {
+                    return Number(b.dataset.companyCapacity) - Number(a.dataset.companyCapacity);
+                }
+                if (sortMode === 'newest') {
+                    return b.dataset.companyCreated.localeCompare(a.dataset.companyCreated);
+                }
+                if (sortMode === 'vacancies') {
+                    return Number(b.dataset.companyVacancies) - Number(a.dataset.companyVacancies);
+                }
+                if (sortMode === 'status') {
+                    const rank = { input_missing: 0, workforce_missing: 1, control_required: 2, ready: 3 };
+                    return (rank[a.dataset.companyStatus] ?? 2) - (rank[b.dataset.companyStatus] ?? 2);
+                }
+                return a.dataset.companyName.localeCompare(b.dataset.companyName, 'tr');
+            }).forEach(function(row) {
+                tbody.appendChild(row);
+            });
+
+            emptyState.style.display = visibleCount ? 'none' : 'block';
+        };
+
+        [statusFilter, sectorFilter, qualityFilter, workforceFilter, inputFilter, offerFilter, sortFilter].forEach(function(control) {
+            control.addEventListener('change', applyFilters);
+        });
+        nameFilter.addEventListener('input', applyFilters);
+        clearFilter.addEventListener('click', function() {
+            statusFilter.value = 'all';
+            sectorFilter.value = 'all';
+            qualityFilter.value = 'all';
+            workforceFilter.value = 'all';
+            inputFilter.value = 'all';
+            offerFilter.value = 'all';
+            nameFilter.value = '';
+            sortFilter.value = 'status';
+            applyFilters();
+        });
+    })();
 </script>
 {% endblock %}
 

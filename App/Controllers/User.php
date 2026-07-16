@@ -121,25 +121,159 @@ class User extends Controller
             ]);
         }
 
-        $gyms = $gymsModel->toArray();
-        $gymList = UserGym::$data;
-        $hasAnyTrainingToday = UserGym::hasTrainingTodayForUser($uid, $gymsModel);
-        $todayQuality = UserGym::getTodayTrainingQualityForUser($uid, $gymsModel);
+        $hasDailyTrainingToday = UserGym::hasTrainingQualityToday($uid, 1, $gymsModel);
+        $dailyGain = (int) (UserGym::$data['q1']['strength'] ?? 5);
+        $trainingHistory = [];
+        $trainingHistoryKeys = [];
 
-        foreach ($gymList as $k => &$gym) {
-            $gym["quality"] = (int) str_replace("q", "", $k);
-            $gym["hasTrainedToday"] = $hasAnyTrainingToday;
-            $gym["trainedQualityToday"] = ($gym["quality"] === $todayQuality);
+        $schema = DB::getSchemaBuilder();
+        if ($schema->hasTable('user_trainings')
+            && $schema->hasColumn('user_trainings', 'created_at')
+            && $schema->hasColumn('user_trainings', 'strength_gained')) {
+            $trainingColumns = ['created_at', 'strength_gained'];
+            if ($schema->hasColumn('user_trainings', 'quality')) {
+                $trainingColumns[] = 'quality';
+            }
+            $rows = DB::table('user_trainings')
+                ->where('uid', (int) $uid)
+                ->orderBy('created_at', 'desc')
+                ->limit(7)
+                ->get($trainingColumns);
 
-            $lastRaw = !empty($gyms[$k]) ? $gyms[$k] : null;
-            if (!empty($lastRaw) && date("Y-m-d", strtotime($lastRaw)) === date("Y-m-d")) {
-                $gym["trainedQualityToday"] = true;
+            foreach ($rows as $row) {
+                $timestamp = strtotime((string) ($row->created_at ?? ''));
+                $gain = (int) ($row->strength_gained ?? 0);
+                if ($timestamp === false || $gain <= 0) {
+                    continue;
+                }
+
+                $trainingHistoryKeys[date('Y-m-d H:i:s', $timestamp) . '|' . $gain] = true;
+                $trainingHistory[] = [
+                    'timestamp' => $timestamp,
+                    'dateLabel' => date('d.m.Y H:i', $timestamp),
+                    'strengthGain' => $gain,
+                    'strengthAfter' => null,
+                    'trainingType' => ((int) ($row->quality ?? 1) === 2) ? 'Ek Eğitim' : 'Günlük Eğitim',
+                ];
+            }
+        }
+
+        $dailyActionsReady = UserGym::ensureDailyActionsTable();
+        if ($dailyActionsReady) {
+            $actionColumns = ['action', 'created_at', 'reward_amount'];
+            if (UserGym::hasDailyActionsColumn('strength_after')) {
+                $actionColumns[] = 'strength_after';
+            }
+            $trainingRows = DB::table('user_gym_daily_actions')
+                ->where('uid', (int) $uid)
+                ->whereIn('action', ['free_training', 'extra_training'])
+                ->where('reward_type', 'strength')
+                ->where('reward_amount', '>', 0)
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get($actionColumns);
+
+            foreach ($trainingRows as $row) {
+                $timestamp = strtotime((string) ($row->created_at ?? ''));
+                $gain = (int) ($row->reward_amount ?? 0);
+                if ($timestamp === false || $gain <= 0) {
+                    continue;
+                }
+
+                $key = date('Y-m-d H:i:s', $timestamp) . '|' . $gain;
+                if (isset($trainingHistoryKeys[$key])) {
+                    $trainingHistory = array_values(array_filter($trainingHistory, function (array $item) use ($timestamp, $gain) {
+                        return !(($item['timestamp'] ?? 0) === $timestamp && ($item['strengthGain'] ?? 0) === $gain && ($item['strengthAfter'] ?? null) === null);
+                    }));
+                }
+                $trainingHistoryKeys[$key] = true;
+                $trainingHistory[] = [
+                    'timestamp' => $timestamp,
+                    'dateLabel' => date('d.m.Y H:i', $timestamp),
+                    'strengthGain' => $gain,
+                    'strengthAfter' => isset($row->strength_after) ? (int) $row->strength_after : null,
+                    'trainingType' => ((string) ($row->action ?? '') === 'extra_training') ? 'Ek Eğitim' : 'Günlük Eğitim',
+                ];
+            }
+        }
+
+        $trainingStreak = UserGym::getDailyTrainingStreak($uid, $gymsModel);
+        $weekStart = strtotime('monday this week 00:00:00');
+        $weeklyTrainingGain = 0;
+        $weeklyTrainingCount = 0;
+        foreach ($trainingHistory as $training) {
+            $timestamp = (int) ($training['timestamp'] ?? 0);
+            if ($timestamp >= $weekStart && $timestamp <= time()) {
+                $weeklyTrainingGain += (int) ($training['strengthGain'] ?? 0);
+                $weeklyTrainingCount++;
+            }
+        }
+
+        usort($trainingHistory, function (array $left, array $right) {
+            return ($right['timestamp'] ?? 0) <=> ($left['timestamp'] ?? 0);
+        });
+        $trainingHistory = array_slice($trainingHistory, 0, 3);
+
+        $userRow = DB::table('users')->where('id', (int) $uid)->first(['strength']);
+        $sessionUser = App::user()->getUser();
+        $currentStrength = (int) ($userRow->strength ?? ($sessionUser['strength'] ?? 0));
+        $goldBalance = 0;
+        $walletReady = $schema->hasTable('user_money') && $schema->hasColumn('user_money', 'gold');
+        if ($walletReady) {
+            $wallet = DB::table('user_money')->where('uid', (int) $uid)->first(['gold']);
+            $walletReady = !empty($wallet);
+            $goldBalance = (float) ($wallet->gold ?? 0);
+        }
+
+        $extraUsed = UserGym::hasTrainingQualityToday($uid, 2, $gymsModel)
+            || ($dailyActionsReady && UserGym::hasDailyActionToday($uid, 'extra_training'));
+        $wheelAction = $dailyActionsReady ? UserGym::getDailyActionToday($uid, 'reward_wheel') : null;
+        $wheelReward = null;
+        if ($wheelAction) {
+            $rewardType = (string) ($wheelAction->reward_type ?? '');
+            $rewardAmount = (int) ($wheelAction->reward_amount ?? 0);
+            $rewardLabels = [
+                'gold' => 'Gold',
+                'esp' => 'ESP',
+                'strength' => 'Guc',
+            ];
+            if (isset($rewardLabels[$rewardType]) && $rewardAmount > 0) {
+                $wheelReward = '+' . $rewardAmount . ' ' . $rewardLabels[$rewardType];
             }
         }
 
         return $this->render('user/gyms.html.twig', [
-            "gyms" => $gymList,
-            "hasAnyTrainingToday" => $hasAnyTrainingToday,
+            "dailyTraining" => [
+                "currentStrength" => $currentStrength,
+                "strengthGain" => $dailyGain,
+                "completed" => $hasDailyTrainingToday,
+                "trainingStreak" => $trainingStreak,
+                "resetAt" => date('c', strtotime('tomorrow')),
+                "serverNow" => date('c'),
+                "lastTraining" => $trainingHistory[0] ?? null,
+                "history" => $trainingHistory,
+                "weekly" => [
+                    "gain" => $weeklyTrainingGain,
+                    "count" => $weeklyTrainingCount,
+                ],
+                "goldBalance" => $goldBalance,
+                "walletReady" => $walletReady,
+                "extra" => [
+                    "cost" => 5,
+                    "strengthGain" => 2,
+                    "completed" => $extraUsed,
+                    "available" => $dailyActionsReady && $walletReady,
+                    "canPurchase" => $dailyActionsReady && $walletReady && !$extraUsed && $goldBalance >= 5,
+                    "remainingBalance" => max(0, $goldBalance - 5),
+                    "missingGold" => max(0, 5 - $goldBalance),
+                ],
+                "wheel" => [
+                    "completed" => (bool) $wheelAction,
+                    "available" => $dailyActionsReady,
+                    "canSpin" => $dailyActionsReady && !$wheelAction,
+                    "reward" => $wheelReward,
+                ],
+            ],
         ]);
     }
 
