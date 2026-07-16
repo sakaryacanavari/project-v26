@@ -4,14 +4,12 @@ namespace App\Controllers;
 
 use App\Models\Country;
 use App\Models\Item;
-use App\Models\UserMoney;
-use App\Models\UserItem;
 use App\Models\ItemOffer;
 use App\System\App;
 use App\System\ActionRateLimiter;
 use App\System\AppException;
 use App\System\Controller;
-use Illuminate\Database\Capsule\Manager as DB;
+use App\System\MarketOrderService;
 
 class Market extends Controller
 {
@@ -41,11 +39,19 @@ class Market extends Controller
         //     $quality = 0;
         // }
 
-        $q = ItemOffer::with(['seller', 'country'])->where([
-            "country" => $country,
-            "item" => $item,
-            "quality" => $quality,
-        ]);
+        $lifecycleReady = MarketOrderService::schemaAvailable();
+        if ($lifecycleReady) {
+            $q = MarketOrderService::activeOffersQuery($country)->where([
+                "item" => $item,
+                "quality" => $quality,
+            ])->with(['seller', 'country']);
+        } else {
+            $q = ItemOffer::with(['seller', 'country'])->where([
+                "country" => $country,
+                "item" => $item,
+                "quality" => $quality,
+            ]);
+        }
 
         if (is_object($q) && method_exists($q, 'orderBy')) {
             $q = $q->orderBy('price', 'asc');
@@ -132,9 +138,16 @@ class Market extends Controller
         // ==========================================
         $userCountryId = App::user()->getLocation()["country"]["id"] ?? 1;
 
-        $initialOffersQ = ItemOffer::with(['seller', 'country'])
-            ->where(["country" => $userCountryId])
-            ->orderBy('price', 'asc');
+        $lifecycleReady = MarketOrderService::schemaAvailable();
+        if ($lifecycleReady) {
+            $initialOffersQ = MarketOrderService::activeOffersQuery($userCountryId)
+                ->with(['seller', 'country'])
+                ->orderBy('price', 'asc');
+        } else {
+            $initialOffersQ = ItemOffer::with(['seller', 'country'])
+                ->where(["country" => $userCountryId])
+                ->orderBy('price', 'asc');
+        }
             
         if (is_object($initialOffersQ) && method_exists($initialOffersQ, 'limit')) {
             $initialOffersQ = $initialOffersQ->limit(10);
@@ -211,6 +224,8 @@ class Market extends Controller
 
             if ($e->getCode() === AppException::NO_ENOUGH_MONEY) {
                 $message = "Yeterli bakiye yok.";
+            } elseif ($e->getCode() === AppException::NO_ENOUGH_RESOURCES) {
+                $message = "Depo kapasitesi dolu.";
             } elseif ($e->getCode() === AppException::INVALID_DATA) {
                 $message = "Teklif veya miktar gecersiz.";
             }
@@ -222,94 +237,7 @@ class Market extends Controller
 
     private function performBuy($id, $quantity, $uid)
     {
-        if ($id < 1 || $quantity < 1) {
-            throw new AppException(AppException::INVALID_DATA);
-        }
-
-        DB::beginTransaction();
-        try {
-        $offer = ItemOffer::with("country")->where(["id" => $id])->lockForUpdate()->first();
-        if (!$offer || (int)$offer->quantity < $quantity) {
-            throw new AppException(AppException::INVALID_DATA);
-        }
-
-        if ((int)$offer->uid === (int)$uid) {
-            throw new AppException(AppException::ACTION_FAILED);
-        }
-
-        $buyerMoney = UserMoney::where(["uid" => $uid])->lockForUpdate()->first();
-        $sellerMoney = UserMoney::where(["uid" => $offer->uid])->lockForUpdate()->first();
-        $offerCountry = $offer->relationLoaded("country") ? $offer->getRelation("country") : $offer->country()->first();
-        $currency = strtolower(trim((string) ($offerCountry->currency ?? "")));
-        $cost = round((float)$offer->price * $quantity, 2);
-
-        if (!$buyerMoney || !$sellerMoney || $currency === "") {
-            throw new AppException(AppException::ACTION_FAILED);
-        }
-
-        $buyerBalance = $this->getMoneyBalance($buyerMoney, $currency);
-        $sellerBalance = $this->getMoneyBalance($sellerMoney, $currency);
-
-        if ($buyerBalance === null || $sellerBalance === null) {
-            throw new AppException(AppException::ACTION_FAILED);
-        }
-
-        if ($buyerBalance < $cost) {
-            throw new AppException(AppException::NO_ENOUGH_MONEY);
-        }
-
-        $purchasedItem = $offer->item;
-        $purchasedQuality = $offer->quality;
-
-            $sellerMoney->setAttribute($currency, round($sellerBalance + $cost, 2));
-            $sellerMoney->save();
-
-            $buyerMoney->setAttribute($currency, round($buyerBalance - $cost, 2));
-            $buyerMoney->save();
-
-            $newQuantity = (int)$offer->quantity - $quantity;
-            if ($newQuantity <= 0) {
-                $offer->delete();
-            } else {
-                $offer->quantity = $newQuantity;
-                $offer->save();
-            }
-
-            $inv = UserItem::firstOrNew([
-                "uid" => $uid,
-                "item" => $purchasedItem,
-                "quality" => $purchasedQuality,
-            ]);
-
-            if ($inv->quantity === null) {
-                $inv->quantity = 0;
-            }
-
-            $inv->quantity += $quantity;
-            $inv->save();
-
-            DB::commit();
-
-            return [
-                "offer_id" => (int) $id,
-                "quantity" => (int) $quantity,
-                "currency" => $currency,
-                "cost" => $cost,
-            ];
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e instanceof AppException ? $e : new AppException(AppException::ACTION_FAILED);
-        }
-    }
-
-    private function getMoneyBalance(UserMoney $wallet, $currency)
-    {
-        $attributes = $wallet->getAttributes();
-        if (!array_key_exists($currency, $attributes)) {
-            return null;
-        }
-
-        return round((float) $wallet->getAttribute($currency), 2);
+        return MarketOrderService::purchase($id, $quantity, $uid);
     }
 
     private function pushMarketFlash($status, $message)
@@ -382,70 +310,7 @@ class Market extends Controller
 
     public function sell()
     {
-        $itemId = (int)($_POST["item"] ?? 0);
-        $quantity = (int)($_POST["quantity"] ?? 0);
-        $quality = (int)($_POST["quality"] ?? 0);
-        $price = round((float)($_POST["price"] ?? 0), 2);
-        $uid = App::user()->getUid();
-
-        $blocked = ActionRateLimiter::throttle(
-            'market_sell',
-            'uid:' . (int) $uid,
-            15,
-            120,
-            300,
-            'Cok hizli satis girisi yapiyorsunuz. Lutfen biraz bekleyin.'
-        );
-        if ($blocked !== null) {
-            throw new AppException(AppException::ACTION_FAILED);
-        }
-
-        if ($price < 0.01 || $itemId < 1 || $quantity < 1 || $quality < 0) {
-            throw new AppException(AppException::INVALID_DATA);
-        }
-
-        $query = [
-            "uid" => $uid,
-            "item" => $itemId,
-            "quality" => $quality,
-        ];
-
-        $inv = UserItem::where($query)->first();
-        if (!$inv || (int)$inv->quantity < $quantity) {
-            throw new AppException(AppException::INVALID_DATA);
-        }
-
-        $offerQuery = [
-            "uid" => $uid,
-            "item" => $itemId,
-            "quality" => $quality,
-            "price" => $price,
-            "country" => App::user()->getLocation()["country"]["id"] ?? 1
-        ];
-
-        $existingOffer = ItemOffer::where($offerQuery)->first();
-
-        if ($existingOffer) {
-            $existingOffer->quantity += $quantity;
-            $success = $existingOffer->save();
-        } else {
-            $offerQuery["quantity"] = $quantity;
-            $success = ItemOffer::create($offerQuery);
-        }
-
-        if ($success) {
-            $inv->quantity -= $quantity;
-            
-            // GÜVENLİK/OPTİMİZASYON GÜNCELLEMESİ: Miktar 0 ise veritabanında tutma, sil
-            if ($inv->quantity <= 0) {
-                $inv->delete();
-            } else {
-                $inv->save();
-            }
-            return true;
-        }
-
-        throw new AppException(AppException::ACTION_FAILED);
+        return $this->sellSafe();
     }
 
     public function sellSafe()
@@ -454,6 +319,7 @@ class Market extends Controller
         $quantity = (int) ($_POST["quantity"] ?? 0);
         $quality = (int) ($_POST["quality"] ?? 0);
         $price = round((float) ($_POST["price"] ?? 0), 2);
+        $durationHours = (int) ($_POST["duration_hours"] ?? 24);
         $uid = (int) App::user()->getUid();
 
         $blocked = ActionRateLimiter::throttle(
@@ -472,64 +338,33 @@ class Market extends Controller
             throw new AppException(AppException::INVALID_DATA);
         }
 
-        $countryId = (int) (App::user()->getLocation()["country"]["id"] ?? 1);
-
-        DB::beginTransaction();
-        try {
-            $query = [
-                "uid" => $uid,
-                "item" => $itemId,
-                "quality" => $quality,
-            ];
-
-            $inv = UserItem::where($query)->lockForUpdate()->first();
-            if (!$inv || (int) $inv->quantity < $quantity) {
-                DB::rollBack();
-                throw new AppException(AppException::INVALID_DATA);
-            }
-
-            $existingOffer = ItemOffer::where([
-                "uid" => $uid,
-                "item" => $itemId,
-                "quality" => $quality,
-                "price" => $price,
-                "country" => $countryId,
-            ])->lockForUpdate()->first();
-
-            if ($existingOffer) {
-                $existingOffer->quantity += $quantity;
-                $success = $existingOffer->save();
-            } else {
-                $success = ItemOffer::create([
-                    "uid" => $uid,
-                    "item" => $itemId,
-                    "quality" => $quality,
-                    "price" => $price,
-                    "country" => $countryId,
-                    "quantity" => $quantity,
-                ]);
-            }
-
-            if (!$success) {
-                DB::rollBack();
-                throw new AppException(AppException::ACTION_FAILED);
-            }
-
-            $inv->quantity -= $quantity;
-            if ($inv->quantity <= 0) {
-                $inv->delete();
-            } else {
-                $inv->save();
-            }
-
-            DB::commit();
-            return true;
-        } catch (\Throwable $e) {
-            if (DB::transactionLevel() > 0) {
-                DB::rollBack();
-            }
-            throw $e instanceof AppException ? $e : new AppException(AppException::ACTION_FAILED);
+        $itemInfo = Item::where(["id" => $itemId]);
+        if (empty($itemInfo) || empty($itemInfo[0]) || empty($itemInfo[0]["canBeSold"])) {
+            throw new AppException(AppException::INVALID_DATA);
         }
+
+        $countryId = (int) (App::user()->getLocation()["country"]["id"] ?? 1);
+        return MarketOrderService::createOrder($uid, $itemId, $quantity, $quality, $price, $countryId, $durationHours);
+    }
+
+    public function cancelOrder()
+    {
+        $id = (int) ($_POST['id'] ?? 0);
+        $uid = (int) App::user()->getUid();
+
+        $blocked = ActionRateLimiter::throttle(
+            'market_cancel',
+            'uid:' . $uid,
+            12,
+            60,
+            300,
+            'Cok hizli iptal istegi gonderiyorsunuz. Lutfen biraz bekleyin.'
+        );
+        if ($blocked !== null) {
+            throw new AppException(AppException::ACTION_FAILED);
+        }
+
+        return MarketOrderService::cancel($id, $uid);
     }
 
     // ==========================================
@@ -544,26 +379,32 @@ class Market extends Controller
             return ['error' => true, 'message' => 'Geçersiz veri'];
         }
 
-        $basePrice = ItemOffer::where(['item' => $item, 'quality' => $quality])->min('price');
-        $basePrice = $basePrice ? (float)$basePrice : mt_rand(10, 100);
+        return $this->getRealMarketPriceSummary($item, $quality);
+    }
 
-        $labels = [];
-        $data = [];
-        
-        for ($i = 24; $i >= 0; $i -= 2) {
-            $labels[] = $i === 0 ? "Şu an" : "-$i S";
-            
-            $fluctuation = $i === 0 ? 0 : $basePrice * (mt_rand(-15, 15) / 100);
-            $data[] = max(0.01, round($basePrice + $fluctuation, 2));
+    private function getRealMarketPriceSummary($item, $quality)
+    {
+        if (!MarketOrderService::schemaAvailable()) {
+            return ['labels' => [], 'data' => [], 'basePrice' => null, 'averagePrice' => null, 'offerCount' => 0, 'item_id' => (int) $item, 'quality' => (int) $quality];
         }
 
-        $data[count($data) - 1] = $basePrice;
+        $countryId = (int) (App::user()->getLocation()['country']['id'] ?? 1);
+        $offers = MarketOrderService::activeOffersQuery($countryId)
+            ->where(['item' => (int) $item, 'quality' => (int) $quality])
+            ->get(['price']);
+        $prices = [];
+        foreach ($offers as $offer) {
+            $prices[] = (float) $offer->price;
+        }
 
         return [
-            'labels' => $labels,
-            'data' => $data,
-            'item_id' => $item,
-            'quality' => $quality
+            'labels' => [],
+            'data' => [],
+            'basePrice' => empty($prices) ? null : round(min($prices), 2),
+            'averagePrice' => empty($prices) ? null : round(array_sum($prices) / count($prices), 2),
+            'offerCount' => count($prices),
+            'item_id' => (int) $item,
+            'quality' => (int) $quality,
         ];
     }
 }

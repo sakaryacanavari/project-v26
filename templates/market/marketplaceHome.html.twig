@@ -119,7 +119,7 @@
                                 <td class="market-cell text-center">
                                     <div class="market-price-pill" title="Birim fiyat">
                                         <span class="market-price-value">{{ offer.price }}</span>
-                                        <span class="market-price-currency">{% filter upper %}{{ offer.country.currency }}{% endfilter %}</span>
+                                        <span class="market-price-currency">{{ offer.country.currency|upper }}</span>
                                     </div>
                                 </td>
                                 <td class="market-cell text-right">

@@ -1,15 +1,37 @@
 {% extends isAjax ? "common/ajaxbase.html.twig" : "common/base.html.twig" %}
 
 {% block content %}
-<div class="space-y-6 animate-fade-in w-full overflow-hidden" id="v2-storage-center">
+<div class="space-y-4 animate-fade-in w-full overflow-hidden" id="v2-storage-center">
     <style>
         #v2-storage-center {
             --storage-accent: var(--brand-primary);
-            --storage-accent-text: color-mix(in srgb, var(--brand-primary) 78%, #ffffff);
-            --storage-accent-strong: color-mix(in srgb, var(--brand-primary) 72%, #020617);
+            --storage-accent-text: color-mix(in srgb, var(--brand-primary) 78%, var(--storage-text, #ffffff));
+            --storage-accent-strong: color-mix(in srgb, var(--brand-primary) 72%, var(--storage-panel-bg, #020617));
             --storage-accent-soft: color-mix(in srgb, var(--brand-primary) 18%, transparent);
             --storage-accent-border: color-mix(in srgb, var(--brand-primary) 34%, transparent);
-            --storage-accent-glow: color-mix(in srgb, var(--brand-primary) 58%, transparent);
+            --storage-accent-glow: color-mix(in srgb, var(--brand-glow, var(--brand-primary)) 70%, transparent);
+            --storage-panel-bg: color-mix(in srgb, var(--brand-primary) 4%, var(--bg-deep, #020617));
+            --storage-panel-alt: color-mix(in srgb, var(--brand-primary) 7%, var(--bg-deep, #020617));
+            --storage-card-bg: color-mix(in srgb, var(--brand-primary) 5%, var(--storage-panel-alt));
+            --storage-panel-border: color-mix(in srgb, var(--brand-primary) 18%, rgba(148, 163, 184, 0.14));
+            --storage-text: var(--text-main, #e5e7eb);
+            --storage-muted: var(--text-muted, #94a3b8);
+        }
+
+        html.theme-archive #v2-storage-center {
+            --storage-panel-bg: color-mix(in srgb, var(--brand-primary) 7%, #171b22);
+            --storage-panel-alt: color-mix(in srgb, var(--brand-primary) 10%, #202329);
+            --storage-card-bg: color-mix(in srgb, var(--brand-primary) 8%, var(--storage-panel-alt));
+            --storage-panel-border: color-mix(in srgb, var(--brand-primary) 22%, rgba(184, 169, 144, 0.18));
+        }
+
+        html.theme-liquid #v2-storage-center {
+            --storage-panel-bg: var(--glass-content-bg, #111923);
+            --storage-panel-alt: var(--glass-content-bg-alt, #151f2d);
+            --storage-card-bg: var(--glass-content-bg-alt, #151f2d);
+            --storage-panel-border: var(--glass-control-border, rgba(198, 216, 232, 0.16));
+            --storage-text: var(--glass-control-text, #eef3f7);
+            --storage-muted: var(--glass-control-muted, #b5c0cb);
         }
 
         .cyber-q-text {
@@ -20,10 +42,12 @@
         }
 
         #v2-storage-center .holo-panel {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(2, 6, 23, 0.95));
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255,255,255,0.08);
+            background: var(--storage-panel-bg);
+            background-image: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: 1px solid var(--storage-panel-border);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3), inset 0 1px 0 color-mix(in srgb, var(--storage-text) 7%, transparent);
             border-radius: 12px;
             overflow: hidden;
             position: relative;
@@ -44,8 +68,8 @@
         }
 
         .tech-slot {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--storage-card-bg);
+            border: 1px solid color-mix(in srgb, var(--storage-panel-border) 82%, transparent);
             border-radius: 10px;
             position: relative;
             transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
@@ -68,28 +92,12 @@
 
         .tech-slot:hover {
             border-color: var(--storage-accent-border);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.42), 0 0 12px var(--storage-accent-soft);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3), 0 0 8px var(--storage-accent-soft);
         }
 
         .tech-slot:hover::before {
             opacity: 1;
-        }
-
-        .qty-badge {
-            position: absolute;
-            top: -1px;
-            right: -1px;
-            background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 78%, #1f2937), color-mix(in srgb, var(--storage-accent) 56%, #020617));
-            border-bottom-left-radius: 10px;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 4px 8px;
-            box-shadow: -2px 2px 10px var(--storage-accent-glow);
-            border-left: 1px solid rgba(255,255,255,0.2);
-            border-bottom: 1px solid rgba(255,255,255,0.2);
         }
 
         .cyber-btn {
@@ -123,40 +131,52 @@
         }
 
         .btn-cyan {
-            background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 78%, #1f2937), color-mix(in srgb, var(--storage-accent) 56%, #020617));
-            color: #fff;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 78%, var(--storage-panel-alt)), color-mix(in srgb, var(--storage-accent) 56%, var(--storage-panel-bg)));
+            color: var(--storage-text);
             border: 1px solid var(--storage-accent);
             box-shadow: 0 0 15px var(--storage-accent-soft);
         }
 
         .btn-cyan:hover {
-            background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 68%, #111827), color-mix(in srgb, var(--storage-accent) 46%, #020617));
+            background: linear-gradient(135deg, color-mix(in srgb, var(--storage-accent) 68%, var(--storage-panel-alt)), color-mix(in srgb, var(--storage-accent) 46%, var(--storage-panel-bg)));
             box-shadow: 0 0 25px var(--storage-accent-glow);
             transform: translateY(-2px);
         }
 
+        html.theme-liquid #v2-storage-center .btn-cyan {
+            background-color: var(--glass-control-bg-active);
+            background-image: linear-gradient(135deg, var(--glass-control-highlight), transparent 42%, var(--glass-control-highlight-soft));
+            border-color: var(--glass-control-border-strong, var(--glass-control-border));
+            color: var(--glass-control-text);
+            box-shadow: inset 1px 1px 0 var(--glass-control-highlight), inset -1px -1px 0 var(--glass-control-divider), var(--glass-control-shadow);
+            backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation));
+            -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(var(--glass-control-saturation));
+        }
+
         .cyber-input {
-            background: rgba(0, 0, 0, 0.6);
+            background: var(--storage-panel-alt);
             border: 1px solid var(--storage-accent-border);
-            color: #e2e8f0;
+            color: var(--storage-text);
             transition: all 0.3s;
         }
 
         .cyber-input:focus {
             outline: none;
             border-color: var(--storage-accent);
-            background: rgba(0, 0, 0, 0.8);
+            background: var(--storage-panel-bg);
             box-shadow: 0 0 15px var(--storage-accent-glow), inset 0 0 10px var(--storage-accent-soft);
         }
 
         .cyber-input option {
-            background: #0f172a;
-            color: #e2e8f0;
+            background: var(--storage-panel-bg);
+            color: var(--storage-text);
         }
 
         .storage-theme-shell {
             border-left-color: var(--storage-accent) !important;
-            background: linear-gradient(180deg, color-mix(in srgb, var(--storage-accent) 7%, rgba(2, 6, 23, 0.96)), rgba(2, 6, 23, 0.94));
+            background: var(--storage-panel-bg) !important;
+            width: fit-content;
+            max-width: 100%;
         }
 
         .storage-theme-icon {
@@ -166,15 +186,6 @@
             box-shadow: 0 0 20px var(--storage-accent-soft);
         }
 
-        .storage-theme-sub {
-            color: var(--storage-accent-text);
-        }
-
-        .storage-theme-sub .storage-theme-dot {
-            background: var(--storage-accent);
-            box-shadow: 0 0 8px var(--storage-accent);
-        }
-
         .storage-theme-title-icon,
         .storage-theme-q {
             color: var(--storage-accent-text);
@@ -182,6 +193,7 @@
 
         .storage-empty-shell {
             border-color: var(--storage-accent-border) !important;
+            background: var(--storage-card-bg) !important;
         }
 
         .storage-empty-cta {
@@ -193,28 +205,301 @@
         .storage-empty-cta:hover {
             background: color-mix(in srgb, var(--storage-accent) 20%, transparent);
         }
-        .storage-action-copy {
-            color: color-mix(in srgb, var(--text-muted, #94a3b8) 84%, #fff);
+        .storage-item-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            text-align: left;
+        }
+        .storage-item-media {
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: color-mix(in srgb, var(--storage-accent) 7%, transparent);
+        }
+        .storage-item-media img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+        .storage-item-content {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .storage-item-name {
+            color: var(--storage-text);
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.25;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .storage-item-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+            color: var(--storage-muted);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .05em;
+        }
+        .storage-item-meta span {
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: color-mix(in srgb, var(--storage-accent) 8%, transparent);
+        }
+        .storage-item-stock {
+            flex: 0 0 auto;
+            min-width: 54px;
+            padding-left: 10px;
+            border-left: 1px solid var(--storage-accent-border);
+            text-align: right;
+        }
+        .storage-item-stock-label {
+            display: block;
+            color: var(--storage-muted);
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .08em;
+        }
+        .storage-item-stock strong {
+            display: block;
+            margin-top: 3px;
+            color: var(--storage-accent-text);
+            font-size: 15px;
+            line-height: 1;
+        }
+        .storage-form-label {
+            display: block;
+            color: var(--storage-accent-text);
             font-size: 10px;
             font-weight: 800;
             letter-spacing: .08em;
-            text-transform: uppercase;
-            line-height: 1.45;
+            line-height: 1.2;
+        }
+        .storage-sell-form {
+            display: grid;
+            align-items: end;
+            gap: 12px;
+        }
+        .storage-sell-info {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px 18px;
+        }
+        .storage-sell-info .storage-sell-summary {
+            margin-top: 0;
         }
         .storage-sell-summary {
-            color: color-mix(in srgb, var(--text-muted, #94a3b8) 86%, #fff);
-            font-size: 9px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px 10px;
+            min-height: 15px;
+            margin-top: 5px;
+            overflow-wrap: anywhere;
+            color: color-mix(in srgb, var(--storage-muted) 86%, var(--storage-text));
+            font-size: 10px;
             font-weight: 800;
             line-height: 1.4;
+        }
+        .storage-sell-summary span + span::before {
+            content: "·";
+            margin-right: 12px;
+            color: var(--storage-accent-border);
+        }
+        .storage-sell-summary .storage-total {
+            color: var(--storage-accent-text);
+        }
+        .storage-sell-validation {
+            min-height: 0;
+            margin-top: 0;
+            color: var(--storage-accent-text);
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        #storage-sell-validation:empty {
+            display: none;
+        }
+        #storage-sell-submit {
+            min-height: 44px;
+            text-transform: none;
+            letter-spacing: .02em;
+        }
+        #storage-sell-submit::before {
+            display: none;
+        }
+        #storage-sell-submit:disabled {
+            cursor: not-allowed;
+            opacity: .62;
+            border-color: color-mix(in srgb, var(--storage-muted) 26%, var(--storage-panel-border));
+            color: var(--storage-muted);
+            box-shadow: none;
+            transform: none;
+        }
+        #storage-section.storage-single-item {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        .storage-capacity-bar {
+            height: 5px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--storage-muted) 16%, transparent);
+        }
+        .storage-capacity-bar > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--storage-accent);
+            transition: width .18s ease-out;
+        }
+        .storage-filter-toolbar {
+            display: grid;
+            grid-template-columns: minmax(160px, 1.4fr) repeat(3, minmax(110px, .8fr)) minmax(150px, .9fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .storage-filter-toolbar label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--storage-muted);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .06em;
+        }
+        .storage-filter-toolbar select,
+        .storage-filter-toolbar input {
+            min-width: 0;
+            height: 38px;
+            padding: 0 10px;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+        .storage-collapsible {
+            padding: 0;
+        }
+        .storage-collapsible > summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 52px;
+            padding: 13px 16px;
+            cursor: pointer;
+            list-style: none;
+            color: var(--storage-text);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .08em;
+        }
+        .storage-collapsible > summary::-webkit-details-marker { display: none; }
+        .storage-collapsible > summary::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--storage-muted);
+            transition: transform .18s ease-out;
+        }
+        .storage-collapsible[open] > summary::after { transform: rotate(180deg); }
+        .storage-collapsible > summary:hover { background: color-mix(in srgb, var(--storage-accent) 5%, transparent); }
+        .storage-order-list { border-top: 1px solid color-mix(in srgb, var(--storage-panel-border) 72%, transparent); }
+        .storage-order-row,
+        .storage-history-row {
+            display: grid;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-bottom: 1px solid color-mix(in srgb, var(--storage-panel-border) 62%, transparent);
+            min-width: 0;
+        }
+        .storage-order-row { grid-template-columns: minmax(0, 1.25fr) repeat(4, minmax(75px, .7fr)) auto; }
+        .storage-history-row { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(90px, .8fr)); }
+        .storage-order-row:last-child,
+        .storage-history-row:last-child { border-bottom: 0; }
+        .storage-order-label,
+        .storage-history-label {
+            display: block;
+            margin-bottom: 3px;
+            color: var(--storage-muted);
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+        .storage-order-value,
+        .storage-history-value {
+            color: var(--storage-text);
+            font-size: 11px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+        .storage-order-product { min-width: 0; }
+        .storage-order-product strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .storage-order-cancel {
+            min-height: 34px;
+            padding: 0 10px;
+            border: 1px solid color-mix(in srgb, #ef4444 35%, var(--storage-panel-border));
+            border-radius: 7px;
+            color: color-mix(in srgb, #ef4444 70%, var(--storage-text));
+            font-size: 9px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .storage-order-cancel:hover { background: color-mix(in srgb, #ef4444 10%, transparent); }
+        .storage-order-cancel:disabled { opacity: .55; cursor: not-allowed; }
+        .storage-empty-inline { padding: 14px 16px; color: var(--storage-muted); font-size: 10px; }
+        .storage-market-compare {
+            min-height: 15px;
+            margin-top: 5px;
+            color: var(--storage-muted);
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .storage-market-compare strong { color: var(--storage-accent-text); }
+        .storage-order-form { margin: 0; }
+        @media (max-width: 1100px) and (min-width: 769px) {
+            .storage-filter-toolbar { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+            .storage-filter-toolbar > :first-child { grid-column: 1 / -1; }
+            .storage-order-row { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(85px, .8fr)) auto; }
+            .storage-order-row > :nth-child(4) { display: none; }
+        }
+        #v2-storage-center > .storage-theme-shell + .holo-panel {
+            margin-top: 8px;
+        }
+        @media (min-width: 769px) {
+            .storage-sell-form {
+                grid-template-columns: minmax(0, 1.35fr) minmax(105px, .65fr) minmax(145px, .85fr) minmax(120px, .7fr) minmax(175px, .8fr);
+            }
         }
         @media (max-width: 768px) {
             #v2-storage-center { gap: 1rem; }
             #v2-storage-center .holo-panel { border-radius: 14px; }
             #v2-storage-center .holo-panel { backdrop-filter: none; }
-            #storage-section { gap: 12px; }
+            #storage-section { grid-template-columns: 1fr; gap: 8px; }
+            .storage-theme-shell { width: 100%; }
             .tech-slot { padding: 12px !important; }
-            #sell-item-form { gap: 14px; }
+            .storage-sell-form { gap: 12px; }
+            .storage-sell-info { gap: 6px 12px; }
             .cyber-btn { min-height: 44px; letter-spacing: 1px; }
+            .storage-filter-toolbar { grid-template-columns: 1fr 1fr; }
+            .storage-filter-toolbar > :first-child,
+            .storage-filter-toolbar > :last-child { grid-column: 1 / -1; }
+            .storage-order-row,
+            .storage-history-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .storage-order-row > :first-child,
+            .storage-history-row > :first-child,
+            .storage-order-row > :last-child { grid-column: 1 / -1; }
+            .storage-order-cancel { width: 100%; }
         }
     </style>
 
@@ -231,137 +516,343 @@
         '10': t('storage.item.raw_ticket')
     } %}
 
-    <div class="holo-panel storage-theme-shell border-l-4 p-5">
+    <div class="holo-panel storage-theme-shell border-l-4 px-4 py-2.5 md:px-5 md:py-3">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative z-10">
-            <div class="flex items-center gap-4">
-                <div class="storage-theme-icon w-12 h-12 rounded-xl border flex items-center justify-center">
-                    <i class="fa-solid fa-box-archive text-2xl"></i>
+            <div class="flex items-center gap-3">
+                <div class="storage-theme-icon w-10 h-10 rounded-lg border flex items-center justify-center">
+                    <i class="fa-solid fa-box-archive text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="text-base font-black text-white uppercase tracking-[0.25em] leading-tight text-shadow-sm">{{ t('storage.hero.title') }}</h1>
-                    <p class="storage-theme-sub text-[10px] font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
-                        <span class="storage-theme-dot w-2 h-2 rounded-full animate-pulse"></span> {{ t('storage.hero.subtitle') }}
-                    </p>
-                    <p class="storage-action-copy mt-2">Stoklarini kontrol et, satisa cikaracagin urunu ve fiyatini net sec.</p>
+                    <h1 class="text-sm font-black text-white uppercase tracking-[0.18em] leading-tight text-shadow-sm">{{ t('storage.hero.title') }}</h1>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="holo-panel p-4 md:p-6 tech-border-top-cyan relative">
-        <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4 relative z-10">
-            <h2 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
-                <i class="storage-theme-title-icon fa-solid fa-cubes text-lg"></i> {{ t('storage.panel.stock') }}
+    <div class="holo-panel p-3.5 md:p-4 tech-border-top-cyan relative">
+        <div class="flex justify-between items-center mb-2 border-b border-white/5 pb-2 relative z-10 gap-3">
+            <h2 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.16em] flex items-center gap-2 min-w-0">
+                <i class="storage-theme-title-icon fa-solid fa-cubes"></i> <span class="truncate">{{ t('storage.panel.stock') }}</span>
             </h2>
+            <div class="min-w-[150px] max-w-[220px] flex-1" aria-label="{{ t('storage.capacity.title') }}">
+                <div class="flex items-center justify-between gap-2 text-[9px] font-bold text-slate-500 mb-1">
+                    <span>{{ t('storage.capacity.title') }}</span>
+                    <span class="text-slate-300">{{ t('storage.capacity.used', {'used': storageCapacity.used|default(0), 'total': storageCapacity.total|default(0)}) }}</span>
+                </div>
+                <div class="storage-capacity-bar"><span style="width: {{ storageCapacity.percent|default(0) }}%"></span></div>
+            </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 relative z-10" id="storage-section">
+        {% if items|length > 2 %}
+        <div class="storage-filter-toolbar relative z-10" id="storage-filter-toolbar">
+            <div>
+                <label for="storage-filter-search">{{ t('storage.filter.search') }}</label>
+                <input id="storage-filter-search" type="search" class="cyber-input w-full" placeholder="{{ t('storage.filter.search') }}" autocomplete="off">
+            </div>
+            <div>
+                <label for="storage-filter-category">{{ t('storage.filter.category') }}</label>
+                <select id="storage-filter-category" class="cyber-input w-full">
+                    <option value="">{{ t('storage.filter.all') }}</option>
+                    <option value="raw">{{ t('storage.filter.raw') }}</option>
+                    <option value="product">{{ t('storage.filter.product') }}</option>
+                </select>
+            </div>
+            <div>
+                <label for="storage-filter-quality">{{ t('storage.filter.quality') }}</label>
+                <select id="storage-filter-quality" class="cyber-input w-full">
+                    <option value="">{{ t('storage.filter.all') }}</option>
+                    {% for quality in 0..5 %}<option value="{{ quality }}">Q{{ quality }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="storage-filter-stock">{{ t('storage.filter.stock') }}</label>
+                <select id="storage-filter-stock" class="cyber-input w-full">
+                    <option value="">{{ t('storage.filter.all') }}</option>
+                    <option value="in-stock">{{ t('storage.filter.in_stock') }}</option>
+                    <option value="low">{{ t('storage.filter.low_stock') }}</option>
+                </select>
+            </div>
+            <div>
+                <label for="storage-filter-sort">{{ t('storage.filter.sort') }}</label>
+                <select id="storage-filter-sort" class="cyber-input w-full">
+                    <option value="name">{{ t('storage.filter.sort_name') }}</option>
+                    <option value="stock">{{ t('storage.filter.sort_stock') }}</option>
+                    <option value="quality">{{ t('storage.filter.sort_quality') }}</option>
+                </select>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-2.5 relative z-10{% if items|length == 1 %} storage-single-item{% endif %}" id="storage-section">
             {% if items|length > 0 %}
                 {% for item in items %}
                     {% set translatedName = item_names[item.item] | default(t('storage.item.default', {'id': item.item})) %}
-                    <div class="tech-slot p-4 text-center group cursor-default">
-                        <div class="qty-badge">x{{ item.quantity }}</div>
-                        <div class="h-14 flex items-center justify-center mb-2 mt-2">
-                            <img class="max-h-full max-w-full opacity-90 drop-shadow-[0_5px_10px_rgba(0,0,0,0.8)] group-hover:opacity-100 transition-all duration-300 group-hover:scale-110" src="img/products/{{ item.item }}.png" alt="{{ translatedName }}">
+                    {% set itemCategory = item.item >= 7 ? 'Hammadde' : 'Ürün' %}
+                    <div class="tech-slot storage-item-card p-3 group cursor-default"
+                         data-storage-item
+                         data-item-name="{{ translatedName|lower|e('html_attr') }}"
+                         data-item-category="{{ item.item >= 7 ? 'raw' : 'product' }}"
+                         data-item-quality="{{ item.quality }}"
+                         data-item-stock="{{ item.quantity }}">
+                        <div class="storage-item-media">
+                            <img class="opacity-90 transition-opacity duration-150 group-hover:opacity-100" src="img/products/{{ item.item }}.png" alt="{{ translatedName }}">
                         </div>
-                        <div class="text-[10px] text-white uppercase leading-none mt-3 pt-3 border-t border-white/10 transition-colors" style="border-top-color: rgba(255,255,255,0.10);" onmouseover="this.style.borderTopColor='var(--storage-accent-border)'" onmouseout="this.style.borderTopColor='rgba(255,255,255,0.10)'">
-                            {% if item.quality > 0 %}
-                                <span class="storage-theme-q cyber-q-text block mb-1">Q{{ item.quality }} {{ t('storage.item.module') }}</span>
-                            {% else %}
-                                <span class="text-slate-500 cyber-q-text block mb-1">{{ t('storage.item.standard') }}</span>
-                            {% endif %}
-                            <div class="mt-1.5 text-slate-300 font-bold text-[10px] tracking-widest truncate px-1" title="{{ translatedName }}">{{ translatedName }}</div>
+                        <div class="storage-item-content">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="storage-item-name" title="{{ translatedName }}">{{ translatedName }}</div>
+                                    <div class="storage-item-meta">
+                                        <span>Q{{ item.quality }}</span>
+                                        <span>{{ itemCategory }}</span>
+                                    </div>
+                                </div>
+                                <div class="storage-item-stock" aria-label="Stok: {{ item.quantity }}">
+                                    <span class="storage-item-stock-label">Stok</span>
+                                    <strong>x{{ item.quantity }}</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 {% endfor %}
             {% else %}
-                <div class="storage-empty-shell col-span-full py-12 text-center bg-black/40 rounded-xl border border-dashed relative z-10">
-                    <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-inner">
-                        <i class="fa-solid fa-box-open text-2xl text-slate-500"></i>
+                <div class="storage-empty-shell col-span-full flex items-center gap-3 py-7 px-4 bg-black/40 rounded-xl border border-dashed relative z-10">
+                    <i class="fa-solid fa-box-open text-lg text-slate-500"></i>
+                    <div class="min-w-0">
+                        <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest">{{ t('storage.empty.title') }}</p>
+                        <a href="{{ path_for('marketplace') }}" class="storage-empty-cta cyber-btn inline-flex mt-3 px-4 py-2 rounded-lg text-[10px] border hover:text-white">
+                            <i class="fa-solid fa-satellite-dish"></i> {{ t('storage.empty.cta') }}
+                        </a>
                     </div>
-                    <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest mb-5">{{ t('storage.empty.title') }}</p>
-                    <a href="{{ path_for('marketplace') }}" class="storage-empty-cta cyber-btn px-8 py-3 rounded-lg text-xs border hover:text-white">
-                        <i class="fa-solid fa-satellite-dish"></i> {{ t('storage.empty.cta') }}
-                    </a>
                 </div>
             {% endif %}
         </div>
+        <p id="storage-filter-empty" class="storage-empty-inline hidden relative z-10">{{ t('storage.filter.no_results') }}</p>
     </div>
 
     {% if items|length > 0 %}
-    <div class="holo-panel p-4 md:p-6 tech-border-top-cyan bg-black/40 relative">
-        <h2 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2 mb-6 border-b border-white/5 pb-4 relative z-10">
-            <i class="storage-theme-title-icon fa-solid fa-file-invoice-dollar text-lg"></i> {{ t('storage.panel.sell') }}
+    <div class="holo-panel storage-sell-panel p-4 md:p-5 tech-border-top-cyan bg-black/40 relative">
+        <h2 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.16em] flex items-center gap-2 mb-4 border-b border-white/5 pb-3 relative z-10">
+            <i class="storage-theme-title-icon fa-solid fa-file-invoice-dollar"></i> {{ t('storage.panel.sell') }}
         </h2>
 
-        <form id="sell-item-form" action="{{ path_for('marketSell') }}" method="post" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end relative z-10">
+        <form id="sell-item-form" action="{{ path_for('marketSell') }}" method="post" class="storage-sell-form relative z-10">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="space-y-2">
-                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-crosshairs mr-1"></i> {{ t('storage.form.item') }}</label>
+                <label class="storage-form-label" for="item">{{ t('storage.form.item') }}</label>
                 <div class="relative">
-                    <select id="item" name="item" class="cyber-input cyber-q-text w-full p-3.5 rounded-lg appearance-none cursor-pointer">
+                    <select id="item" name="item" aria-describedby="storage-sell-summary" class="cyber-input cyber-q-text w-full p-3 rounded-lg appearance-none cursor-pointer">
                         {% for item in items %}
                             {% set translatedName = item_names[item.item] | default(t('storage.item.default', {'id': item.item})) %}
                             <option value="{{ item.item }}" data-quality="{{ item.quality }}" data-max="{{ item.quantity }}" class="cyber-q-text">
-                                Q{{ item.quality }} - {{ translatedName|upper }} ({{ t('storage.form.max') }}: {{ item.quantity }})
+                                Q{{ item.quality }} · {{ translatedName }} · {{ t('storage.form.max') }}: {{ item.quantity }}
                             </option>
                         {% endfor %}
                     </select>
-                    <i class="storage-theme-title-icon fa-solid fa-chevron-down absolute right-4 top-4 text-[10px] pointer-events-none"></i>
+                    <i class="storage-theme-title-icon fa-solid fa-chevron-down absolute right-4 top-3.5 text-[10px] pointer-events-none"></i>
                 </div>
             </div>
 
             <div class="space-y-2">
-                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-weight-hanging mr-1"></i> {{ t('storage.form.quantity') }}</label>
-                <input id="quantity" name="quantity" type="number" value="1" min="1" class="cyber-input w-full p-3.5 rounded-lg text-xs font-bold">
-                <p id="storage-sell-summary" class="storage-sell-summary"></p>
+                <label class="storage-form-label" for="quantity">{{ t('storage.form.quantity') }}</label>
+                <input id="quantity" name="quantity" type="number" value="1" min="1" inputmode="numeric" aria-describedby="storage-sell-summary storage-sell-validation" class="cyber-input w-full p-3 rounded-lg text-xs font-bold">
             </div>
 
             <div class="space-y-2">
-                <label class="text-[9px] font-black uppercase tracking-widest ml-1" style="color: var(--storage-accent-text);"><i class="fa-solid fa-tag mr-1"></i> {{ t('storage.form.price') }} ({{ my.location.country.currency|upper }})</label>
+                <label class="storage-form-label" for="price">{{ t('storage.form.price') }} ({{ my.location.country.currency|upper }})</label>
                 <div class="relative">
-                    <input id="price" name="price" type="number" step="0.01" placeholder="0.00" class="cyber-input w-full p-3.5 pl-10 rounded-lg text-xs font-bold">
-                    <i class="fa-solid fa-coins absolute left-4 top-4 text-yellow-500 text-[11px]"></i>
+                    <input id="price" name="price" type="number" step="0.01" min="0.01" placeholder="Örn. 0.00" aria-describedby="storage-sell-summary storage-sell-validation" class="cyber-input w-full p-3 pl-10 rounded-lg text-xs font-bold">
+                    <i class="storage-theme-title-icon fa-solid fa-coins absolute left-4 top-3.5 text-[11px]"></i>
                 </div>
+                <div id="storage-market-compare" class="storage-market-compare" aria-live="polite">{{ t('storage.market.no_data') }}</div>
             </div>
 
-            <button type="submit" class="btn-cyan cyber-btn text-white py-3.5 rounded-lg text-[11px] w-full h-full max-h-[46px] flex items-center justify-center">
-                <i class="fa-solid fa-satellite-dish mr-2"></i> {{ t('storage.form.submit') }}
+            <div class="space-y-2">
+                <label class="storage-form-label" for="duration_hours">{{ t('storage.form.duration') }}</label>
+                <select id="duration_hours" name="duration_hours" class="cyber-input w-full p-3 rounded-lg text-xs font-bold">
+                    <option value="24">{{ t('storage.orders.hours_24') }}</option>
+                    <option value="72">{{ t('storage.orders.days_3') }}</option>
+                    <option value="168">{{ t('storage.orders.days_7') }}</option>
+                </select>
+            </div>
+
+            <button id="storage-sell-submit" type="submit" aria-describedby="storage-sell-summary storage-sell-validation" class="btn-cyan cyber-btn text-white rounded-lg text-[11px] w-full flex items-center justify-center">
+                <i class="fa-solid fa-plus"></i> {{ t('storage.form.submit') }}
             </button>
+            <div class="storage-sell-info md:col-span-5 -mt-1">
+                <div id="storage-sell-summary" class="storage-sell-summary" aria-live="polite">
+                    <span id="storage-sell-stock">Stok: -</span>
+                    <span id="storage-sell-total" class="storage-total">Tahmini toplam: -</span>
+                    <span id="storage-sell-remaining">Kalan stok: -</span>
+                </div>
+                <p id="storage-sell-validation" class="storage-sell-validation" aria-live="polite"></p>
+            </div>
         </form>
     </div>
     {% endif %}
 
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-3 relative z-10" id="storage-order-sections">
+        <details class="holo-panel storage-collapsible" {% if activeOrders|default([])|length > 0 %}open{% endif %}>
+            <summary>
+                <span class="flex items-center gap-2"><i class="storage-theme-title-icon fa-solid fa-list-check"></i> {{ t('storage.orders.title') }}{% if activeOrders|default([])|length > 0 %} <span class="text-[9px] text-slate-500">({{ activeOrders|length }})</span>{% endif %}</span>
+            </summary>
+            <div class="storage-order-list">
+                {% if activeOrders|default([])|length > 0 %}
+                    {% for order in activeOrders %}
+                        {% set orderName = item_names[order.item]|default(t('storage.item.default', {'id': order.item})) %}
+                        <div class="storage-order-row">
+                            <div class="storage-order-product">
+                                <span class="storage-order-label">{{ t('storage.orders.product') }}</span>
+                                <strong class="storage-order-value" title="{{ orderName }}">Q{{ order.quality }} · {{ orderName }}</strong>
+                            </div>
+                            <div><span class="storage-order-label">{{ t('storage.orders.remaining') }}</span><span class="storage-order-value">{{ order.quantity }} / {{ order.listed_quantity|default(order.quantity) }}</span></div>
+                            <div><span class="storage-order-label">{{ t('storage.orders.price') }}</span><span class="storage-order-value">{{ order.price|number_format(2, '.', '') }} {{ order.currency }}</span></div>
+                            <div><span class="storage-order-label">{{ t('storage.orders.total') }}</span><span class="storage-order-value">{{ order.remaining_value|number_format(2, '.', '') }} {{ order.currency }}</span></div>
+                            <div><span class="storage-order-label">{{ t('storage.orders.expires') }}</span><span class="storage-order-value whitespace-nowrap">{{ order.expires_at ? order.expires_at|date('d.m.Y H:i') : '-' }}</span></div>
+                            <form class="storage-order-form" action="{{ path_for('marketOrderCancel') }}" method="post" data-cancel-order>
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="id" value="{{ order.id }}">
+                                <button type="submit" class="storage-order-cancel" data-cancel-label="{{ t('storage.orders.cancel')|e('html_attr') }}">{{ t('storage.orders.cancel') }}</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="storage-empty-inline">{{ t('storage.orders.empty') }}</div>
+                {% endif %}
+            </div>
+        </details>
+
+        <details class="holo-panel storage-collapsible">
+            <summary><span class="flex items-center gap-2"><i class="storage-theme-title-icon fa-solid fa-clock-rotate-left"></i> {{ t('storage.history.title') }}</span></summary>
+            <div class="storage-order-list">
+                {% if salesHistory|default([])|length > 0 %}
+                    {% for entry in salesHistory %}
+                        {% set historyName = item_names[entry.item]|default(t('storage.item.default', {'id': entry.item})) %}
+                        <div class="storage-history-row">
+                            <div><span class="storage-history-label">{{ t('storage.orders.product') }}</span><span class="storage-history-value">Q{{ entry.quality }} · {{ historyName }}</span></div>
+                            <div><span class="storage-history-label">{{ t('storage.history.income') }}</span><span class="storage-history-value">{% if entry.amount|default(0) > 0 %}{{ entry.amount|number_format(2, '.', '') }} {{ entry.currency|default('') }}{% else %}-{% endif %}</span></div>
+                            <div><span class="storage-history-label">{{ t('storage.orders.remaining') }}</span><span class="storage-history-value">{{ entry.quantity|default(0) }}</span></div>
+                            <div><span class="storage-history-label">{{ t('storage.history.date') }}</span><span class="storage-history-value whitespace-nowrap">{{ entry.created_at ? entry.created_at|date('d.m.Y H:i') : '-' }}</span></div>
+                            <div class="col-span-full text-[10px] font-bold text-slate-400">{% if entry.status == 'completed' %}{{ t('storage.history.sale_completed') }}{% elseif entry.status == 'partial' %}{{ t('storage.history.sale_partial') }}{% elseif entry.status == 'cancelled' %}{{ t('storage.history.cancelled') }}{% else %}{{ t('storage.history.expired') }}{% endif %}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="storage-empty-inline">{{ t('storage.history.empty') }}</div>
+                {% endif %}
+            </div>
+        </details>
+    </div>
+
     <script>
         $(function () {
-            if (typeof peque !== 'undefined' && peque.market) {
-                peque.market.initStorage();
+            const $form = $('#sell-item-form');
+            const $item = $('#item');
+            const $quantity = $('#quantity');
+            const $price = $('#price');
+            const $button = $('#storage-sell-submit');
+            const $stock = $('#storage-sell-stock');
+            const $total = $('#storage-sell-total');
+            const $remaining = $('#storage-sell-remaining');
+            const $validation = $('#storage-sell-validation');
+            const $compare = $('#storage-market-compare');
+            const priceComparisons = {{ priceComparisons|default({})|json_encode|raw }};
+            const currency = '{{ my.location.country.currency|upper|e('js') }}';
+            const accessibleSubmitLabel = '{{ t('storage.form.submit')|e('js') }}';
+            const submitLabel = '<i class="fa-solid fa-plus"></i> {{ t('storage.form.submit')|e('js') }}';
+            const processingLabel = '<i class="fa-solid fa-spinner fa-spin"></i> {{ t('storage.js.processing')|e('js') }}';
+            let isSubmitting = false;
+
+            function formatMoney(value) {
+                return value.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + currency;
             }
 
-            $('#item').on('change', function() {
-                let selected = $(this).find('option:selected');
-                let q = selected.data('quality');
-                let max = selected.data('max');
+            function updateSellState() {
+                const selected = $item.find('option:selected');
+                const max = parseInt(selected.data('max'), 10) || 0;
+                const quality = parseInt(selected.data('quality'), 10) || 0;
+                const quantity = parseInt($quantity.val(), 10) || 0;
+                const price = parseFloat($price.val()) || 0;
+                const total = quantity > 0 && price > 0 ? quantity * price : 0;
+                const remaining = max - quantity;
+                let message = '';
 
-                $('#quantity').attr('max', max);
-                $('#storage-sell-summary').text('Satilabilir adet: ' + max + ' | Secili kalite: Q' + q);
+                $stock.text('Stok: ' + max + ' · Q' + quality);
+                $total.text(total > 0 ? 'Tahmini toplam: ' + formatMoney(total) : 'Tahmini toplam: -');
+                $remaining.text(quantity > 0 && quantity <= max ? 'Kalan stok: ' + remaining : 'Kalan stok: -');
 
-                if ($('#hidden-quality').length === 0) {
-                    $('#sell-item-form').append('<input type="hidden" name="quality" id="hidden-quality" value=\"' + q + '\">');
-                } else {
-                    $('#hidden-quality').val(q);
+                if (quantity < 1) {
+                    message = 'Miktar 1 veya daha fazla olmalı.';
+                } else if (quantity > max) {
+                    message = 'Stokta yeterli miktar yok.';
+                } else if (price < 0.01) {
+                    message = 'Birim fiyat 0.01 veya daha yüksek olmalı.';
                 }
-            }).trigger('change');
 
-            $('#sell-item-form').on('submit', function(e) {
+                $validation.text(message);
+                $button.attr('title', message || '');
+                $button.attr('aria-label', message ? accessibleSubmitLabel + ': ' + message : accessibleSubmitLabel);
+                $button.prop('disabled', isSubmitting || Boolean(message));
+                updateMarketComparison();
+            }
+
+            function updateMarketComparison() {
+                if (!$compare.length) {
+                    return;
+                }
+                const selected = $item.find('option:selected');
+                const key = String(selected.val() || '') + ':' + String(parseInt(selected.data('quality'), 10) || 0);
+                const comparison = priceComparisons[key];
+                const price = parseFloat($price.val()) || 0;
+                if (!comparison || !comparison.minimum) {
+                    $compare.text('{{ t('storage.market.no_data')|e('js') }}');
+                    return;
+                }
+                let copy = '{{ t('storage.market.minimum')|e('js') }}: <strong>' + formatMoney(comparison.minimum) + '</strong> · {{ t('storage.market.average')|e('js') }}: <strong>' + formatMoney(comparison.average) + '</strong>';
+                if (price > 0 && price < comparison.minimum) {
+                    copy += ' <span class="text-amber-300">{{ t('storage.form.price_below_market')|e('js') }}</span>';
+                }
+                $compare.html(copy);
+            }
+
+            function syncSelectedItem() {
+                const selected = $item.find('option:selected');
+                const quality = parseInt(selected.data('quality'), 10) || 0;
+                const max = parseInt(selected.data('max'), 10) || 0;
+
+                $quantity.attr('max', max);
+                if ($('#hidden-quality').length === 0) {
+                    $('<input>', {type: 'hidden', name: 'quality', id: 'hidden-quality', value: quality}).appendTo($form);
+                } else {
+                    $('#hidden-quality').val(quality);
+                }
+                updateSellState();
+            }
+
+            function restoreButton() {
+                isSubmitting = false;
+                $button.html(submitLabel);
+                updateSellState();
+            }
+
+            $item.off('change.storage').on('change.storage', syncSelectedItem);
+            $quantity.off('input.storage change.storage').on('input.storage change.storage', updateSellState);
+            $price.off('input.storage change.storage').on('input.storage change.storage', updateSellState);
+            $form.off('submit.storage').on('submit.storage', function(e) {
                 e.preventDefault();
 
-                let form = $(this);
-                let url = form.attr('action');
-                let data = form.serialize();
-                let btn = form.find('button[type=\"submit\"]');
+                if (isSubmitting) {
+                    return;
+                }
 
-                btn.prop('disabled', true).html('<i class=\"fa-solid fa-spinner fa-spin mr-2\"></i> {{ t('storage.js.processing') }}');
+                updateSellState();
+                if ($button.prop('disabled')) {
+                    return;
+                }
+
+                isSubmitting = true;
+                const url = $form.attr('action');
+                const data = $form.serialize();
+
+                $button.prop('disabled', true).html(processingLabel);
 
                 $.ajax({
                     type: 'POST',
@@ -372,17 +863,96 @@
                         'X-CSRF-Token': '{{ csrf_token|e('js') }}'
                     },
                     success: function(response) {
-                        if (response === true || response.success) {
+                        const result = response && response.result !== undefined ? response.result : response;
+                        if (result === true || (result && (result.success || result.order_id))) {
                             alert('{{ t('storage.js.success') }}');
                             window.location.reload();
                         } else {
-                            alert('{{ t('storage.js.failed') }}'.replace(':message', (response.message || '{{ t('storage.js.unknown') }}')));
-                            btn.prop('disabled', false).html('<i class=\"fa-solid fa-satellite-dish mr-2\"></i> {{ t('storage.form.submit') }}');
+                            const message = (result && result.message) || (response && response.message) || '{{ t('storage.js.unknown') }}';
+                            alert('{{ t('storage.js.failed') }}'.replace(':message', message));
+                            restoreButton();
                         }
                     },
                     error: function() {
                         alert('{{ t('storage.js.connection') }}');
-                        btn.prop('disabled', false).html('<i class=\"fa-solid fa-satellite-dish mr-2\"></i> {{ t('storage.form.submit') }}');
+                        restoreButton();
+                    }
+                });
+            });
+
+            syncSelectedItem();
+
+            const $storageCards = $('[data-storage-item]');
+            const $filterSearch = $('#storage-filter-search');
+            const $filterCategory = $('#storage-filter-category');
+            const $filterQuality = $('#storage-filter-quality');
+            const $filterStock = $('#storage-filter-stock');
+            const $filterSort = $('#storage-filter-sort');
+            const $filterEmpty = $('#storage-filter-empty');
+
+            function applyStorageFilters() {
+                if (!$storageCards.length) {
+                    return;
+                }
+                const search = String($filterSearch.val() || '').toLowerCase().trim();
+                const category = String($filterCategory.val() || '');
+                const quality = String($filterQuality.val() || '');
+                const stock = String($filterStock.val() || '');
+                const sort = String($filterSort.val() || 'name');
+                const visible = [];
+
+                $storageCards.each(function () {
+                    const $card = $(this);
+                    const matches = (!search || String($card.data('item-name') || '').indexOf(search) !== -1)
+                        && (!category || String($card.data('item-category')) === category)
+                        && (!quality || String($card.data('item-quality')) === quality)
+                        && (!stock || (stock === 'low' ? Number($card.data('item-stock')) <= 10 : Number($card.data('item-stock')) > 10));
+                    $card.toggle(matches);
+                    if (matches) {
+                        visible.push($card);
+                    }
+                });
+
+                visible.sort(function (a, b) {
+                    if (sort === 'stock') {
+                        return Number(b.data('item-stock')) - Number(a.data('item-stock'));
+                    }
+                    if (sort === 'quality') {
+                        return Number(b.data('item-quality')) - Number(a.data('item-quality'));
+                    }
+                    return String(a.data('item-name')).localeCompare(String(b.data('item-name')), 'tr');
+                });
+                $.each(visible, function (_, $card) { $('#storage-section').append($card); });
+                $filterEmpty.toggle(visible.length === 0);
+            }
+
+            $filterSearch.off('input.storageFilter').on('input.storageFilter', applyStorageFilters);
+            $filterCategory.add($filterQuality).add($filterStock).add($filterSort).off('change.storageFilter').on('change.storageFilter', applyStorageFilters);
+
+            $('[data-cancel-order]').off('submit.storageOrder').on('submit.storageOrder', function (event) {
+                event.preventDefault();
+                const form = this;
+                const $cancel = $(form).find('button[type="submit"]');
+                if ($cancel.prop('disabled')) {
+                    return;
+                }
+                $cancel.prop('disabled', true).text('{{ t('storage.orders.cancelled')|e('js') }}');
+                $.ajax({
+                    type: 'POST',
+                    url: $(form).attr('action'),
+                    data: $(form).serialize(),
+                    dataType: 'json',
+                    headers: { 'X-CSRF-Token': '{{ csrf_token|e('js') }}' },
+                    success: function (response) {
+                        const result = response && response.result !== undefined ? response.result : response;
+                        if (result && (result.order_id || result.success)) {
+                            window.location.reload();
+                            return;
+                        }
+                        $cancel.prop('disabled', false).text($cancel.data('cancel-label'));
+                    },
+                    error: function () {
+                        $cancel.prop('disabled', false).text($cancel.data('cancel-label'));
                     }
                 });
             });

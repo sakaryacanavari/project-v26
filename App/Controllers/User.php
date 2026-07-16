@@ -11,6 +11,7 @@ use App\Models\UserMoney;
 use App\System\App;
 use App\System\AppException;
 use App\System\Controller;
+use App\System\MarketOrderService;
 use \App\Models\User as UserModel;
 use Illuminate\Database\Capsule\Manager as DB;
 
@@ -327,12 +328,16 @@ class User extends Controller
 
     public function showStorage()
     {
-        $items = UserItem::where([
-            "uid" => App::user()->getUid()
-        ])->get()->toArray();
+        $uid = (int) App::user()->getUid();
+        $countryId = (int) (App::user()->getLocation()["country"]["id"] ?? 1);
+        $snapshot = MarketOrderService::storageSnapshot($uid, $countryId);
 
         return $this->render('user/storage.html.twig', [
-            "items" => $items,
+            "items" => $snapshot['items'],
+            "activeOrders" => $snapshot['activeOrders'],
+            "salesHistory" => $snapshot['history'],
+            "priceComparisons" => $snapshot['priceComparisons'],
+            "storageCapacity" => $snapshot['storageCapacity'],
         ]);
     }
 

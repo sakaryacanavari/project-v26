@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ItemOffer extends Model
 {
-    protected $fillable = ["item", "uid", "price", "quantity", "quality", "country"];
+    protected $fillable = [
+        "item", "uid", "price", "quantity", "quality", "country",
+        "status", "listed_quantity", "expires_at", "closed_at",
+    ];
 
     public function seller() {
         return $this->hasOne('App\Models\User', 'id', 'uid');
