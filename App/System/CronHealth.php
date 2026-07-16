@@ -72,4 +72,17 @@ final class CronHealth
             ]
         );
     }
+
+    public static function latest($name): array
+    {
+        if (!self::hasTable()) {
+            return [];
+        }
+        try {
+            $row = DB::table('system_cron_status')->where('name', (string) $name)->first();
+            return $row ? (array) $row : [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
 }
