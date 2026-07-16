@@ -78,17 +78,19 @@ abstract class Controller
                 $user["location"] = [];
             }
 
-            $bread = \App\Models\UserItem::where([
-                "uid" => (int)($user["id"] ?? 0),
-                "item" => 4,
-                "quality" => 1,
-            ])->first();
+            $bread = null;
+            $weapon = null;
+            $hudItems = \App\Models\UserItem::where('uid', (int)($user["id"] ?? 0))
+                ->whereIn('item', [4, 5])
+                ->get(['item', 'quality', 'quantity']);
 
-            $weapon = \App\Models\UserItem::where([
-                "uid" => (int)($user["id"] ?? 0),
-                "item" => 5,
-                "quality" => 5,
-            ])->first();
+            foreach ($hudItems as $hudItem) {
+                if ((int) $hudItem->item === 4 && (int) $hudItem->quality === 1) {
+                    $bread = $hudItem;
+                } elseif ((int) $hudItem->item === 5 && (int) $hudItem->quality === 5) {
+                    $weapon = $hudItem;
+                }
+            }
 
             $user["inventory"] = [
                 "bread" => (int)($bread->quantity ?? 0),
