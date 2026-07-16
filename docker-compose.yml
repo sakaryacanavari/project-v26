@@ -2,20 +2,106 @@ services:
   app:
     build:
       context: .
+    command: sh -c "chown -R www-data:www-data /var/www/html/tmp && exec apache2-foreground"
     ports:
       - "8080:80"
     environment:
-      APP_ENV: development
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: proje
-      DB_USERNAME: proje
-      DB_PASSWORD: proje
+      APP_ENV: ${APP_ENV:-development}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-proje}
+      DB_USERNAME: ${DB_USERNAME:-proje}
+      DB_PASSWORD: ${DB_PASSWORD:-proje}
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_TIMEOUT: ${REDIS_TIMEOUT:-0.25}
+      QUEUE_ENABLED: ${QUEUE_ENABLED:-true}
+      QUEUE_MAX_ATTEMPTS: ${QUEUE_MAX_ATTEMPTS:-3}
+      SCHEDULER_INTERVAL: ${SCHEDULER_INTERVAL:-60}
       COOKIE_DOMAIN: localhost
     volumes:
       - ./:/var/www/html
+      - v26_runtime:/var/www/html/tmp
     depends_on:
       mysql:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  worker:
+    build:
+      context: .
+    command: sh -c "chown -R www-data:www-data /var/www/html/tmp && exec php scripts/queue-worker.php"
+    profiles: ["background", "production"]
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-proje}
+      DB_USERNAME: ${DB_USERNAME:-proje}
+      DB_PASSWORD: ${DB_PASSWORD:-proje}
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_TIMEOUT: ${REDIS_TIMEOUT:-0.25}
+      QUEUE_ENABLED: ${QUEUE_ENABLED:-true}
+      QUEUE_MAX_ATTEMPTS: ${QUEUE_MAX_ATTEMPTS:-3}
+      QUEUE_WORKER_MAX_RUNTIME: ${QUEUE_WORKER_MAX_RUNTIME:-3600}
+      QUEUE_WORKER_MAX_JOBS: ${QUEUE_WORKER_MAX_JOBS:-500}
+    volumes:
+      - ./:/var/www/html
+      - v26_runtime:/var/www/html/tmp
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: .
+    command: sh -c "chown -R www-data:www-data /var/www/html/tmp && exec php scripts/run-scheduler.php --loop"
+    profiles: ["background", "production"]
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-proje}
+      DB_USERNAME: ${DB_USERNAME:-proje}
+      DB_PASSWORD: ${DB_PASSWORD:-proje}
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_TIMEOUT: ${REDIS_TIMEOUT:-0.25}
+      SCHEDULER_INTERVAL: ${SCHEDULER_INTERVAL:-60}
+      SCHEDULER_LOCK_TTL: ${SCHEDULER_LOCK_TTL:-55}
+    volumes:
+      - ./:/var/www/html
+      - v26_runtime:/var/www/html/tmp
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   mysql:
@@ -39,3 +125,4 @@ services:
 
 volumes:
   mysql_data:
+  v26_runtime:
