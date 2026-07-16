@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\System\App;
+use App\System\Cache;
 use App\System\Controller;
 use Illuminate\Database\Capsule\Manager as DB;
 
@@ -65,6 +66,13 @@ class Notifications extends Controller
         $session->ensureLogged();
         $uid = (int)$session->getUid();
 
+        $cacheKey = \App\System\Notify::unreadCacheKey($uid);
+        $cacheHit = false;
+        $cachedBadges = Cache::get($cacheKey, $cacheHit);
+        if ($cacheHit && is_array($cachedBadges)) {
+            return $this->jsonOut(['error' => false, 'badges' => $cachedBadges]);
+        }
+
         try {
             // Okunmamış Bildirim Sayısı
             $notifCnt = (int) DB::table('notifications')
@@ -77,6 +85,11 @@ class Notifications extends Controller
                 ->where('to_uid', $uid)
                 ->whereNull('read_at')
                 ->count();
+
+            Cache::put($cacheKey, [
+                'notifications' => $notifCnt,
+                'messages' => $msgCnt,
+            ], 5);
 
             // JS'nin tam beklediği "badges" objesi formatı
             return $this->jsonOut([
@@ -112,6 +125,8 @@ class Notifications extends Controller
                 ->where('uid', $uid)
                 ->update(['is_read' => 1]);
 
+            \App\System\Notify::forgetUnreadCache($uid);
+
             return $this->jsonOut(['error' => false]);
         } catch (\Exception $e) {
             return $this->jsonOut(['error' => true, 'message' => 'Veritabanı hatası.']);
@@ -130,6 +145,8 @@ class Notifications extends Controller
                 ->where('uid', $uid)
                 ->where('is_read', 0)
                 ->update(['is_read' => 1]);
+
+            \App\System\Notify::forgetUnreadCache($uid);
 
             return $this->jsonOut(['error' => false]);
         } catch (\Exception $e) {

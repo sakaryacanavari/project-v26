@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\System\App;
+use App\System\Cache;
 use App\System\Controller;
 use App\System\DmPrivacy;
 use App\System\GameExperience;
@@ -123,46 +124,58 @@ class UserSettings extends Controller
 
     private static function getAuthenticatedUserThemeState()
     {
-        try {
-            $uid = App::user()->getUid();
-            $user = DB::table('users')
-                ->select('theme')
-                ->where('id', $uid)
-                ->first();
-
-            if (!$user) {
-                return self::getDefaultThemeState();
-            }
-
-            return self::parseThemeString(isset($user->theme) ? $user->theme : null);
-        } catch (\Exception $e) {
+        $uid = (int) App::user()->getUid();
+        if ($uid < 1) {
             return self::getDefaultThemeState();
         }
+
+        return Cache::remember(Cache::userKey($uid, 'theme'), 60, function () use ($uid) {
+            try {
+                $user = DB::table('users')
+                    ->select('theme')
+                    ->where('id', $uid)
+                    ->first();
+
+                if (!$user) {
+                    return self::getDefaultThemeState();
+                }
+
+                return self::parseThemeString(isset($user->theme) ? $user->theme : null);
+            } catch (\Exception $e) {
+                return self::getDefaultThemeState();
+            }
+        });
     }
 
     private static function getAuthenticatedLanguage()
     {
         $default = 'tr';
 
-        try {
-            if (!DB::getSchemaBuilder()->hasColumn('users', 'language')) {
-                return App::getLang() ?: $default;
-            }
-
-            $uid = App::user()->getUid();
-            $user = DB::table('users')
-                ->select('language')
-                ->where('id', $uid)
-                ->first();
-
-            $language = $user && !empty($user->language) ? trim((string) $user->language) : '';
-            if (isset(self::getLanguageConfig()[$language])) {
-                return $language;
-            }
-        } catch (\Exception $e) {
+        $uid = (int) App::user()->getUid();
+        if ($uid < 1) {
+            return App::getLang() ?: $default;
         }
 
-        return App::getLang() ?: $default;
+        return Cache::remember(Cache::userKey($uid, 'language'), 60, function () use ($uid, $default) {
+            try {
+                if (!DB::getSchemaBuilder()->hasColumn('users', 'language')) {
+                    return App::getLang() ?: $default;
+                }
+
+                $user = DB::table('users')
+                    ->select('language')
+                    ->where('id', $uid)
+                    ->first();
+
+                $language = $user && !empty($user->language) ? trim((string) $user->language) : '';
+                if (isset(self::getLanguageConfig()[$language])) {
+                    return $language;
+                }
+            } catch (\Exception $e) {
+            }
+
+            return App::getLang() ?: $default;
+        });
     }
 
     private function hasValidCsrf()
@@ -320,6 +333,8 @@ class UserSettings extends Controller
                 ->where('id', $uid)
                 ->update(['theme' => $combined]);
 
+            Cache::forget(Cache::userKey($uid, 'theme'));
+
             return [
                 'success' => true,
                 'message' => 'Tema uygulandi.',
@@ -357,6 +372,8 @@ class UserSettings extends Controller
             DB::table('users')
                 ->where('id', $uid)
                 ->update(['language' => $locale]);
+
+            Cache::forget(Cache::userKey($uid, 'language'));
 
             App::container()->get('langManager')->setLocale($locale);
 

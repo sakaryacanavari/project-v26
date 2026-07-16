@@ -3,10 +3,21 @@
 namespace App\System;
 
 use Illuminate\Database\Capsule\Manager as DB;
-use Illuminate\Database\Schema\Blueprint;
 
 final class Notify
 {
+    public static function unreadCacheKey(int $uid): string
+    {
+        return Cache::userKey($uid, 'notification_badges');
+    }
+
+    public static function forgetUnreadCache(int $uid): void
+    {
+        if ($uid > 0) {
+            Cache::forget(self::unreadCacheKey($uid));
+        }
+    }
+
     public static function getDefaultPreferences(): array
     {
         return [
@@ -23,21 +34,15 @@ final class Notify
     {
         try {
             $schema = DB::getSchemaBuilder();
-            if ($schema->hasTable('notification_preferences')) {
-                return true;
+            if (!$schema->hasTable('notification_preferences')) {
+                return false;
             }
 
-            $schema->create('notification_preferences', function (Blueprint $table) {
-                $table->unsignedInteger('uid')->primary();
-                $table->tinyInteger('dm_enabled')->default(1);
-                $table->tinyInteger('news_enabled')->default(1);
-                $table->tinyInteger('system_enabled')->default(1);
-                $table->tinyInteger('quiet_hours_enabled')->default(0);
-                $table->string('quiet_start', 5)->default('22:00');
-                $table->string('quiet_end', 5)->default('08:00');
-                $table->dateTime('created_at')->nullable();
-                $table->dateTime('updated_at')->nullable();
-            });
+            foreach (['uid', 'dm_enabled', 'news_enabled', 'system_enabled', 'quiet_hours_enabled', 'quiet_start', 'quiet_end'] as $column) {
+                if (!$schema->hasColumn('notification_preferences', $column)) {
+                    return false;
+                }
+            }
 
             return true;
         } catch (\Exception $e) {
@@ -52,23 +57,25 @@ final class Notify
             return $defaults;
         }
 
-        try {
-            $row = DB::table('notification_preferences')->where('uid', $uid)->first();
-            if (!$row) {
+        return Cache::remember(Cache::userKey($uid, 'notification_preferences'), 60, function () use ($uid, $defaults) {
+            try {
+                $row = DB::table('notification_preferences')->where('uid', $uid)->first();
+                if (!$row) {
+                    return $defaults;
+                }
+
+                return [
+                    'dm_enabled' => (int)($row->dm_enabled ?? $defaults['dm_enabled']),
+                    'news_enabled' => (int)($row->news_enabled ?? $defaults['news_enabled']),
+                    'system_enabled' => (int)($row->system_enabled ?? $defaults['system_enabled']),
+                    'quiet_hours_enabled' => (int)($row->quiet_hours_enabled ?? $defaults['quiet_hours_enabled']),
+                    'quiet_start' => self::normalizeTime((string)($row->quiet_start ?? $defaults['quiet_start']), $defaults['quiet_start']),
+                    'quiet_end' => self::normalizeTime((string)($row->quiet_end ?? $defaults['quiet_end']), $defaults['quiet_end']),
+                ];
+            } catch (\Exception $e) {
                 return $defaults;
             }
-
-            return [
-                'dm_enabled' => (int)($row->dm_enabled ?? $defaults['dm_enabled']),
-                'news_enabled' => (int)($row->news_enabled ?? $defaults['news_enabled']),
-                'system_enabled' => (int)($row->system_enabled ?? $defaults['system_enabled']),
-                'quiet_hours_enabled' => (int)($row->quiet_hours_enabled ?? $defaults['quiet_hours_enabled']),
-                'quiet_start' => self::normalizeTime((string)($row->quiet_start ?? $defaults['quiet_start']), $defaults['quiet_start']),
-                'quiet_end' => self::normalizeTime((string)($row->quiet_end ?? $defaults['quiet_end']), $defaults['quiet_end']),
-            ];
-        } catch (\Exception $e) {
-            return $defaults;
-        }
+        });
     }
 
     public static function savePreferences(int $uid, array $preferences): bool
@@ -93,11 +100,17 @@ final class Notify
         try {
             $exists = DB::table('notification_preferences')->where('uid', $uid)->exists();
             if ($exists) {
-                return (bool) DB::table('notification_preferences')->where('uid', $uid)->update($payload);
+                $written = DB::table('notification_preferences')->where('uid', $uid)->update($payload) !== false;
+            } else {
+                $payload['created_at'] = $now;
+                $written = (bool) DB::table('notification_preferences')->insert($payload);
             }
 
-            $payload['created_at'] = $now;
-            return (bool) DB::table('notification_preferences')->insert($payload);
+            if ($written) {
+                Cache::forget(Cache::userKey($uid, 'notification_preferences'));
+            }
+
+            return $written;
         } catch (\Exception $e) {
             return false;
         }
@@ -137,6 +150,8 @@ final class Notify
                 'is_read'    => $isRead,
                 'created_at' => $now,
             ]);
+
+            self::forgetUnreadCache($uid);
 
             return $inserted;
             

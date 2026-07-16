@@ -3,17 +3,16 @@
 namespace App\System;
 
 use Illuminate\Database\Capsule\Manager as DB;
-use Illuminate\Database\Schema\Blueprint;
 
 final class GameExperience
 {
     public static function getDefaultPreferences(): array
     {
         return [
-            'ui_density' => 'balanced',
-            'animation_level' => 'balanced',
+            'ui_density' => 'compact',
+            'animation_level' => 'full',
             'left_hud' => 'detailed',
-            'shout_width' => 'balanced',
+            'shout_width' => 'compact',
             'home_layout' => 'wide',
             'home_priority' => 'news',
             'quick_favorites' => ['training', 'jobs', 'storage', 'market'],
@@ -41,24 +40,26 @@ final class GameExperience
             return $defaults;
         }
 
-        try {
-            $row = DB::table('game_experience_settings')->where('uid', $uid)->first();
-            if (!$row) {
+        return Cache::remember(Cache::userKey($uid, 'game_experience'), 60, function () use ($uid, $defaults) {
+            try {
+                $row = DB::table('game_experience_settings')->where('uid', $uid)->first();
+                if (!$row) {
+                    return $defaults;
+                }
+
+                return [
+                    'ui_density' => self::normalize((string) ($row->ui_density ?? ''), ['compact', 'balanced', 'comfortable'], $defaults['ui_density']),
+                    'animation_level' => self::normalize((string) ($row->animation_level ?? ''), ['off', 'balanced', 'full'], $defaults['animation_level']),
+                    'left_hud' => self::normalize((string) ($row->left_hud ?? ''), ['detailed', 'compact'], $defaults['left_hud']),
+                    'shout_width' => self::normalize((string) ($row->shout_width ?? ''), ['compact', 'balanced', 'wide'], $defaults['shout_width']),
+                    'home_layout' => self::normalize((string) ($row->home_layout ?? ''), ['wide', 'compact_columns'], $defaults['home_layout']),
+                    'home_priority' => self::normalize((string) ($row->home_priority ?? ''), ['news', 'shouts', 'tasks'], $defaults['home_priority']),
+                    'quick_favorites' => self::normalizeFavorites((string) ($row->quick_favorites ?? ''), $defaults['quick_favorites']),
+                ];
+            } catch (\Exception $e) {
                 return $defaults;
             }
-
-            return [
-                'ui_density' => self::normalize((string) ($row->ui_density ?? ''), ['compact', 'balanced', 'comfortable'], $defaults['ui_density']),
-                'animation_level' => self::normalize((string) ($row->animation_level ?? ''), ['off', 'balanced', 'full'], $defaults['animation_level']),
-                'left_hud' => self::normalize((string) ($row->left_hud ?? ''), ['detailed', 'compact'], $defaults['left_hud']),
-                'shout_width' => self::normalize((string) ($row->shout_width ?? ''), ['compact', 'balanced', 'wide'], $defaults['shout_width']),
-                'home_layout' => self::normalize((string) ($row->home_layout ?? ''), ['wide', 'compact_columns'], $defaults['home_layout']),
-                'home_priority' => self::normalize((string) ($row->home_priority ?? ''), ['news', 'shouts', 'tasks'], $defaults['home_priority']),
-                'quick_favorites' => self::normalizeFavorites((string) ($row->quick_favorites ?? ''), $defaults['quick_favorites']),
-            ];
-        } catch (\Exception $e) {
-            return $defaults;
-        }
+        });
     }
 
     public static function savePreferences(int $uid, array $preferences): bool
@@ -94,6 +95,7 @@ final class GameExperience
                 return false;
             }
 
+            Cache::forget(Cache::userKey($uid, 'game_experience'));
             $saved = self::getPreferences($uid);
             return $saved['ui_density'] === $normalized['ui_density']
                 && $saved['animation_level'] === $normalized['animation_level']
@@ -153,51 +155,15 @@ final class GameExperience
     {
         try {
             $schema = DB::getSchemaBuilder();
-            if ($schema->hasTable('game_experience_settings')) {
-                $schema->table('game_experience_settings', function (Blueprint $table) use ($schema) {
-                    if (!$schema->hasColumn('game_experience_settings', 'ui_density')) {
-                        $table->string('ui_density', 20)->default('balanced');
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'animation_level')) {
-                        $table->string('animation_level', 20)->default('balanced');
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'left_hud')) {
-                        $table->string('left_hud', 20)->default('detailed');
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'shout_width')) {
-                        $table->string('shout_width', 20)->default('balanced');
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'home_layout')) {
-                        $table->string('home_layout', 30)->default('wide');
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'home_priority')) {
-                        $table->string('home_priority', 20)->default('news');
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'quick_favorites')) {
-                        $table->text('quick_favorites')->nullable();
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'created_at')) {
-                        $table->dateTime('created_at')->nullable();
-                    }
-                    if (!$schema->hasColumn('game_experience_settings', 'updated_at')) {
-                        $table->dateTime('updated_at')->nullable();
-                    }
-                });
-                return true;
+            if (!$schema->hasTable('game_experience_settings')) {
+                return false;
             }
 
-            $schema->create('game_experience_settings', function (Blueprint $table) {
-                $table->unsignedInteger('uid')->primary();
-                $table->string('ui_density', 20)->default('balanced');
-                $table->string('animation_level', 20)->default('balanced');
-                $table->string('left_hud', 20)->default('detailed');
-                $table->string('shout_width', 20)->default('balanced');
-                $table->string('home_layout', 30)->default('wide');
-                $table->string('home_priority', 20)->default('news');
-                $table->text('quick_favorites')->nullable();
-                $table->dateTime('created_at')->nullable();
-                $table->dateTime('updated_at')->nullable();
-            });
+            foreach (['uid', 'ui_density', 'animation_level', 'left_hud', 'shout_width', 'home_layout', 'home_priority', 'quick_favorites'] as $column) {
+                if (!$schema->hasColumn('game_experience_settings', $column)) {
+                    return false;
+                }
+            }
 
             return true;
         } catch (\Exception $e) {
