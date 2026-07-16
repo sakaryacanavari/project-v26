@@ -155,6 +155,36 @@ twice. Runtime and log files are stored in the persistent
 `v26_runtime` volume. Keep production secrets in the environment or local `.env`;
 they are not copied into the image.
 
+### Production deploy, backup and rollback
+
+Set `APP_ENV=production`, database credentials, Redis settings and an external
+`BACKUP_ROOT` in the production `.env` before deploying. The scripts never
+overwrite `.env` or secret files and require a clean, committed Git checkout.
+
+```bash
+BACKUP_ROOT=/var/backups/project-v26 ./scripts/deploy-production.sh
+./scripts/production-backup.sh
+./scripts/rollback-production.sh --confirm
+./scripts/production-restore.sh --confirm /var/backups/project-v26/db_20260717T120000Z_abc1234.sql
+```
+
+`deploy-production.sh` validates Compose, takes a commit-labelled database
+backup, starts MySQL/Redis, installs production Composer dependencies, runs
+idempotent migrations, prepares Twig/runtime directories, recreates the web,
+worker and scheduler services, and stops with a non-zero status if health checks
+do not become ready. The previous release is recorded under `.deploy-state/`.
+Use `--previous-ref COMMIT_OR_TAG` when the previous release is not `HEAD^`.
+
+Use `--dry-run` on deploy, backup, rollback or restore to inspect the planned
+commands without changing services or files. Backups include the UTC timestamp
+and Git commit, and files older than `BACKUP_RETENTION_DAYS` (default 14) are
+removed. Store `BACKUP_ROOT` outside the repository in production.
+
+On Windows development machines, keep using `docker compose up -d` and the
+existing `scripts/backup_project.ps1` with a local backup directory. Linux
+production scripts require Bash, Docker Compose v2, Git and an explicitly
+configured production `.env`; do not run them against development data.
+
 If you use local-only Docker overrides, keep secrets and machine-specific settings out of commits.
 
 ## Local Setup
