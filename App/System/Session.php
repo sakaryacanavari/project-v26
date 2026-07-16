@@ -30,7 +30,18 @@ class Session
         session_cache_limiter(false);
 
         session_set_cookie_params(18000, '/', $this->app->getContainer()->get('settings')['cookies.domain']);
-        session_start();
+
+        $redisSession = Cache::isAvailable();
+        if ($redisSession) {
+            ini_set('session.save_handler', 'redis');
+            ini_set('session.save_path', Cache::sessionSavePath());
+        }
+
+        if (!@session_start() && $redisSession) {
+            ini_set('session.save_handler', 'files');
+            ini_set('session.save_path', '');
+            @session_start();
+        }
     }
 
     private function clearCache()
@@ -156,7 +167,7 @@ class Session
         session_destroy();
         $this->clearCache();
 
-        $this->app->isAjax = false;
+        App::setAjax(false);
         $this->isLogged = false;
 
         $previousPath = "";
@@ -187,7 +198,7 @@ class Session
     {
         if (!$this->isLogged())
         {
-            if ($this->app->isAjax) {
+            if (App::isAjax()) {
                 header("Content-Type: application/json");
                 echo json_encode(['error' => 11]);
                 exit;
@@ -255,12 +266,19 @@ class Session
     public function getLocation ()
     {
         return $this->remember('location', function () {
+            $uid = $this->getUid();
             $user = $this->getUser();
             if (empty($user["region"])) {
                 return [];
             }
 
-            return Region::getFullInfo($user["region"]);
+            return Cache::remember(
+                Cache::userKey($uid, 'hud:location'),
+                30,
+                function () use ($user) {
+                    return Region::getFullInfo($user["region"]);
+                }
+            );
         });
     }
 
