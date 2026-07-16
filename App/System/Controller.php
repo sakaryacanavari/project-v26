@@ -6,7 +6,7 @@
  */
 namespace App\System;
 
-use Slim\Http\Request;
+use Psr\Http\Message\ServerRequestInterface;
 
 abstract class Controller
 {
@@ -23,7 +23,7 @@ abstract class Controller
     /**
      * Shortcut to the request functionalities
      *
-     * @var Request
+     * @var ServerRequestInterface
      */
     public $req = null;
 
@@ -256,7 +256,8 @@ abstract class Controller
      */
     public function exec()
     {
-        call_user_func_array(array($this, "run"), func_get_args());
+        $result = call_user_func_array(array($this, "run"), func_get_args());
+        return $result instanceof \Psr\Http\Message\ResponseInterface ? $result : $this->response;
     }
 
     /**
