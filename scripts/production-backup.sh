@@ -23,5 +23,5 @@ esac
 require_command docker
 require_command git
 require_production_env
-create_database_backup >/dev/null
+create_database_backup
 log "Backup tamamlandi."
