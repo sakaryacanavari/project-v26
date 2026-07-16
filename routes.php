@@ -21,32 +21,37 @@ use \App\Controllers\BoxController;
 use \App\Controllers\BlackMarket;
 use \App\Controllers\AdminOps;
 use \App\System\App as AppController;
+use \App\System\HealthCheck;
 use \Illuminate\Database\Capsule\Manager as DB;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-$ensureLogged = function($request, $response, $next) use ($app) {
+$ensureLogged = function(ServerRequestInterface $request, RequestHandlerInterface $handler) use ($app) {
     $app->getContainer()->get("session")->ensureLogged();
-    return $next($request, $response);
+    return $handler->handle($request);
 };
 
-$congressistsOnly = function($request, $response, $next) use ($app) {
+$congressistsOnly = function(ServerRequestInterface $request, RequestHandlerInterface $handler) use ($app) {
     if (!AppController::user()->isCongressist()) {
-        return AppController::container()->get("view")->render($response, "congress/access_restricted.html.twig", []);
+        return AppController::container()->get("view")->render($app->getResponseFactory()->createResponse(403), "congress/access_restricted.html.twig", []);
     }
-    return $next($request, $response);
+    return $handler->handle($request);
 };
 
-$adminOnly = function($request, $response, $next) use ($app) {
+$adminOnly = function(ServerRequestInterface $request, RequestHandlerInterface $handler) use ($app) {
     $userId = AppController::session()->getUid();
     $isAdmin = DB::table('users')->where('id', $userId)->value('is_admin') == 1;
 
     if (!$isAdmin) {
-        return $response->withStatus(403)->write(json_encode([
+        $response = $app->getResponseFactory()->createResponse(403)->withHeader('Content-Type', 'application/json');
+        $response->getBody()->write(json_encode([
             'error' => true,
             'message' => 'Bu işlem için yetkiniz yok.'
-        ]));
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return $response;
     }
 
-    return $next($request, $response);
+    return $handler->handle($request);
 };
 
 $app->get('/login', function($request, $response, $args) use ($app) {
@@ -108,6 +113,23 @@ $app->post('/api/auth/resend-verification', function($request, $response, $args)
     $ct = new User($app, $response);
     $ct->json('resendVerificationEmail');
 })->setName('resendVerificationEmail');
+
+$app->get('/health', function($request, $response) {
+    $report = HealthCheck::report();
+    $detailed = (getenv('APP_ENV') === 'development');
+    if (!$detailed) {
+        try {
+            $user = AppController::session()->getUser();
+            $detailed = (int) (($user['is_admin'] ?? 0)) === 1;
+        } catch (Throwable $e) {
+            $detailed = false;
+        }
+    }
+    $payload = $detailed ? $report : ['status' => $report['status']];
+    $response = $response->withHeader('Content-Type', 'application/json');
+    $response->getBody()->write(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    return $response;
+})->setName('health');
 
 $app->get('/logout', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
@@ -560,6 +582,11 @@ $app->group('/api', function () use ($app, $adminOnly) {
                 $ct = new Market($app, $res);
                 $ct->json('sellSafe');
             })->setName('marketSell');
+
+            $app->post('/cancel', function($req, $res) use ($app) {
+                $ct = new Market($app, $res);
+                $ct->json('cancelOrder');
+            })->setName('marketOrderCancel');
         });
 
         $app->post('/work', function($req, $res) use ($app) {
@@ -954,6 +981,10 @@ $app->group('/api', function () use ($app, $adminOnly) {
                 return $ct->json($method);
             }
         }
+
+        $response = $response->withStatus(404);
+        $response->getBody()->write('Sistem Hatası: Sınıf veya metod bulunamadı.');
+        return $response;
 
         return $response->withStatus(404)->write("Sistem Hatası: Sınıf veya metod bulunamadı.");
     });

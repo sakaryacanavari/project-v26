@@ -1,48 +1,52 @@
 <?php
 
-use \Slim\App as Slim;
-use \App\System\Session;
-use \App\System\App;
-use \App\System\Logger;
-use \App\System\RequestProfiler;
+use DI\Container;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Exception\HttpMethodNotAllowedException;
+use Slim\Exception\HttpNotFoundException;
+use Slim\Factory\AppFactory;
+use App\System\App;
+use App\System\LegacyApp;
+use App\System\LegacyInvocationStrategy;
+use App\System\LegacyRouter;
+use App\System\Logger;
+use App\System\RequestProfiler;
+use App\System\Session;
+use App\System\TwigFactory;
 
-// Set internal encoding to what should be the default
-mb_internal_encoding("UTF-8");
+mb_internal_encoding('UTF-8');
 
-/**
- * Config array for Slim framework
- * Define the basic constants that the application needs
- */
-$config = require dirname(__FILE__) . '/conf.php';
+$config = require __DIR__ . '/conf.php';
+$config['observability'] = array_merge([
+    'slow_request_ms' => max(1, (float) (getenv('SLOW_REQUEST_MS') ?: 1000)),
+    'slow_query_ms' => max(1, (float) (getenv('SLOW_QUERY_MS') ?: 250)),
+    'log_level' => getenv('APP_LOG_LEVEL') ?: (($config['mode'] ?? 'production') === 'development' ? 'debug' : 'info'),
+    'log_max_bytes' => max(1048576, (int) (getenv('LOG_MAX_BYTES') ?: 10485760)),
+    'log_max_files' => max(1, (int) (getenv('LOG_MAX_FILES') ?: 5)),
+    'log_dedupe_seconds' => max(0, (int) (getenv('LOG_DEDUPE_SECONDS') ?: 60)),
+], (array) ($config['observability'] ?? []));
 
 define('APP_HTDOCS_PATH', APP_ROOT . 'htdocs/');
 define('APP_TEMPLATES_PATH', APP_ROOT . 'templates/');
 
 require APP_ROOT . 'vendor/autoload.php';
 
-Logger::boot(APP_ROOT . 'tmp/logs/app.log');
-
-if (($config['mode'] ?? 'production') === 'development') {
-    RequestProfiler::boot(APP_ROOT . 'tmp/logs/profile.log');
-}
+Logger::boot(APP_ROOT . 'tmp/logs/app.log', $config['observability'] ?? []);
+RequestProfiler::boot(APP_ROOT . 'tmp/logs/profile.log', $config['observability'] ?? []);
 
 set_error_handler(function ($severity, $message, $file, $line) {
     if (!(error_reporting() & $severity)) {
         return false;
     }
 
-    Logger::error($message, [
-        'severity' => $severity,
-        'file' => $file,
-        'line' => $line,
-    ]);
-
+    Logger::error($message, ['severity' => $severity, 'file' => $file, 'line' => $line]);
     return false;
 });
 
 register_shutdown_function(function () {
     $error = error_get_last();
-
     if (!$error || !in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
         return;
     }
@@ -55,120 +59,103 @@ register_shutdown_function(function () {
     ]);
 });
 
-$app = new Slim(['settings' => $config]);
+$container = new Container();
+$container->set('settings', $config);
+
+$slimApp = AppFactory::createFromContainer($container);
+$slimApp->getRouteCollector()->setDefaultInvocationStrategy(new LegacyInvocationStrategy());
+$app = new LegacyApp($slimApp, $container);
 App::$slim = $app;
 
-$container = $app->getContainer();
+$container->set('router', function () use ($slimApp) {
+    return new LegacyRouter($slimApp->getRouteCollector()->getRouteParser());
+});
 
-require APP_ROOT. 'i18n.php';
+require __DIR__ . '/i18n.php';
 
-/**
- * Add resources to the app. These resources will be needed at any point throughout the execution.
- */
-$container['session'] = function () use ($app) {
+$container->set('session', function () use ($app) {
     return new Session($app);
-};
-$container['langManager'] = function ($container) use ($app) {
+});
+$container->set('langManager', function (ContainerInterface $container) use ($app) {
     return new \App\System\LangManager($app, $container->get('session'));
-};
-$app->langManager = $container['langManager'];
-$container['i18n'] = function ($container) {
+});
+$container->set('i18n', function (ContainerInterface $container) {
     return new \App\System\I18nService(
         new \App\System\SimpleTranslator($container->get('langManager'))
     );
-};
-$container['view'] = function ($container) {
-    $cache = '../tmp/cache';
-
-    if ($container->get("settings")["mode"] == "development") {
-        $cache = false;
+});
+$container->set('view', function (ContainerInterface $container) {
+    $settings = $container->get('settings');
+    $cache = false;
+    if (($settings['mode'] ?? 'production') !== 'development') {
+        $cachePath = APP_ROOT . 'tmp/cache';
+        if (!is_dir($cachePath) && !@mkdir($cachePath, 0775, true) && !is_dir($cachePath)) {
+            Logger::warning('Twig cache directory could not be created.', ['path' => $cachePath]);
+        }
+        if (is_dir($cachePath) && is_writable($cachePath)) {
+            $cache = $cachePath;
+        } else {
+            Logger::warning('Twig cache directory is not writable; Twig cache disabled.', ['path' => $cachePath]);
+        }
     }
 
-    $view = new \Slim\Views\Twig(APP_TEMPLATES_PATH, [
-        'debug' => true,
-        'cache' => $cache
-    ]);
-
-    $view->addExtension(new Twig_Extensions_Extension_I18n());
-    $view->addExtension(new \Slim\Views\TwigExtension(
-        $container['router'],
-        $container['request']->getUri()
-    ));
-    $view->getEnvironment()->addFunction(new \Twig_SimpleFunction('t', function ($key, $vars = []) use ($container) {
-        if (!is_array($vars)) {
-            $vars = [];
-        }
-
-        return $container->get('i18n')->getTranslator()->translate($key, $vars);
-    }));
-    if ($container->get("settings")["mode"] == "development") {
-        $view->addExtension(new Twig_Extension_Debug());
+    $view = \Slim\Views\Twig::create(APP_TEMPLATES_PATH, ['debug' => true, 'cache' => $cache]);
+    $request = $container->has('request')
+        ? $container->get('request')
+        : (new \Slim\Psr7\Factory\ServerRequestFactory())->createServerRequest('GET', 'http://localhost/');
+    TwigFactory::addLegacyRoutingFunctions($view->getEnvironment(), $container->get('router'), $request->getUri());
+    TwigFactory::addFunction($view->getEnvironment(), 't', function ($key, $vars = []) use ($container) {
+        return $container->get('i18n')->getTranslator()->translate($key, is_array($vars) ? $vars : []);
+    });
+    if (($settings['mode'] ?? 'production') === 'development') {
+        TwigFactory::addDebug($view);
     }
 
     return $view;
-};
-
-$container['db'] = function ($container) {
-    $capsule = new \Illuminate\Database\Capsule\Manager;
-    $capsule->addConnection($container['settings']['mysql']);
-
+});
+$container->set('db', function (ContainerInterface $container) {
+    $capsule = new \Illuminate\Database\Capsule\Manager();
+    $capsule->addConnection($container->get('settings')['mysql']);
     $capsule->setAsGlobal();
     $capsule->bootEloquent();
-
-    // for query debugging/printing
-    //$capsule::connection()->enableQueryLog();
-    //p(\Illuminate\Database\Capsule\Manager::getQueryLog());exit;
-
     return $capsule;
-};
+});
 
-$container['notFoundHandler'] = function ($container) {
-    return function ($request, $response) use ($container) {
-        Logger::warning('Route not found.', [
-            'uri' => $_SERVER['REQUEST_URI'] ?? '',
-            'method' => $_SERVER['REQUEST_METHOD'] ?? '',
-        ]);
+$slimApp->addRoutingMiddleware();
 
-        return $container->get('view')->render($response->withStatus(404), 'common/error.html.twig', [
-            'page_title' => 'Sayfa Bulunamadi',
-            'error_title' => 'Istenen Sayfa Bulunamadi',
-            'error_message' => 'Baglanti degismis olabilir veya icerik kaldirilmis olabilir.',
-            'error_code' => 404,
-            'lang' => App::getLang(),
-        ]);
-    };
-};
-
-$container['errorHandler'] = function ($container) {
-    return function ($request, $response, $exception) use ($container) {
-        Logger::exception($exception, [
-            'uri' => $_SERVER['REQUEST_URI'] ?? '',
-            'method' => $_SERVER['REQUEST_METHOD'] ?? '',
-        ]);
-
-        if ($container->get('settings')['mode'] === 'development') {
-            throw $exception;
+$slimApp->add(function (ServerRequestInterface $request, RequestHandlerInterface $handler) use ($container) {
+    $connection = null;
+    try {
+        $connection = $container->get('db')->getConnection();
+    } catch (\Throwable $e) {
+        Logger::warning('Request database profiler unavailable.');
+    }
+    \App\System\Cache::resetMetrics();
+    RequestProfiler::start($request, $connection);
+    $result = null;
+    try {
+        $result = $handler->handle($request);
+    } finally {
+        $uid = 0;
+        try {
+            $uid = (int) App::session()->getUid();
+        } catch (\Throwable $e) {
         }
+        $result = RequestProfiler::finish($request, $result, $uid);
+    }
+    return $result;
+});
 
-        return $container->get('view')->render($response->withStatus(500), 'common/error.html.twig', [
-            'page_title' => 'Sistem Hatasi',
-            'error_title' => 'Sistem Gecici Olarak Yanit Veremiyor',
-            'error_message' => 'Beklenmeyen bir hata olustu. Islem kayda alindi.',
-            'error_code' => 500,
-            'lang' => App::getLang(),
-        ]);
-    };
-};
+$slimApp->add(function (ServerRequestInterface $request, RequestHandlerInterface $handler) use ($container) {
+    $container->get('view')->getEnvironment()->addGlobal('isAjax', App::isAjax());
+    return $handler->handle($request);
+});
 
-$app->add(function ($request, $response, $next) use ($app) {
-    if (
-        strtoupper($request->getMethod()) === 'POST' &&
-        $app->getContainer()->get('session')->isLogged()
-    ) {
+$slimApp->add(function (ServerRequestInterface $request, RequestHandlerInterface $handler) use ($app) {
+    if (strtoupper($request->getMethod()) === 'POST' && $app->getContainer()->get('session')->isLogged()) {
         $path = $request->getUri()->getPath();
         $parsedBody = $request->getParsedBody();
         $csrfToken = trim((string) $request->getHeaderLine('X-CSRF-Token'));
-
         if ($csrfToken === '' && is_array($parsedBody)) {
             $csrfToken = trim((string) ($parsedBody['csrf_token'] ?? $parsedBody['_csrf'] ?? ''));
         }
@@ -180,129 +167,83 @@ $app->add(function ($request, $response, $next) use ($app) {
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
             ]);
 
-            if ($request->isXhr() || \App\System\Utils::isAPIpath($path)) {
-                \App\System\Utils::jsonResponse([
+            if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest' || \App\System\Utils::isAPIpath($path)) {
+                $response = $app->getResponseFactory()->createResponse(403)->withHeader('Content-Type', 'application/json; charset=utf-8');
+                $response->getBody()->write(json_encode([
                     'error' => 1,
                     'code' => 'CSRF',
                     'message' => 'Gecersiz guvenlik anahtari. Sayfayi yenileyip tekrar deneyin.',
-                ]);
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+                return $response;
             }
 
-            return $app->getContainer()->get('view')->render(
-                $response->withStatus(403),
-                'common/error.html.twig',
-                [
-                    'page_title' => 'Guvenlik Hatasi',
-                    'error_title' => 'Islem Reddedildi',
-                    'error_message' => 'Gecersiz guvenlik anahtari. Sayfayi yenileyip tekrar deneyin.',
-                    'error_code' => 403,
-                    'lang' => App::getLang(),
-                ]
-            );
-        }
-    }
-
-    return $next($request, $response);
-});
-
-/*
- * Add some global vars before rendering each template
- */
-$app->add(function ($request, $response, $next) use ($app) {
-
-    $view = App::container()->get("view");
-    $view->getEnvironment()->addGlobal('isAjax', $app->isAjax);
-
-    //$response = $next($request, $response);return $response;
-    try {
-        $response = $next($request, $response);
-    } catch (\Exception $e)
-    {
-        Logger::exception($e, [
-            'uri' => $_SERVER['REQUEST_URI'] ?? '',
-            'method' => $_SERVER['REQUEST_METHOD'] ?? '',
-            'uid' => App::session()->getUid(),
-            'ajax' => (bool) $app->isAjax,
-        ]);
-
-        if ($e->getCode() == 11 && !$app->isAjax) { // Authentication failed
-            App::redirect("/login");
-        }
-        if ($app->isAjax) {
-            $response = new \stdClass();
-            $response->error = $e->getCode();
-            $response->message = $e->getMessage();
-
-            \App\System\Utils::jsonResponse($response);
-        } else if (App::settings()["mode"] == "development") {
-            throw $e;
-        } else {
-            return $view->render($response->withStatus(500), 'common/error.html.twig', [
-                'page_title' => 'Sistem Hatasi',
-                'error_title' => 'Sistem Gecici Olarak Yanit Veremiyor',
-                'error_message' => 'Beklenmeyen bir hata olustu. Islem kayda alindi.',
-                'error_code' => 500,
+            return $app->getContainer()->get('view')->render($app->getResponseFactory()->createResponse(403), 'common/error.html.twig', [
+                'page_title' => 'Guvenlik Hatasi',
+                'error_title' => 'Islem Reddedildi',
+                'error_message' => 'Gecersiz guvenlik anahtari. Sayfayi yenileyip tekrar deneyin.',
+                'error_code' => 403,
                 'lang' => App::getLang(),
             ]);
         }
     }
-
-    return $response;
+    return $handler->handle($request);
 });
 
-if (($config['mode'] ?? 'production') === 'development') {
-    $app->add(function ($request, $response, $next) use ($app) {
-        $path = $request->getUri()->getPath();
-        $started = microtime(true);
-        $memoryBefore = memory_get_usage(true);
-        $peakBefore = memory_get_peak_usage(true);
-        $connection = null;
+$slimApp->add(function (ServerRequestInterface $request, RequestHandlerInterface $handler) use ($container, $app) {
+    $container->set('request', $request);
+    $app->setRequest($request);
+    App::setAjax($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest');
+    return $handler->handle($request);
+});
 
-        try {
-            $connection = $app->getContainer()->get('db')->getConnection();
-            $connection->flushQueryLog();
-            $connection->enableQueryLog();
-        } catch (\Throwable $e) {
-            $connection = null;
-        }
+$slimApp->addBodyParsingMiddleware();
+$errorMiddleware = $slimApp->addErrorMiddleware(($config['mode'] ?? 'production') === 'development', false, false);
+$errorMiddleware->setErrorHandler(HttpNotFoundException::class, function (ServerRequestInterface $request, \Throwable $exception, bool $displayErrorDetails) use ($app) {
+    Logger::warning('Route not found.', ['uri' => (string) $request->getUri(), 'method' => $request->getMethod()]);
+    return $app->getContainer()->get('view')->render($app->getResponseFactory()->createResponse(404), 'common/error.html.twig', [
+        'page_title' => 'Sayfa Bulunamadi',
+        'error_title' => 'Istenen Sayfa Bulunamadi',
+        'error_message' => 'Baglanti degismis olabilir veya icerik kaldirilmis olabilir.',
+        'error_code' => 404,
+        'lang' => App::getLang(),
+    ]);
+});
+$errorMiddleware->setErrorHandler(HttpMethodNotAllowedException::class, function (ServerRequestInterface $request, \Throwable $exception, bool $displayErrorDetails) use ($app) {
+    Logger::warning('HTTP method not allowed.', ['uri' => (string) $request->getUri(), 'method' => $request->getMethod()]);
+    $response = $app->getResponseFactory()->createResponse(405);
+    if (App::isAjax() || \App\System\Utils::isAPIpath($request->getUri()->getPath())) {
+        $response = $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        $response->getBody()->write(json_encode(['error' => 1, 'message' => 'Bu HTTP metodu desteklenmiyor.'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return $response;
+    }
+    return $app->getContainer()->get('view')->render($response, 'common/error.html.twig', [
+        'page_title' => 'Gecersiz Islem',
+        'error_title' => 'Islem Desteklenmiyor',
+        'error_message' => 'Bu sayfada kullanilan istek metodu desteklenmiyor.',
+        'error_code' => 405,
+        'lang' => App::getLang(),
+    ]);
+});
+$errorMiddleware->setDefaultErrorHandler(function (ServerRequestInterface $request, \Throwable $exception, bool $displayErrorDetails) use ($app) {
+    Logger::exception($exception, [
+        'uri' => (string) $request->getUri(),
+        'method' => $request->getMethod(),
+        'uid' => App::session()->getUid(),
+        'ajax' => App::isAjax(),
+    ]);
+    $response = $app->getResponseFactory()->createResponse(500);
+    if (App::isAjax() || \App\System\Utils::isAPIpath($request->getUri()->getPath())) {
+        $response = $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        $response->getBody()->write(json_encode(['error' => 1, 'message' => 'Beklenmeyen bir hata olustu.'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return $response;
+    }
+    return $app->getContainer()->get('view')->render($response, 'common/error.html.twig', [
+        'page_title' => 'Sistem Hatasi',
+        'error_title' => 'Sistem Gecici Olarak Yanit Veremiyor',
+        'error_message' => 'Beklenmeyen bir hata olustu. Islem kayda alindi.',
+        'error_code' => 500,
+        'lang' => App::getLang(),
+    ]);
+});
 
-        try {
-            return $next($request, $response);
-        } finally {
-            $durationMs = round((microtime(true) - $started) * 1000, 2);
-            $memoryDeltaKb = round((memory_get_usage(true) - $memoryBefore) / 1024, 2);
-            $peakDeltaKb = round((memory_get_peak_usage(true) - $peakBefore) / 1024, 2);
-            $queryCount = 0;
-            $queryTimeMs = 0.0;
-
-            if ($connection) {
-                try {
-                    $queryLog = $connection->getQueryLog();
-                    if (is_array($queryLog)) {
-                        $queryCount = count($queryLog);
-                        foreach ($queryLog as $queryEntry) {
-                            $queryTimeMs += (float) ($queryEntry['time'] ?? 0);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    $queryCount = 0;
-                    $queryTimeMs = 0.0;
-                }
-            }
-
-            RequestProfiler::log([
-                'method' => $_SERVER['REQUEST_METHOD'] ?? '',
-                'uri' => $path,
-                'query' => isset($_SERVER['QUERY_STRING']) ? (string) $_SERVER['QUERY_STRING'] : '',
-                'ajax' => (bool) $app->isAjax,
-                'uid' => App::session()->getUid(),
-                'duration_ms' => $durationMs,
-                'queries' => $queryCount,
-                'query_time_ms' => round($queryTimeMs, 2),
-                'memory_delta_kb' => $memoryDeltaKb,
-                'peak_delta_kb' => $peakDeltaKb,
-            ]);
-        }
-    });
-}
-App::container()->get("db")->getConnection();
+$container->get('db')->getConnection();

@@ -2,7 +2,6 @@
 
 namespace App\System;
 
-use Slim\Slim;
 
 /**
  * Helper to access Slim container easily with some helpful methods
@@ -12,6 +11,14 @@ use Slim\Slim;
 class App
 {
     const CURRENT_VERSION = "0.3";
+
+    /**
+     * Request-level AJAX state. Keep this outside the Slim 3 application
+     * object so PHP 8.2 does not create a dynamic property on the framework.
+     *
+     * @var bool
+     */
+    private static $ajax = false;
 
     /**
      * @var \Slim\App
@@ -86,7 +93,8 @@ class App
         $url = $app->urlFor($route, $params);
 
         if ($withBase) {
-            $url = $app->request->getUrl() . $url;
+            $uri = self::container()->get('request')->getUri();
+            $url = rtrim($uri->getScheme() . '://' . $uri->getAuthority(), '/') . $url;
         }
 
         return $url;
@@ -107,7 +115,17 @@ class App
      */
     public static function getLang()
     {
-        return self::getInstance()->langManager->getLocale();
+        return self::container()->get('langManager')->getLocale();
+    }
+
+    public static function setAjax($value)
+    {
+        self::$ajax = (bool) $value;
+    }
+
+    public static function isAjax()
+    {
+        return self::$ajax;
     }
 
     public static function container () {
