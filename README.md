@@ -99,9 +99,10 @@ http://localhost:8080
 ```
 
 On a new Docker volume, MySQL imports `proje.sql` automatically. Existing
-volumes are not migrated automatically. For an existing database, review and
-apply the SQL files in [SCHEMA_SYNC_APPLY_ORDER.md](SCHEMA_SYNC_APPLY_ORDER.md)
-in the documented order before testing features that depend on newer schema.
+volumes are not migrated automatically. Run `composer schema-migrate` from the
+app container before testing features that depend on the player preference,
+training, notification, DM privacy or market extensions. HTTP requests only
+check schema readiness and never create tables, columns or indexes.
 
 The included Compose setup starts:
 
@@ -115,8 +116,44 @@ docker compose ps
 docker compose logs -f app
 docker compose logs -f mysql
 docker compose exec app composer install
+docker compose exec app composer schema-migrate
 docker compose down
 ```
+
+### Production worker and scheduler
+
+The web service remains usable without background services. For a production-like
+local run, start the worker and the single scheduler through the `production`
+profile:
+
+```bash
+docker compose --profile production up -d --build
+docker compose --profile production ps
+docker compose logs -f worker scheduler
+docker compose exec app php scripts/health-check.php
+```
+
+Stop or restart only the background services when needed:
+
+```bash
+docker compose --profile production stop worker scheduler
+docker compose --profile production restart worker scheduler
+docker compose --profile production down
+```
+
+The worker has bounded runtime/job limits, graceful signal handling and bounded
+retries. Failed jobs remain in the queue's failed-job list for an explicit
+`--retry-failed` run:
+
+```bash
+docker compose --profile production exec worker php scripts/queue-worker.php --retry-failed
+```
+
+Run only one scheduler service instance. It also uses a short Redis lock, so
+accidental duplicate containers do not process the same market expiry window
+twice. Runtime and log files are stored in the persistent
+`v26_runtime` volume. Keep production secrets in the environment or local `.env`;
+they are not copied into the image.
 
 If you use local-only Docker overrides, keep secrets and machine-specific settings out of commits.
 
