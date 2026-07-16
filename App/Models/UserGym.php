@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Capsule\Manager as DB;
-use Illuminate\Database\Schema\Blueprint;
 
 class UserGym extends Model
 {
@@ -192,40 +191,19 @@ class UserGym extends Model
     {
         try {
             $schema = DB::getSchemaBuilder();
-            if ($schema->hasTable('user_gym_daily_actions')) {
-                if (!$schema->hasColumn('user_gym_daily_actions', 'strength_after')) {
-                    try {
-                        $schema->table('user_gym_daily_actions', function (Blueprint $table) {
-                            $table->integer('strength_after')->nullable();
-                        });
-                    } catch (\Exception $ignored) {
-                        // Existing installations can continue without snapshots.
-                    }
-                }
-                return true;
+            if (!$schema->hasTable('user_gym_daily_actions')) {
+                return false;
             }
 
-            $schema->create('user_gym_daily_actions', function (Blueprint $table) {
-                $table->bigIncrements('id');
-                $table->unsignedInteger('uid');
-                $table->string('action', 32);
-                $table->string('reward_key', 32)->nullable();
-                $table->string('reward_type', 16)->nullable();
-                $table->decimal('reward_amount', 11, 2)->nullable();
-                $table->integer('strength_after')->nullable();
-                $table->date('action_day');
-                $table->dateTime('created_at');
-                $table->unique(['uid', 'action', 'action_day'], 'uniq_user_gym_daily_action');
-                $table->index(['uid', 'created_at'], 'idx_user_gym_daily_action_uid');
-            });
+            foreach (['uid', 'action', 'reward_amount', 'action_day', 'created_at'] as $column) {
+                if (!$schema->hasColumn('user_gym_daily_actions', $column)) {
+                    return false;
+                }
+            }
 
             return true;
         } catch (\Exception $e) {
-            try {
-                return DB::getSchemaBuilder()->hasTable('user_gym_daily_actions');
-            } catch (\Exception $ignored) {
-                return false;
-            }
+            return false;
         }
     }
 

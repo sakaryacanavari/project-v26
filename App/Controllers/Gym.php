@@ -27,7 +27,7 @@ class Gym extends Controller
             $strengthGain = (int) (UserGym::$data['q1']['strength'] ?? 5);
             $dailyActionsReady = UserGym::ensureDailyActionsTable();
 
-            return DB::transaction(function () use ($uid, $strengthGain, $dailyActionsReady) {
+            $result = DB::transaction(function () use ($uid, $strengthGain, $dailyActionsReady) {
                 $actionDay = UserGym::serverDay();
                 $createdAt = date('Y-m-d H:i:s');
                 $user = DB::table('users')->where('id', $uid)->lockForUpdate()->first();
@@ -76,8 +76,6 @@ class Gym extends Controller
                     DB::table('user_gym_daily_actions')->insert($action);
                 }
 
-                App::session()->setUserField('strength', $newStrength);
-
                 return [
                     "success" => true,
                     "message" => "Gunluk egitim tamamlandi.",
@@ -89,6 +87,12 @@ class Gym extends Controller
                     "serverNow" => date('c'),
                 ];
             });
+
+            if (!empty($result['success']) && isset($result['newStrength'])) {
+                App::session()->setUserField('strength', (int) $result['newStrength']);
+            }
+
+            return $result;
         } catch (\Exception $e) {
             return ["error" => true, "message" => "Egitim tamamlanamadi. Lutfen tekrar deneyin."];
         }
@@ -103,7 +107,7 @@ class Gym extends Controller
         try {
             $uid = (int) App::user()->getUid();
 
-            return DB::transaction(function () use ($uid) {
+            $result = DB::transaction(function () use ($uid) {
                 $actionDay = UserGym::serverDay();
                 $createdAt = date('Y-m-d H:i:s');
                 $user = DB::table('users')->where('id', $uid)->lockForUpdate()->first();
@@ -153,13 +157,19 @@ class Gym extends Controller
                     $action['strength_after'] = $newStrength;
                 }
                 DB::table('user_gym_daily_actions')->insert($action);
-                App::session()->setUserField('strength', $newStrength);
-
                 return [
                     "success" => true,
                     "message" => "Ek egitim tamamlandi. +" . self::EXTRA_STRENGTH_GAIN . " Guc kazandiniz.",
+                    "_sessionStrength" => $newStrength,
                 ];
             });
+
+            if (isset($result['_sessionStrength'])) {
+                App::session()->setUserField('strength', (int) $result['_sessionStrength']);
+                unset($result['_sessionStrength']);
+            }
+
+            return $result;
         } catch (\Exception $e) {
             return ["error" => true, "message" => "Ek egitim tamamlanamadi. Lutfen tekrar deneyin."];
         }
@@ -174,7 +184,7 @@ class Gym extends Controller
         try {
             $uid = (int) App::user()->getUid();
 
-            return DB::transaction(function () use ($uid) {
+            $result = DB::transaction(function () use ($uid) {
                 $actionDay = UserGym::serverDay();
                 $createdAt = date('Y-m-d H:i:s');
                 $user = DB::table('users')->where('id', $uid)->lockForUpdate()->first();
@@ -220,16 +230,20 @@ class Gym extends Controller
                     }
                 }
                 DB::table('user_gym_daily_actions')->insert($action);
-                if ($newStrength !== null) {
-                    App::session()->setUserField('strength', $newStrength);
-                }
-
                 return [
                     "success" => true,
                     "reward" => $reward['label'],
                     "message" => "Gunluk cark odulunuz uygulandi: " . $reward['label'],
+                    "_sessionStrength" => $newStrength,
                 ];
             });
+
+            if (isset($result['_sessionStrength'])) {
+                App::session()->setUserField('strength', (int) $result['_sessionStrength']);
+                unset($result['_sessionStrength']);
+            }
+
+            return $result;
         } catch (\Exception $e) {
             return ["error" => true, "message" => "Gunluk cark tamamlanamadi. Lutfen tekrar deneyin."];
         }
