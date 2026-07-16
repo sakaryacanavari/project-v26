@@ -157,12 +157,14 @@ they are not copied into the image.
 
 ### Production deploy, backup and rollback
 
-Set `APP_ENV=production`, database credentials, Redis settings and an external
-`BACKUP_ROOT` in the production `.env` before deploying. The scripts never
+Set `APP_ENV=production`, database credentials and Redis settings in the
+production `.env`. Export an external `BACKUP_ROOT` in the shell before running
+the commands. The scripts never
 overwrite `.env` or secret files and require a clean, committed Git checkout.
 
 ```bash
-BACKUP_ROOT=/var/backups/project-v26 ./scripts/deploy-production.sh
+export BACKUP_ROOT=/var/backups/project-v26
+./scripts/deploy-production.sh
 ./scripts/production-backup.sh
 ./scripts/rollback-production.sh --confirm
 ./scripts/production-restore.sh --confirm /var/backups/project-v26/db_20260717T120000Z_abc1234.sql
