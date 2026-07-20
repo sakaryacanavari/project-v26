@@ -40,6 +40,7 @@ else
 fi
 
 compose_run up -d mysql redis
+compose_run run --rm frontend-build
 compose_run up -d --build app
 compose_run exec -T app composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 compose_run exec -T app composer schema-migrate

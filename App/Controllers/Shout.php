@@ -1422,7 +1422,7 @@ class Shout extends Controller
             $threadShoutId = $shoutId;
         }
 
-        $homeUrl = $this->app->getContainer()->get('router')->pathFor('home') . '#shout-' . $threadShoutId;
+        $homeUrl = $this->app->getContainer()->get('router')->urlFor('home') . '#shout-' . $threadShoutId;
         $excludedLookup = [];
         foreach ($excludedUserIds as $excludedUserId) {
             $excludedUserId = (int) $excludedUserId;
@@ -1462,7 +1462,7 @@ class Shout extends Controller
         }
 
         $authorNick = (string) DB::table('users')->where('id', $authorUid)->value('nick');
-        $homeUrl = $this->app->getContainer()->get('router')->pathFor('home') . '#shout-' . $parentShoutId;
+        $homeUrl = $this->app->getContainer()->get('router')->urlFor('home') . '#shout-' . $parentShoutId;
 
         Notify::push(
             $targetUid,
@@ -1484,7 +1484,7 @@ class Shout extends Controller
     private function buildShoutUrl($threadShoutId = 0)
     {
         $threadShoutId = (int) $threadShoutId;
-        $url = $this->app->getContainer()->get('router')->pathFor('home');
+        $url = $this->app->getContainer()->get('router')->urlFor('home');
 
         if ($threadShoutId > 0) {
             $url .= '#shout-' . $threadShoutId;
@@ -1946,7 +1946,7 @@ class Shout extends Controller
                 'shout_restriction',
                 'Shout paylasimin gecici olarak kisitlandi',
                 $reason . ' nedeniyle ' . self::humanRemaining(strtotime($mutedUntil) - time()) . ' boyunca shout atamayacaksin.',
-                $this->app->getContainer()->get('router')->pathFor('home'),
+                $this->app->getContainer()->get('router')->urlFor('home'),
                 ['muted_until' => $mutedUntil]
             );
         } catch (\Exception $e) {
@@ -2891,7 +2891,7 @@ class Shout extends Controller
             'shout_tip',
             'Bir shoutun destek aldi',
             $goldAmount . ' Gold destek aldigin bir shout var.',
-            $this->app->getContainer()->get('router')->pathFor('home') . '#shout-' . $shoutId,
+            $this->app->getContainer()->get('router')->urlFor('home') . '#shout-' . $shoutId,
             ['shout_id' => $shoutId, 'from_uid' => $uid, 'gold_amount' => $goldAmount]
         );
 
@@ -2995,7 +2995,7 @@ class Shout extends Controller
                 'shout_like',
                 'Bir shoutun begenildi',
                 'Bir kullanici shoutunu begendi.',
-                $this->app->getContainer()->get('router')->pathFor('home') . '#shout-' . $shoutId,
+            $this->app->getContainer()->get('router')->urlFor('home') . '#shout-' . $shoutId,
                 ['shout_id' => $shoutId, 'from_uid' => $uid]
             );
         }
@@ -3253,7 +3253,7 @@ class Shout extends Controller
                     'shout_deleted',
                     'Bir shoutun kaldirildi',
                     'Admin bir shoutunu kaldirdi.',
-                    $this->app->getContainer()->get('router')->pathFor('home'),
+                    $this->app->getContainer()->get('router')->urlFor('home'),
                     ['shout_id' => $shoutId]
                 );
 

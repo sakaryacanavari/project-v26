@@ -7,6 +7,11 @@
     <base href="{{ base_url() }}/">
     <title>S-REPUBLIK | V7.0 OMNI-COMMAND</title>
 
+    {% set v26Css = vite_asset('app.css') %}
+    {% set v26Js = vite_asset('app.js') %}
+    {% if v26Css %}<link rel="stylesheet" href="{{ v26Css }}">{% endif %}
+    {% if v26Js %}<script type="module" src="{{ v26Js }}" defer></script>{% endif %}
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">

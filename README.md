@@ -67,13 +67,13 @@ Crate opening and item upgrade interfaces.
 
 ## Tech Stack
 
-- PHP 8.0 runtime image for Docker.
+- PHP 8.4 runtime image for Docker.
 - Slim 3 application structure.
 - Twig templates.
 - Illuminate Database components.
 - Apache with rewrite support.
 - MySQL/MariaDB compatible database layer.
-- Legacy Grunt/Sass asset tooling.
+- Vite asset build with the legacy Grunt/Sass tooling kept available during migration.
 
 ## Docker Setup
 
@@ -117,8 +117,25 @@ docker compose logs -f app
 docker compose logs -f mysql
 docker compose exec app composer install
 docker compose exec app composer schema-migrate
+docker compose run --rm frontend-build
 docker compose down
 ```
+
+### Frontend assets
+
+Vite is the production asset entry point. Build hashed assets locally with:
+
+```bash
+npm ci
+npm run build
+```
+
+The PHP/Twig layer reads `public/build/manifest.json` through `vite_asset()`.
+When the manifest is absent, no asset is emitted and the existing inline/CDN
+fallback remains active; a missing build therefore does not crash the app. The
+production deploy runs the isolated `frontend-build` Compose service before
+recreating the web container. Page-specific inline scripts remain scoped to
+their templates until they are migrated deliberately.
 
 ### Production worker and scheduler
 

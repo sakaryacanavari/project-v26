@@ -23,10 +23,12 @@ if (!is_object($app) || strlen((string) $rendered) < 100) {
 $router = App::container()->get('router');
 $routeNames = ['home', 'login', 'settings', 'storage', 'gyms'];
 foreach ($routeNames as $routeName) {
-    $route = method_exists($router, 'hasNamedRoute')
-        ? $router->hasNamedRoute($routeName)
-        : $router->getNamedRoute($routeName);
-    if (!$route) {
+    try {
+        $route = $router->urlFor($routeName);
+    } catch (Throwable $e) {
+        $route = '';
+    }
+    if ($route === '') {
         fwrite(STDERR, 'Missing named route: ' . $routeName . PHP_EOL);
         exit(1);
     }

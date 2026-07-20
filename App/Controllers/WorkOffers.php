@@ -697,7 +697,7 @@ class WorkOffers extends Controller
 
     private function buildWorkOffersUrl(array $params)
     {
-        $basePath = $this->app->getContainer()->get('router')->pathFor('workOffers');
+        $basePath = $this->app->getContainer()->get('router')->urlFor('workOffers');
         $params = $this->removeEmptyQueryParams($params);
 
         if (empty($params)) {

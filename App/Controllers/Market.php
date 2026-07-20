@@ -263,7 +263,7 @@ class Market extends Controller
 
     private function resolveMarketBackUrl()
     {
-        $defaultPath = $this->app->getContainer()->get("router")->pathFor("marketplace");
+        $defaultPath = $this->app->getContainer()->get("router")->urlFor("marketplace");
         $back = trim((string) ($_SERVER["HTTP_REFERER"] ?? ""));
         if ($back === "") {
             return $defaultPath;
@@ -292,7 +292,7 @@ class Market extends Controller
         }
 
         $allowedPaths = [
-            $this->app->getContainer()->get("router")->pathFor("marketplace"),
+            $this->app->getContainer()->get("router")->urlFor("marketplace"),
             "/marketplace",
         ];
 

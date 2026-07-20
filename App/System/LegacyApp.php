@@ -36,7 +36,7 @@ final class LegacyApp
 
     public function urlFor(string $name, array $data = [], array $queryParams = []): string
     {
-        return $this->container->get('router')->pathFor($name, $data, $queryParams);
+        return $this->container->get('router')->urlFor($name, $data, $queryParams);
     }
 
     public function setRequest($request): void

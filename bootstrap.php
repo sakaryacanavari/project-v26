@@ -8,9 +8,9 @@ use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Factory\AppFactory;
 use App\System\App;
+use App\System\AssetManifest;
 use App\System\LegacyApp;
 use App\System\LegacyInvocationStrategy;
-use App\System\LegacyRouter;
 use App\System\Logger;
 use App\System\RequestProfiler;
 use App\System\Session;
@@ -67,9 +67,7 @@ $slimApp->getRouteCollector()->setDefaultInvocationStrategy(new LegacyInvocation
 $app = new LegacyApp($slimApp, $container);
 App::$slim = $app;
 
-$container->set('router', function () use ($slimApp) {
-    return new LegacyRouter($slimApp->getRouteCollector()->getRouteParser());
-});
+$container->set('router', $slimApp->getRouteCollector()->getRouteParser());
 
 require __DIR__ . '/i18n.php';
 
@@ -106,6 +104,9 @@ $container->set('view', function (ContainerInterface $container) {
     TwigFactory::addLegacyRoutingFunctions($view->getEnvironment(), $container->get('router'), $request->getUri());
     TwigFactory::addFunction($view->getEnvironment(), 't', function ($key, $vars = []) use ($container) {
         return $container->get('i18n')->getTranslator()->translate($key, is_array($vars) ? $vars : []);
+    });
+    TwigFactory::addFunction($view->getEnvironment(), 'vite_asset', function ($entry) {
+        return AssetManifest::url((string) $entry);
     });
     if (($settings['mode'] ?? 'production') === 'development') {
         TwigFactory::addDebug($view);

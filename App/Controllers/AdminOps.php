@@ -638,7 +638,7 @@ class AdminOps extends Controller
             'shout_deleted',
             'Bir shoutun kaldirildi',
             'Admin bir shoutunu kaldirdi.',
-            $this->app->getContainer()->get('router')->pathFor('home'),
+            $this->app->getContainer()->get('router')->urlFor('home'),
             ['shout_id' => $shoutId]
         );
 
@@ -718,7 +718,7 @@ class AdminOps extends Controller
             'shout_restriction',
             'Shout paylasimin gecici olarak kisitlandi',
             'Admin seni 24 saat boyunca shouttan susturdu.',
-            $this->app->getContainer()->get('router')->pathFor('home'),
+            $this->app->getContainer()->get('router')->urlFor('home'),
             ['muted_until' => $mutedUntil]
         );
 
@@ -750,7 +750,7 @@ class AdminOps extends Controller
             'shout_restriction_lifted',
             'Shout kisitin kaldirildi',
             'Admin shout kisitini kaldirdi. Tekrar shout atabilirsin.',
-            $this->app->getContainer()->get('router')->pathFor('home'),
+            $this->app->getContainer()->get('router')->urlFor('home'),
             []
         );
 

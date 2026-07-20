@@ -1,0 +1,4 @@
+/* Reserved shared entry point for incremental asset extraction. */
+:root {
+  --v26-assets-ready: 1;
+}

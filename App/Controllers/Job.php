@@ -293,7 +293,7 @@ class Job extends Controller
                 ];
             }
 
-            App::redirect($this->app->getContainer()->get('router')->pathFor('workOffers'));
+            App::redirect($this->app->getContainer()->get('router')->urlFor('workOffers'));
             exit;
         }
 
@@ -323,7 +323,7 @@ class Job extends Controller
             ];
         }
 
-        App::redirect($this->app->getContainer()->get('router')->pathFor('workOffers'));
+        App::redirect($this->app->getContainer()->get('router')->urlFor('workOffers'));
         exit;
     }
 

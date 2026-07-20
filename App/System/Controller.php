@@ -254,7 +254,7 @@ abstract class Controller
      * NOTE: A possible use of this wrapper function could be to determine if the request is a regular HTTP one or an AJAX one, and pass this variable to the view.
      *
      */
-    public function exec()
+    public function exec(): \Psr\Http\Message\ResponseInterface
     {
         $result = call_user_func_array(array($this, "run"), func_get_args());
         return $result instanceof \Psr\Http\Message\ResponseInterface ? $result : $this->response;
@@ -276,13 +276,5 @@ abstract class Controller
         }
 
         Utils::jsonResponse($result);
-        /*
-         * Right response should be like this, but doesnt work, so fuck phpSlim wrappers.
-         * http://www.slimframework.com/docs/objects/router.html
-         */
-        /*
-        return $this->response->withHeader('Content-Type', 'application/json')
-                                ->write(json_encode($result));
-        */
     }
 }

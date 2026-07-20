@@ -25,6 +25,9 @@ use \App\System\HealthCheck;
 use \Illuminate\Database\Capsule\Manager as DB;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Handlers\Strategies\RequestResponse;
+
+$modernInvocation = new RequestResponse();
 
 $ensureLogged = function(ServerRequestInterface $request, RequestHandlerInterface $handler) use ($app) {
     $app->getContainer()->get("session")->ensureLogged();
@@ -56,8 +59,8 @@ $adminOnly = function(ServerRequestInterface $request, RequestHandlerInterface $
 
 $app->get('/login', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
-    $ct->exec('showLogin');
-})->setName('login');
+    return $ct->exec('showLogin');
+})->setName('login')->setInvocationStrategy($modernInvocation);
 
 $app->post('/login', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
@@ -66,8 +69,8 @@ $app->post('/login', function($request, $response, $args) use ($app) {
 
 $app->get('/signup', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
-    $ct->exec('showSignup');
-})->setName('signup');
+    return $ct->exec('showSignup');
+})->setName('signup')->setInvocationStrategy($modernInvocation);
 
 $app->post('/signup', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
@@ -76,8 +79,8 @@ $app->post('/signup', function($request, $response, $args) use ($app) {
 
 $app->get('/forgot-password', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
-    $ct->exec('showForgotPassword');
-})->setName('forgotPassword');
+    return $ct->exec('showForgotPassword');
+})->setName('forgotPassword')->setInvocationStrategy($modernInvocation);
 
 $app->post('/forgot-password', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
@@ -86,8 +89,8 @@ $app->post('/forgot-password', function($request, $response, $args) use ($app) {
 
 $app->get('/reset-password/{token}', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
-    $ct->exec('showResetPassword', $args['token']);
-})->setName('resetPassword');
+    return $ct->exec('showResetPassword', $args['token']);
+})->setName('resetPassword')->setInvocationStrategy($modernInvocation);
 
 $app->post('/reset-password/{token}', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
@@ -106,15 +109,15 @@ $app->post('/api/auth/check-nick', function($request, $response, $args) use ($ap
 
 $app->get('/verify-email/{token}', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
-    $ct->exec('verifyEmail', $args['token']);
-})->setName('verifyEmail');
+    return $ct->exec('verifyEmail', $args['token']);
+})->setName('verifyEmail')->setInvocationStrategy($modernInvocation);
 
 $app->post('/api/auth/resend-verification', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
     $ct->json('resendVerificationEmail');
 })->setName('resendVerificationEmail');
 
-$app->get('/health', function($request, $response) {
+$app->getSlimApp()->get('/health', function($request, $response) {
     $report = HealthCheck::report();
     $detailed = (getenv('APP_ENV') === 'development');
     if (!$detailed) {
@@ -133,24 +136,24 @@ $app->get('/health', function($request, $response) {
 
 $app->get('/logout', function($request, $response, $args) use ($app) {
     $ct = new User($app, $response);
-    $ct->exec('logout');
-})->setName('logout');
+    return $ct->exec('logout');
+})->setName('logout')->setInvocationStrategy($modernInvocation);
 
-$app->group('', function () use ($app, $congressistsOnly, $adminOnly) {
+$app->group('', function () use ($app, $congressistsOnly, $adminOnly, $modernInvocation) {
 
     $app->get('/', function($request, $response, $args) use ($app) {
         $ct = new Home($app, $response);
-        $ct->exec('showHomepage');
-    })->setName('home');
+        return $ct->exec('showHomepage');
+    })->setName('home')->setInvocationStrategy($modernInvocation);
 
     $app->get('/work-offers', function($request, $response, $args) use ($app) {
         $ct = new WorkOffers($app, $response);
-        $ct->exec('showList');
-    })->setName('workOffers');
+        return $ct->exec('showList');
+    })->setName('workOffers')->setInvocationStrategy($modernInvocation);
 
     $app->get('/workoffers', function($request, $response, $args) use ($app) {
         $queryParams = $request->getQueryParams();
-        $target = $app->getContainer()->get('router')->pathFor('workOffers');
+        $target = $app->getContainer()->get('router')->urlFor('workOffers');
 
         if (!empty($queryParams)) {
             $target .= '?' . http_build_query($queryParams);
@@ -161,78 +164,78 @@ $app->group('', function () use ($app, $congressistsOnly, $adminOnly) {
 
     $app->get('/resign', function($request, $response, $args) use ($app) {
         $ct = new Job($app, $response);
-        $ct->exec('resign');
-    })->setName('resign');
+        return $ct->exec('resign');
+    })->setName('resign')->setInvocationStrategy($modernInvocation);
 
     $app->get('/mycompanies', function($request, $response, $args) use ($app) {
         $ct = new Company($app, $response);
-        $ct->exec('showMyCompanies');
-    })->setName('myCompanies');
+        return $ct->exec('showMyCompanies');
+    })->setName('myCompanies')->setInvocationStrategy($modernInvocation);
 
     $app->get('/create-company', function($request, $response, $args) use ($app) {
         $ct = new Company($app, $response);
-        $ct->exec('showCreate');
-    })->setName('createCompany');
+        return $ct->exec('showCreate');
+    })->setName('createCompany')->setInvocationStrategy($modernInvocation);
 
     $app->get('/storage', function($request, $response, $args) use ($app) {
         $ct = new User($app, $response);
-        $ct->exec('showStorage');
-    })->setName('storage');
+        return $ct->exec('showStorage');
+    })->setName('storage')->setInvocationStrategy($modernInvocation);
 
     $app->get('/gyms', function($request, $response, $args) use ($app) {
         $ct = new User($app, $response);
-        $ct->exec('showGyms');
-    })->setName('gyms');
+        return $ct->exec('showGyms');
+    })->setName('gyms')->setInvocationStrategy($modernInvocation);
 
     $app->get('/settings', function($request, $response, $args) use ($app) {
         $ct = new UserSettings($app, $response);
-        $ct->exec('showSettings');
-    })->setName('settings');
+        return $ct->exec('showSettings');
+    })->setName('settings')->setInvocationStrategy($modernInvocation);
 
     $app->get('/bug-report', function($request, $response, $args) use ($app) {
         $ct = new BugFix($app, $response);
-        $ct->exec('index');
-    })->setName('bugReport');
+        return $ct->exec('index');
+    })->setName('bugReport')->setInvocationStrategy($modernInvocation);
 
     $app->get('/wars', function($request, $response, $args) use ($app) {
         $ct = new War($app, $response);
-        $ct->exec('showList');
-    })->setName('wars');
+        return $ct->exec('showList');
+    })->setName('wars')->setInvocationStrategy($modernInvocation);
 
     $app->get('/map', function($request, $response, $args) use ($app) {
         $ct = new WorldMap($app, $response);
-        $ct->exec('showMap');
-    })->setName('worldMap');
+        return $ct->exec('showMap');
+    })->setName('worldMap')->setInvocationStrategy($modernInvocation);
 
     $app->get('/box', function($request, $response, $args) use ($app) {
         $ct = new BoxController($app, $response);
-        $ct->exec('index');
-    })->setName('box');
+        return $ct->exec('index');
+    })->setName('box')->setInvocationStrategy($modernInvocation);
 
     $app->get('/blackmarket', function($request, $response, $args) use ($app) {
         $ct = new BlackMarket($app, $response);
-        $ct->exec('index');
-    })->setName('blackmarket');
+        return $ct->exec('index');
+    })->setName('blackmarket')->setInvocationStrategy($modernInvocation);
 
     $app->get('/blackmarket/create', function($request, $response, $args) use ($app) {
         $ct = new BlackMarket($app, $response);
-        $ct->exec('createAd');
-    })->setName('createBlackMarketAd');
+        return $ct->exec('createAd');
+    })->setName('createBlackMarketAd')->setInvocationStrategy($modernInvocation);
 
     $app->get('/marketplace', function($request, $response, $args) use ($app) {
         $ct = new Market($app, $response);
-        $ct->exec('showMarketplaceHome');
-    })->setName('marketplace');
+        return $ct->exec('showMarketplaceHome');
+    })->setName('marketplace')->setInvocationStrategy($modernInvocation);
 
     $app->get('/marketplace/offers/{item}[/{quality}]', function($request, $response, $args) use ($app) {
         $ct = new Market($app, $response);
-        $ct->exec('showItemOffers', $args['item'], $args['quality'] ?? 0);
-    })->setName('marketplaceOffers');
+        return $ct->exec('showItemOffers', $args['item'], $args['quality'] ?? 0);
+    })->setName('marketplaceOffers')->setInvocationStrategy($modernInvocation);
 
     $app->post('/marketplace/buy', function($request, $response, $args) use ($app) {
         $ct = new Market($app, $response);
-        $ct->exec('buyAndRedirect');
-    })->setName('marketBuyPage');
+        return $ct->exec('buyAndRedirect');
+    })->setName('marketBuyPage')->setInvocationStrategy($modernInvocation);
 
     $app->get('/market/trends/{item}/{quality}', function($request, $response, $args) use ($app) {
         $ct = new Market($app, $response);
@@ -241,98 +244,98 @@ $app->group('', function () use ($app, $congressistsOnly, $adminOnly) {
 
     $app->get('/messages', function($request, $response, $args) use ($app) {
         $ct = new Messages($app, $response);
-        $ct->exec('showInbox');
-    })->setName('messages');
+        return $ct->exec('showInbox');
+    })->setName('messages')->setInvocationStrategy($modernInvocation);
 
     $app->get('/messages/{uid}', function($request, $response, $args) use ($app) {
         $ct = new Messages($app, $response);
-        $ct->exec('showThread', $args['uid']);
-    })->setName('messagesThread');
+        return $ct->exec('showThread', $args['uid']);
+    })->setName('messagesThread')->setInvocationStrategy($modernInvocation);
 
     $app->get('/citizen/{uid}', function($request, $response, $args) use ($app) {
         $ct = new User($app, $response);
-        $ct->exec('showCitizen', $args['uid']);
-    })->setName('citizenProfile');
+        return $ct->exec('showCitizen', $args['uid']);
+    })->setName('citizenProfile')->setInvocationStrategy($modernInvocation);
 
     $app->get('/notifications', function($request, $response, $args) use ($app) {
         $ct = new Notifications($app, $response);
-        $ct->exec('showCenter');
-    })->setName('notifications');
+        return $ct->exec('showCenter');
+    })->setName('notifications')->setInvocationStrategy($modernInvocation);
 
     $app->get('/social', function($request, $response, $args) use ($app) {
         $ct = new Social($app, $response);
-        $ct->exec('index');
-    })->setName('social');
+        return $ct->exec('index');
+    })->setName('social')->setInvocationStrategy($modernInvocation);
 
-    $app->group('/congress', function () use ($app) {
+    $app->group('/congress', function () use ($app, $modernInvocation) {
         $app->get('', function($request, $response, $args) use ($app) {
             $ct = new Congress($app, $response);
-            $ct->exec('showHome');
-        })->setName('congressHome');
+            return $ct->exec('showHome');
+        })->setName('congressHome')->setInvocationStrategy($modernInvocation);
 
         $app->get('/law/{id}', function($request, $response, $args) use ($app) {
             $ct = new Congress($app, $response);
-            $ct->exec('showLawProposal', $args["id"]);
-        })->setName('congressLaw');
+            return $ct->exec('showLawProposal', $args["id"]);
+        })->setName('congressLaw')->setInvocationStrategy($modernInvocation);
     });
 
     $app->get('/elections', function($request, $response, $args) use ($app) {
         $ct = new Congress($app, $response);
-        $ct->exec('showElections');
-    })->setName('electionsHome');
+        return $ct->exec('showElections');
+    })->setName('electionsHome')->setInvocationStrategy($modernInvocation);
 
     $app->get('/elections/archive[/{type}]', function($request, $response, $args) use ($app) {
         $ct = new Congress($app, $response);
-        $ct->exec('showElectionArchive', $args['type'] ?? null);
-    })->setName('electionsArchive');
+        return $ct->exec('showElectionArchive', $args['type'] ?? null);
+    })->setName('electionsArchive')->setInvocationStrategy($modernInvocation);
 
     $app->get('/parties', function($request, $response, $args) use ($app) {
         $ct = new PoliticalParty($app, $response);
-        $ct->exec('showList');
-    })->setName('partyList');
+        return $ct->exec('showList');
+    })->setName('partyList')->setInvocationStrategy($modernInvocation);
 
     $app->get('/party/create', function($request, $response, $args) use ($app) {
         $ct = new PoliticalParty($app, $response);
-        $ct->exec('showCreationForm');
-    })->setName('partyCreationForm');
+        return $ct->exec('showCreationForm');
+    })->setName('partyCreationForm')->setInvocationStrategy($modernInvocation);
 
     $app->get('/party/{id}[/{slug}]', function($request, $response, $args) use ($app) {
         $ct = new PoliticalParty($app, $response);
-        $ct->exec('showParty', $args['id']);
-    })->setName('party');
+        return $ct->exec('showParty', $args['id']);
+    })->setName('party')->setInvocationStrategy($modernInvocation);
 
     $app->get('/admin/ops', function($request, $response, $args) use ($app) {
         $ct = new AdminOps($app, $response);
         return $ct->exec('index');
-    })->setName('adminOps')->add($adminOnly);
+    })->setName('adminOps')->setInvocationStrategy($modernInvocation)->add($adminOnly);
 
-    $app->group('/news', function () use ($app) {
+    $app->group('/news', function () use ($app, $modernInvocation) {
         $app->get('', function($request, $response, $args) use ($app) {
             $ct = new Newspaper($app, $response);
-            $ct->exec('showHome');
-        })->setName('newspaperList');
+            return $ct->exec('showHome');
+        })->setName('newspaperList')->setInvocationStrategy($modernInvocation);
 
         $app->get('/article/{id}', function($request, $response, $args) use ($app) {
             $ct = new Newspaper($app, $response);
-            $ct->exec('showArticle', $args["id"]);
-        })->setName('showArticle');
+            return $ct->exec('showArticle', $args["id"]);
+        })->setName('showArticle')->setInvocationStrategy($modernInvocation);
 
         $app->get('/create', function($request, $response, $args) use ($app) {
             $ct = new Newspaper($app, $response);
-            $ct->exec('showCreateArticle');
-        })->setName('createArticle');
+            return $ct->exec('showCreateArticle');
+        })->setName('createArticle')->setInvocationStrategy($modernInvocation);
     });
 
-    $app->group('/newspaper', function () use ($app) {
+    $app->group('/newspaper', function () use ($app, $modernInvocation) {
         $app->get('/create', function($request, $response, $args) use ($app) {
             $ct = new Newspaper($app, $response);
-            $ct->exec('showCreateForm');
-        })->setName('createNewspaper');
+            return $ct->exec('showCreateForm');
+        })->setName('createNewspaper')->setInvocationStrategy($modernInvocation);
 
         $app->get('/{id}', function($request, $response, $args) use ($app) {
             $ct = new Newspaper($app, $response);
-            $ct->exec('showNewspaper', $args["id"]);
-        })->setName('showNewspaper');
+            return $ct->exec('showNewspaper', $args["id"]);
+        })->setName('showNewspaper')->setInvocationStrategy($modernInvocation);
     });
 
 })->add($ensureLogged);
@@ -986,7 +989,6 @@ $app->group('/api', function () use ($app, $adminOnly) {
         $response->getBody()->write('Sistem Hatası: Sınıf veya metod bulunamadı.');
         return $response;
 
-        return $response->withStatus(404)->write("Sistem Hatası: Sınıf veya metod bulunamadı.");
     });
 
 })->add($ensureLogged);

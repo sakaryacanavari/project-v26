@@ -35,6 +35,43 @@ class UserGym extends Model
         ]
     ];
 
+    private static $schemaCapabilities;
+
+    /** Cache schema metadata so one request does not repeat identical DDL checks. */
+    private static function schemaCapabilities(): array
+    {
+        if (is_array(self::$schemaCapabilities)) {
+            return self::$schemaCapabilities;
+        }
+
+        $capabilities = [
+            'user_trainings' => ['table' => false, 'columns' => []],
+            'daily_actions' => ['table' => false, 'columns' => []],
+        ];
+
+        try {
+            $schema = DB::getSchemaBuilder();
+            foreach ([
+                'user_trainings' => ['uid', 'quality', 'created_at', 'strength_gained'],
+                'daily_actions' => ['uid', 'action', 'reward_amount', 'action_day', 'created_at', 'reward_type', 'strength_after'],
+            ] as $key => $columns) {
+                $table = $key === 'daily_actions' ? 'user_gym_daily_actions' : 'user_trainings';
+                if (!$schema->hasTable($table)) {
+                    continue;
+                }
+
+                $capabilities[$key]['table'] = true;
+                foreach ($columns as $column) {
+                    $capabilities[$key]['columns'][$column] = $schema->hasColumn($table, $column);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Keep the existing fail-closed behavior if metadata is unavailable.
+        }
+
+        return self::$schemaCapabilities = $capabilities;
+    }
+
     public function hasTrainedToday ($quality)
     {
         $lastTime = date("Y-m-d", strtotime($this["q$quality"]));
@@ -78,11 +115,11 @@ class UserGym extends Model
             }
         }
 
-        $schema = DB::getSchemaBuilder();
-        if (!$schema->hasTable('user_trainings')
-            || !$schema->hasColumn('user_trainings', 'uid')
-            || !$schema->hasColumn('user_trainings', 'quality')
-            || !$schema->hasColumn('user_trainings', 'created_at')) {
+        $trainingSchema = self::schemaCapabilities()['user_trainings'];
+        if (!$trainingSchema['table']
+            || !$trainingSchema['columns']['uid']
+            || !$trainingSchema['columns']['quality']
+            || !$trainingSchema['columns']['created_at']) {
             return false;
         }
 
@@ -118,11 +155,12 @@ class UserGym extends Model
             }
         }
 
-        $schema = DB::getSchemaBuilder();
-        if ($schema->hasTable('user_gym_daily_actions')
-            && $schema->hasColumn('user_gym_daily_actions', 'uid')
-            && $schema->hasColumn('user_gym_daily_actions', 'action')
-            && $schema->hasColumn('user_gym_daily_actions', 'action_day')) {
+        $capabilities = self::schemaCapabilities();
+        $dailySchema = $capabilities['daily_actions'];
+        if ($dailySchema['table']
+            && $dailySchema['columns']['uid']
+            && $dailySchema['columns']['action']
+            && $dailySchema['columns']['action_day']) {
             $rows = DB::table('user_gym_daily_actions')
                 ->where('uid', $uid)
                 ->where('action', 'free_training')
@@ -138,10 +176,11 @@ class UserGym extends Model
             }
         }
 
-        if ($schema->hasTable('user_trainings')
-            && $schema->hasColumn('user_trainings', 'uid')
-            && $schema->hasColumn('user_trainings', 'quality')
-            && $schema->hasColumn('user_trainings', 'created_at')) {
+        $trainingSchema = $capabilities['user_trainings'];
+        if ($trainingSchema['table']
+            && $trainingSchema['columns']['uid']
+            && $trainingSchema['columns']['quality']
+            && $trainingSchema['columns']['created_at']) {
             $rows = DB::table('user_trainings')
                 ->where('uid', $uid)
                 ->where('quality', 1)
@@ -189,32 +228,20 @@ class UserGym extends Model
 
     public static function ensureDailyActionsTable(): bool
     {
-        try {
-            $schema = DB::getSchemaBuilder();
-            if (!$schema->hasTable('user_gym_daily_actions')) {
+        $schema = self::schemaCapabilities()['daily_actions'];
+        foreach (['uid', 'action', 'reward_amount', 'action_day', 'created_at'] as $column) {
+            if (!$schema['table'] || empty($schema['columns'][$column])) {
                 return false;
             }
-
-            foreach (['uid', 'action', 'reward_amount', 'action_day', 'created_at'] as $column) {
-                if (!$schema->hasColumn('user_gym_daily_actions', $column)) {
-                    return false;
-                }
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            return false;
         }
+
+        return true;
     }
 
     public static function hasDailyActionsColumn($column): bool
     {
-        try {
-            return DB::getSchemaBuilder()->hasTable('user_gym_daily_actions')
-                && DB::getSchemaBuilder()->hasColumn('user_gym_daily_actions', (string) $column);
-        } catch (\Exception $e) {
-            return false;
-        }
+        $schema = self::schemaCapabilities()['daily_actions'];
+        return $schema['table'] && !empty($schema['columns'][(string) $column]);
     }
 
     public static function hasDailyActionToday($uid, $action, $actionDay = null): bool
@@ -265,7 +292,7 @@ class UserGym extends Model
             }
         }
 
-        if (!DB::getSchemaBuilder()->hasTable('user_trainings')) {
+        if (!self::schemaCapabilities()['user_trainings']['table']) {
             return false;
         }
 
@@ -296,7 +323,7 @@ class UserGym extends Model
             }
         }
 
-        if (!DB::getSchemaBuilder()->hasTable('user_trainings')) {
+        if (!self::schemaCapabilities()['user_trainings']['table']) {
             return 0;
         }
 

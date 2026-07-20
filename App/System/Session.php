@@ -175,7 +175,7 @@ class Session
             $previousPath  = "?redirect=" . urlencode($_REQUEST["redirect"]);
         }
 
-        App::redirect($this->app->getContainer()->get('router')->pathFor('login') . $previousPath);
+        App::redirect($this->app->getContainer()->get('router')->urlFor('login') . $previousPath);
     }
 
     /**
@@ -209,7 +209,7 @@ class Session
                 if (!empty($_GET)) {
                     $params = "?" . http_build_query($_GET);
                 }
-                App::redirect($router->pathFor('login') . $params);
+                App::redirect($router->urlFor('login') . $params);
             }
         }
     }

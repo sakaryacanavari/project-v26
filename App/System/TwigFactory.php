@@ -41,7 +41,7 @@ final class TwigFactory
     public static function addLegacyRoutingFunctions($environment, $router, $uri): void
     {
         self::addFunction($environment, 'path_for', function ($name, $data = [], $query = []) use ($router) {
-            return $router->pathFor((string) $name, is_array($data) ? $data : [], is_array($query) ? $query : []);
+            return $router->urlFor((string) $name, is_array($data) ? $data : [], is_array($query) ? $query : []);
         });
 
         $baseUrl = '';

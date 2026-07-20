@@ -1418,7 +1418,7 @@ class User extends Controller
         $response->error = 0;
         $response->field = null;
         $response->message = \t('auth.reset.success_message');
-        $response->redirect = $this->app->getContainer()->get('router')->pathFor('login') . '?reset_completed=1';
+        $response->redirect = $this->app->getContainer()->get('router')->urlFor('login') . '?reset_completed=1';
         return $response;
     }
 
@@ -1650,7 +1650,7 @@ class User extends Controller
     private function redirectLoggedUsers()
     {
         if ($this->isLogged) {
-            App::redirect($this->app->getContainer()->get('router')->pathFor('home'));
+            App::redirect($this->app->getContainer()->get('router')->urlFor('home'));
             exit;
         }
     }
@@ -1914,14 +1914,14 @@ class User extends Controller
     {
         $uri = $this->container->get('request')->getUri();
         $base = $uri->getScheme() . '://' . $uri->getAuthority();
-        return $base . $this->app->getContainer()->get('router')->pathFor('verifyEmail', ['token' => $token]);
+        return $base . $this->app->getContainer()->get('router')->urlFor('verifyEmail', ['token' => $token]);
     }
 
     private function buildPasswordResetUrl($token)
     {
         $uri = $this->container->get('request')->getUri();
         $base = $uri->getScheme() . '://' . $uri->getAuthority();
-        return $base . $this->app->getContainer()->get('router')->pathFor('resetPassword', ['token' => $token]);
+        return $base . $this->app->getContainer()->get('router')->urlFor('resetPassword', ['token' => $token]);
     }
 
     private function findValidPasswordResetRow($token)
@@ -1956,7 +1956,7 @@ class User extends Controller
 
     private function redirectToLoginWithQuery(array $params = [])
     {
-        $target = $this->app->getContainer()->get('router')->pathFor('login');
+        $target = $this->app->getContainer()->get('router')->urlFor('login');
         if (!empty($params)) {
             $target .= '?' . http_build_query($params);
         }

@@ -79,7 +79,7 @@ class Home extends Controller
     public function showHomepage ()
     {
         if (!$this->isLogged) {
-            App::redirect($this->app->getContainer()->get('router')->pathFor('home'));
+            App::redirect($this->app->getContainer()->get('router')->urlFor('home'));
             exit;
         }
 
@@ -365,7 +365,7 @@ class Home extends Controller
                 'daily' => false,
                 'label' => \t('home.route.step_1_label'),
                 'done' => $hasCompletedProfile,
-                'href' => $this->app->getContainer()->get('router')->pathFor('settings'),
+                'href' => $this->app->getContainer()->get('router')->urlFor('settings'),
                 'hint' => $hasCompletedProfile ? \t('home.route.step_1_hint_done') : \t('home.route.step_1_hint_pending'),
                 'reason' => \t('home.route.step_1_reason'),
                 'benefit' => \t('home.route.step_1_benefit'),
@@ -378,7 +378,7 @@ class Home extends Controller
                 'daily' => true,
                 'label' => \t('home.route.step_2_label'),
                 'done' => $hasAnyTrainingToday,
-                'href' => $this->app->getContainer()->get('router')->pathFor('gyms'),
+                'href' => $this->app->getContainer()->get('router')->urlFor('gyms'),
                 'hint' => $hasAnyTrainingToday ? \t('home.route.step_2_hint_done') : \t('home.route.step_2_hint_pending'),
                 'reason' => \t('home.route.step_2_reason'),
                 'benefit' => \t('home.route.step_2_benefit'),
@@ -391,7 +391,7 @@ class Home extends Controller
                 'daily' => false,
                 'label' => \t('home.route.step_3_label'),
                 'done' => !empty($job),
-                'href' => $this->app->getContainer()->get('router')->pathFor('workOffers'),
+                'href' => $this->app->getContainer()->get('router')->urlFor('workOffers'),
                 'hint' => !empty($job) ? \t('home.route.step_3_hint_done') : \t('home.route.step_3_hint_pending'),
                 'reason' => \t('home.route.step_3_reason'),
                 'benefit' => \t('home.route.step_3_benefit'),
@@ -404,7 +404,7 @@ class Home extends Controller
                 'daily' => false,
                 'label' => \t('home.route.step_4_label'),
                 'done' => $hasInventoryItem,
-                'href' => $this->app->getContainer()->get('router')->pathFor('marketplace'),
+                'href' => $this->app->getContainer()->get('router')->urlFor('marketplace'),
                 'hint' => $hasInventoryItem ? \t('home.route.step_4_hint_done') : \t('home.route.step_4_hint_pending'),
                 'reason' => \t('home.route.step_4_reason'),
                 'benefit' => \t('home.route.step_4_benefit'),
@@ -417,7 +417,7 @@ class Home extends Controller
                 'daily' => false,
                 'label' => \t('home.route.step_5_label'),
                 'done' => $hasPoliticalParty,
-                'href' => $this->app->getContainer()->get('router')->pathFor('partyList'),
+                'href' => $this->app->getContainer()->get('router')->urlFor('partyList'),
                 'hint' => $hasPoliticalParty ? \t('home.route.step_5_hint_done') : \t('home.route.step_5_hint_pending'),
                 'reason' => \t('home.route.step_5_reason'),
                 'benefit' => \t('home.route.step_5_benefit'),
@@ -430,7 +430,7 @@ class Home extends Controller
                 'daily' => false,
                 'label' => \t('home.route.step_6_label'),
                 'done' => !empty($myNewspaper),
-                'href' => $this->app->getContainer()->get('router')->pathFor('createNewspaper'),
+                'href' => $this->app->getContainer()->get('router')->urlFor('createNewspaper'),
                 'hint' => !empty($myNewspaper) ? \t('home.route.step_6_hint_done') : \t('home.route.step_6_hint_pending'),
                 'reason' => \t('home.route.step_6_reason'),
                 'benefit' => \t('home.route.step_6_benefit'),
@@ -482,7 +482,7 @@ class Home extends Controller
                 'label' => \t('home.player_goals.profile.label'),
                 'description' => \t('home.player_goals.profile.description'),
                 'done' => $hasCompletedProfile,
-                'href' => $router->pathFor('settings'),
+                'href' => $router->urlFor('settings'),
             ],
             [
                 'key' => 'career',
@@ -490,7 +490,7 @@ class Home extends Controller
                 'label' => \t('home.player_goals.career.label'),
                 'description' => \t('home.player_goals.career.description'),
                 'done' => !empty($job),
-                'href' => $router->pathFor('workOffers'),
+                'href' => $router->urlFor('workOffers'),
             ],
             [
                 'key' => 'party',
@@ -499,8 +499,8 @@ class Home extends Controller
                 'description' => \t('home.player_goals.party.description'),
                 'done' => $hasPoliticalParty,
                 'href' => $hasPoliticalParty
-                    ? $router->pathFor('party', ['id' => (int) ($myPartyMembership->party ?? 0)])
-                    : $router->pathFor('partyList'),
+                    ? $router->urlFor('party', ['id' => (int) ($myPartyMembership->party ?? 0)])
+                    : $router->urlFor('partyList'),
             ],
         ];
 
@@ -512,7 +512,7 @@ class Home extends Controller
                 'label' => \t('home.player_goals.party_role.label'),
                 'description' => \t('home.player_goals.party_role.description'),
                 'done' => $partyRoleLevel > 0,
-                'href' => $router->pathFor('party', ['id' => (int) ($myPartyMembership->party ?? 0)]),
+                'href' => $router->urlFor('party', ['id' => (int) ($myPartyMembership->party ?? 0)]),
             ];
         }
 
@@ -553,7 +553,7 @@ class Home extends Controller
                                 'label' => \t('home.player_goals.election_candidate.label'),
                                 'description' => \t('home.player_goals.election_candidate.description'),
                                 'done' => $isCandidate,
-                                'href' => $router->pathFor('electionsHome'),
+                                'href' => $router->urlFor('electionsHome'),
                             ];
                         }
                         if ($isPartyVotingOpen || $hasVoted) {
@@ -563,7 +563,7 @@ class Home extends Controller
                                 'label' => \t('home.player_goals.election_vote.label'),
                                 'description' => \t('home.player_goals.election_vote.description'),
                                 'done' => $hasVoted,
-                                'href' => $router->pathFor('electionsHome'),
+                                'href' => $router->urlFor('electionsHome'),
                             ];
                         }
                     }
@@ -584,7 +584,7 @@ class Home extends Controller
         unset($playerGoal);
 
         $quickLinks = GameExperience::buildQuickLinks($gameExperienceSettings, function ($routeName) use ($router) {
-            return $router->pathFor($routeName);
+            return $router->urlFor($routeName);
         });
 
         return $this->render('home.html.twig', [

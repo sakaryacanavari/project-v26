@@ -24,6 +24,7 @@ services:
       COOKIE_DOMAIN: localhost
     volumes:
       - ./:/var/www/html
+      - v26_frontend_build:/var/www/html/public/build
       - v26_runtime:/var/www/html/tmp
     depends_on:
       mysql:
@@ -37,6 +38,20 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  frontend-build:
+    image: node:20-alpine
+    profiles: ["production"]
+    working_dir: /src
+    command: >-
+      sh -c "rm -rf /tmp/v26-build && mkdir -p /tmp/v26-build &&
+      cp /src/package.json /src/package-lock.json /src/vite.config.js /tmp/v26-build/ &&
+      cp -R /src/frontend /tmp/v26-build/frontend && cd /tmp/v26-build &&
+      npm ci --ignore-scripts && npm run build && rm -rf /out/* &&
+      cp -R public/build/. /out/"
+    volumes:
+      - ./:/src:ro
+      - v26_frontend_build:/out
 
   worker:
     build:
@@ -126,3 +141,4 @@ services:
 volumes:
   mysql_data:
   v26_runtime:
+  v26_frontend_build:
